@@ -1,0 +1,52 @@
+---
+import PillarSection from "../PillarSection.astro";
+---
+
+<PillarSection
+  stage="IN PROGRESS"
+  note="the documentation"
+  heading="Write it where the work is."
+  body="The block editor lives inside the client project — specs, meeting notes, statements of work, nested pages, reusable templates. Not a separate wiki nobody opens, because it's already where the work is."
+  band="bg-band-warm"
+>
+  {/* Maquette d'éditeur de blocs. La poignée à six points signale un vrai éditeur —
+      c'est le détail qui distingue d'un simple champ de texte. */}
+  <div class="rounded-[8px] border border-rule bg-white p-5">
+    <p class="font-mono text-[11px] text-slate">Northwind / Ledger rebuild / Technical spec</p>
+
+    <div class="mt-4 space-y-3">
+      <div class="group relative">
+        <span
+          class="absolute -left-5 top-1/2 -translate-y-1/2 font-mono text-[12px] leading-none text-rule"
+          aria-hidden="true">⠿</span
+        >
+        <h3 class="text-[22px] font-bold">Migration scope</h3>
+      </div>
+
+      <p class="text-[14px] leading-[1.7] text-slate">
+        Move the existing ledger to the new schema. No new reporting surface in this phase — the
+        April 3 call fixed the scope to a two-sprint window.
+      </p>
+
+      <label class="flex items-center gap-2 text-[14px]">
+        <span
+          class="grid h-[18px] w-[18px] place-items-center rounded-[3px] bg-live text-[11px] text-white"
+          >✓</span
+        >
+        <span class="text-slate line-through">Sign off migration plan with Elena</span>
+      </label>
+
+      <label class="flex items-center gap-2 text-[14px]">
+        <span class="h-[18px] w-[18px] rounded-[3px] border border-rule"></span>
+        <span>Draft rollback procedure</span>
+      </label>
+
+      <div
+        class="rounded-[6px] bg-paper p-3 font-mono text-[12px] text-slate"
+        style="background:repeating-linear-gradient(45deg,#F3F5F7 0 4px,#fff 4px 8px)"
+      >
+        <span class="rounded-[3px] bg-white px-2 py-1">migrate --dry-run --schema=v2</span>
+      </div>
+    </div>
+  </div>
+</PillarSection>

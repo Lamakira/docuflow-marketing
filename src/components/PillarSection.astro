@@ -1,0 +1,43 @@
+---
+interface Props {
+  stage: string;
+  note: string;
+  heading: string;
+  body: string;
+  /** Fond de bande — uni, jamais de dégradé (brief §5). */
+  band?: string;
+  stageTone?: "hour" | "live";
+  /** Place le visuel à gauche pour casser l'alternance. */
+  reverse?: boolean;
+}
+
+const {
+  stage,
+  note,
+  heading,
+  body,
+  band = "bg-paper",
+  stageTone = "hour",
+  reverse = false,
+} = Astro.props;
+---
+
+<section class={`${band} py-[88px]`}>
+  <div class="container-page">
+    <p class="mb-6 font-mono text-[13px]">
+      <span class={stageTone === "live" ? "text-live" : "text-hour"}>{stage}</span>{" "}
+      <span class="text-slate">— {note}</span>
+    </p>
+
+    <div class="grid items-center gap-14 min-[901px]:grid-cols-2">
+      <div class={reverse ? "min-[901px]:order-2" : ""}>
+        <h2 class="max-w-[18ch] text-[clamp(28px,4vw,42px)]">{heading}</h2>
+        <p class="mt-5 max-w-[52ch] text-[18px] leading-[1.55] text-slate">{body}</p>
+      </div>
+
+      <div class={reverse ? "min-[901px]:order-1" : ""}>
+        <slot />
+      </div>
+    </div>
+  </div>
+</section>

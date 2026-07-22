@@ -1,0 +1,41 @@
+---
+const guarantees = [
+  "A visible indicator shows the team exactly when the timer is running.",
+  "Screenshots can be blurred so content is never legible.",
+  "Capture is scheduled to working hours only.",
+  "Anyone can open and review their own recorded data.",
+];
+---
+
+{/* Section à part entière, pas une note de bas de page : c'est l'objection
+    principale d'un dirigeant, et au Québec c'est aussi un sujet de conformité (Loi 25). */}
+<section class="bg-paper py-[88px]">
+  <div class="container-page">
+    <div class="grid gap-12 rounded-[8px] border border-rule bg-white p-12 min-[901px]:grid-cols-2">
+      <div>
+        <p class="label-mono text-[11px] text-live">Transparency</p>
+        <h2 class="mt-4 max-w-[16ch] text-[clamp(28px,4vw,42px)]">
+          Monitoring people can live with.
+        </h2>
+        <p class="mt-5 max-w-[48ch] text-[18px] leading-[1.55] text-slate">
+          Employees see exactly what's recorded and when the timer is running. Screenshots can be
+          blurred, capture can be scheduled to working hours, and anyone can review their own data.
+          Configure it once, tell your team, keep it visible.
+        </p>
+      </div>
+
+      <ul class="space-y-3">
+        {
+          guarantees.map((item) => (
+            <li class="flex items-start gap-3 rounded-[6px] bg-paper p-4">
+              <span class="mt-[2px] grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full bg-live text-[11px] text-white">
+                ✓
+              </span>
+              <span class="text-[15px] leading-snug">{item}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>

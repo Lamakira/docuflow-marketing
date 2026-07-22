@@ -1,17 +1,33 @@
 ---
+import Layout from "../layouts/Layout.astro";
+import Hero from "../components/sections/Hero.astro";
+import ProofBand from "../components/sections/ProofBand.astro";
+import StackFold from "../components/sections/StackFold.astro";
+import ClientRecord from "../components/sections/ClientRecord.astro";
+import Hours from "../components/sections/Hours.astro";
+import Documentation from "../components/sections/Documentation.astro";
+import AiAnswer from "../components/sections/AiAnswer.astro";
+import Transparency from "../components/sections/Transparency.astro";
+import Sectors from "../components/sections/Sectors.astro";
+import TheBill from "../components/sections/TheBill.astro";
+import FinalCta from "../components/sections/FinalCta.astro";
 
+const title = "DocuFlow — clients, hours and documentation in one tool";
+const description =
+  "Contacts, budgets, tasks, hours, screenshots and documents on the same client project. Service teams replace four subscriptions with DocuFlow.";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title={title} description={description}>
+  {/* L'ordre suit le cycle de vie d'un mandat client : un pilier, une section. */}
+  <Hero />
+  <ProofBand />
+  <StackFold />
+  <ClientRecord />
+  <Hours />
+  <Documentation />
+  <AiAnswer />
+  <Transparency />
+  <Sectors />
+  <TheBill />
+  <FinalCta />
+</Layout>

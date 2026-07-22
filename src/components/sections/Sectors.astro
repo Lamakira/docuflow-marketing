@@ -1,0 +1,26 @@
+---
+import { SECTORS } from "../../data/site";
+---
+
+<section id="solutions" class="container-page py-[88px]">
+  <p class="mb-6 font-mono text-[13px]">
+    <span class="text-hour">COMPLETED</span>{" "}
+    <span class="text-slate">— who it's for</span>
+  </p>
+
+  <h2 class="max-w-[16ch] text-[clamp(28px,4vw,42px)]">Teams that deliver for clients.</h2>
+
+  <div class="mt-10 grid grid-cols-1 gap-4 min-[561px]:grid-cols-2 min-[901px]:grid-cols-4">
+    {
+      SECTORS.map((sector) => (
+        <a
+          href={sector.href}
+          class="rounded-[6px] border border-rule bg-white p-5 transition-all duration-[120ms] hover:-translate-y-[2px] hover:border-hour"
+        >
+          <p class="font-mono text-[11px] text-slate">{sector.tag}</p>
+          <p class="mt-1 text-[16px] font-semibold">{sector.name}</p>
+        </a>
+      ))
+    }
+  </div>
+</section>

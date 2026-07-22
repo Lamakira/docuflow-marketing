@@ -1,0 +1,228 @@
+---
+import { STAGES } from "../../data/site";
+
+const CURRENT_STAGE = "IN PROGRESS";
+
+const team = [
+  { initials: "AR", hours: "38.5 h", pct: 96, tone: "live" },
+  { initials: "JM", hours: "21.0 h", pct: 62, tone: "hour" },
+  { initials: "KT", hours: "12.2 h", pct: 32, tone: "slate" },
+];
+
+const shots = [9.1, 10.3, 11.4, 13.3, 14.6, 16.1, 17.2];
+const tasks = [9.66, 12.9, 15.5, 17.8];
+const docs = [8.5, 13.4, 15.9, 16.8];
+
+/** Position horizontale d'un marqueur sur la journée 08:00–18:00. */
+const at = (hour: number) => `${((hour - 8) / 10) * 100}%`;
+
+const layers = [
+  { id: "record", detail: "Client record · 3 contacts · $48,000 budget · 62% used · 2 tags" },
+  { id: "hours", detail: "Tracked hours · 71.7 h logged across 3 people this month" },
+  { id: "shots", detail: "Screenshots · 7 captures filed against this project today" },
+  { id: "markers", detail: "Tasks & documents · 4 tasks moved · 4 documents edited" },
+];
+---
+
+<section class="container-page pb-16 pt-[84px]">
+  <p class="mb-5 flex items-center gap-2 font-mono text-[13px]">
+    <span class="inline-block h-2 w-2 rounded-full bg-hour"></span>
+    <span class="text-hour">LEAD</span>
+    <span class="text-slate">— a new client project</span>
+  </p>
+
+  <h1 class="max-w-[15ch] text-[clamp(38px,6vw,66px)] leading-[1.02]">
+    One place for everything a client project leaves behind.
+  </h1>
+
+  <p class="mt-6 max-w-[62ch] text-[19px] leading-[1.55] text-slate">
+    Contacts, budgets, tasks, hours, screenshots and documents — all attached to the same client
+    project, in one tool. Service teams replace four subscriptions with DocuFlow.
+  </p>
+
+  <div class="mt-8 flex flex-wrap items-center gap-3">
+    <a
+      href="/signup"
+      class="rounded-[6px] bg-hour px-[22px] py-[13px] font-medium text-ink transition-colors hover:bg-hour-hover"
+    >
+      Start free trial
+    </a>
+    <a
+      href="/demo"
+      class="rounded-[6px] border border-rule bg-white px-[22px] py-[13px] font-medium transition-colors hover:border-ink"
+    >
+      Book a 15-minute demo
+    </a>
+  </div>
+
+  <p class="mt-4 font-mono text-[12.5px] text-slate">
+    No credit card. Desktop app for Windows, macOS and Linux.
+  </p>
+
+  {/* Carte projet : chaque couche est rattachée au même mandat client.
+      C'est la thèse de la page rendue littérale. */}
+  <div class="mt-12 rounded-[8px] border border-rule bg-white p-[22px_24px]" data-project-card>
+    <div class="flex items-baseline justify-between gap-4">
+      <p class="label-mono text-[11px] text-slate">One client project · everything attached</p>
+      <p class="font-mono text-[11px] text-slate">hover a layer →</p>
+    </div>
+
+    <div class="mt-3 flex items-center gap-3">
+      <p class="font-display text-[17px] font-bold">Northwind · Ledger rebuild</p>
+      <span class="rounded-[3px] bg-hour px-2 py-[3px] font-mono text-[10px] font-bold text-ink">
+        {CURRENT_STAGE}
+      </span>
+    </div>
+
+    <ol class="mt-3 flex flex-wrap items-center gap-2 font-mono text-[10px]">
+      {
+        STAGES.map((stage, i) => {
+          const index = STAGES.indexOf(CURRENT_STAGE as (typeof STAGES)[number]);
+          const tone =
+            i < index ? "text-slate" : i === index ? "text-hour font-bold" : "text-rule";
+          return (
+            <>
+              {i > 0 && <li class="h-px w-6 bg-rule" aria-hidden="true" />}
+              <li class={tone}>{stage}</li>
+            </>
+          );
+        })
+      }
+    </ol>
+
+    <div class="mt-5 space-y-4">
+      {/* Couche 1 — le dossier client */}
+      <div
+        class="layer flex flex-wrap items-center gap-3 rounded-[6px] p-2"
+        data-layer="record"
+        tabindex="0"
+      >
+        <div class="flex -space-x-2">
+          {
+            ["EP", "RA", "SD"].map((initials, i) => (
+              <span
+                class="grid h-6 w-6 place-items-center rounded-full border border-white font-mono text-[9px] text-white"
+                style={`background:${["#0F1524", "#59657A", "#1F9D6B"][i]}`}
+              >
+                {initials}
+              </span>
+            ))
+          }
+        </div>
+        <span class="font-mono text-[11px] text-slate">3 contacts</span>
+        <span class="font-mono text-[13px] font-bold">$48,000</span>
+        <span class="h-[6px] flex-1 min-w-[120px] overflow-hidden rounded-full bg-paper">
+          <span class="block h-full w-[62%] bg-live"></span>
+        </span>
+        <span class="font-mono text-[11px] text-slate">62% used</span>
+        <span class="rounded-[3px] border border-rule px-2 py-[2px] font-mono text-[10px] text-slate">
+          retainer
+        </span>
+        <span class="rounded-[3px] border border-rule px-2 py-[2px] font-mono text-[10px] text-slate">
+          Q2
+        </span>
+      </div>
+
+      {/* Couche 2 — les heures, un attribut du mandat parmi d'autres */}
+      <div class="layer rounded-[6px] p-2" data-layer="hours" tabindex="0">
+        <div class="space-y-[6px]">
+          {
+            team.map((member) => (
+              <div class="flex items-center gap-3">
+                <span class="w-6 font-mono text-[10px] text-slate">{member.initials}</span>
+                <span class="h-[6px] flex-1 overflow-hidden rounded-full bg-paper">
+                  <span
+                    class="block h-full"
+                    style={`width:${member.pct}%;background:var(--color-${member.tone})`}
+                  />
+                </span>
+                <span class="w-[52px] text-right font-mono text-[11px]">{member.hours}</span>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+
+      {/* Couche 3 — les captures */}
+      <div class="layer relative h-10 rounded-[6px] p-2" data-layer="shots" tabindex="0">
+        <span class="label-mono absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-slate">
+          Shots
+        </span>
+        <div class="relative ml-14 h-full">
+          {
+            shots.map((hour) => (
+              <span
+                class="absolute top-1/2 h-[26px] w-[34px] -translate-y-1/2 rounded-[3px] border border-rule"
+                style={`left:${at(hour)};background:repeating-linear-gradient(45deg,#F3F5F7 0 4px,#fff 4px 8px)`}
+              />
+            ))
+          }
+        </div>
+      </div>
+
+      {/* Couche 4 — tâches et documents */}
+      <div class="layer relative h-8 rounded-[6px] p-2" data-layer="markers" tabindex="0">
+        <span class="label-mono absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-slate">
+          Tasks · docs
+        </span>
+        <div class="relative ml-14 h-full">
+          {
+            tasks.map((hour) => (
+              <span
+                class="absolute top-1/2 h-[7px] w-[7px] -translate-y-1/2 rounded-[1px] bg-hour"
+                style={`left:${at(hour)}`}
+              />
+            ))
+          }
+          {
+            docs.map((hour) => (
+              <span
+                class="absolute top-1/2 h-[7px] w-[7px] -translate-y-1/2 rounded-full bg-live"
+                style={`left:${at(hour)}`}
+              />
+            ))
+          }
+        </div>
+      </div>
+    </div>
+
+    {/* Inspecteur — hauteur réservée pour garder CLS ≈ 0. */}
+    <div class="mt-4 flex min-h-[58px] items-center border-t border-rule pt-4">
+      <p class="text-[14px] text-slate" data-inspector>
+        Every layer is attached to the same client project — hover to see what the record holds.
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .layer {
+    transition: background-color 0.12s ease;
+  }
+
+  .layer:hover,
+  .layer:focus-visible {
+    background-color: var(--color-paper);
+  }
+</style>
+
+<script define:vars={{ layers }}>
+  const inspector = document.querySelector("[data-inspector]");
+  const card = document.querySelector("[data-project-card]");
+
+  if (inspector && card) {
+    const fallback = inspector.textContent;
+    const details = Object.fromEntries(layers.map((layer) => [layer.id, layer.detail]));
+
+    const show = (event) => {
+      const layer = event.target.closest("[data-layer]");
+      if (layer) inspector.textContent = details[layer.dataset.layer] ?? fallback;
+    };
+
+    card.addEventListener("mouseover", show);
+    card.addEventListener("focusin", show);
+    card.addEventListener("mouseleave", () => {
+      inspector.textContent = fallback;
+    });
+  }
+</script>

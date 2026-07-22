@@ -1,0 +1,30 @@
+---
+import { PROOF_STATS } from "../../data/site";
+---
+
+<section class="bg-ink py-16 text-slate-on-ink">
+  <div class="container-page grid gap-12 min-[901px]:grid-cols-[1.3fr_1fr]">
+    <div>
+      <h2 class="text-[26px] font-bold text-white">
+        Built by an agency that got tired of paying four vendors.
+      </h2>
+      <p class="mt-4 max-w-[48ch] leading-relaxed">
+        DocuFlow runs TECHMA's own operations every day — the timers, the screenshots, the client
+        records, the docs. We ship what we use.
+      </p>
+    </div>
+
+    {/* ⚠️ Valeurs provisoires — voir src/data/site.ts avant mise en ligne. */}
+    <dl class="grid grid-cols-2 gap-6">
+      {
+        PROOF_STATS.map((stat) => (
+          <div class="border-l-2 border-hour pl-[14px]">
+            <dt class="sr-only">{stat.label}</dt>
+            <dd class="font-mono text-[24px] font-bold text-white">{stat.value}</dd>
+            <p class="font-mono text-[12px]">{stat.label}</p>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>

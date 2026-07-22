@@ -1,0 +1,81 @@
+@import "tailwindcss";
+@import "./fonts.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/jetbrains-mono/700.css";
+
+/* Design tokens — noms figés par le brief §5. Ne pas renommer. */
+@theme {
+  --color-ink: #0f1524;
+  --color-ink-raised: #161d30;
+  --color-ink-border: #2a3348;
+  --color-paper: #f3f5f7;
+  --color-hour: #e9a23b;
+  --color-hour-hover: #d8912f;
+  --color-live: #1f9d6b;
+  --color-slate: #59657a;
+  --color-slate-on-ink: #9aa6b8;
+  --color-rule: #d8dee6;
+
+  /* Fonds de bande — unis, jamais de dégradé. */
+  --color-band-mint: #eaf2ed;
+  --color-band-warm: #fbf3e6;
+
+  --font-display: "Cabinet Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Switzer", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-hour);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@utility container-page {
+  margin-inline: auto;
+  max-width: 1200px;
+  padding-inline: 24px;
+}
+
+@utility label-mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}

@@ -1,0 +1,151 @@
+---
+import { STACK, STACK_TOTAL, DOCUFLOW_PRICE } from "../../data/site";
+
+const CARD_W = 22; // % du conteneur
+const TARGET = 39; // point de convergence, en % du conteneur
+const LEFTS = [2, 26.3, 50.6, 74.9];
+
+/** Décalage vers le centre, exprimé en % de la largeur de la carte
+ *  (translateX en % est relatif à l'élément, pas au parent). */
+const shift = (i: number) => ((TARGET - LEFTS[i]) / CARD_W) * 100;
+---
+
+<section class="container-page py-[88px]">
+  <h2 class="max-w-[16ch] text-[clamp(28px,4vw,42px)]">Your stack has four logins and no memory.</h2>
+
+  <p class="mt-6 max-w-[62ch] text-[18px] leading-[1.55] text-slate">
+    A CRM that doesn't know the hours. A time tracker that doesn't know the client. A monitoring
+    tool that doesn't know the project. A wiki nobody opens. Four bills, four exports, and a
+    spreadsheet to glue it together.
+  </p>
+
+  <div class="fold relative mt-12 h-[300px]" data-fold>
+    {
+      STACK.map((item, i) => (
+        <article
+          class="bill absolute top-0 flex h-[220px] flex-col justify-between rounded-[6px] border border-rule bg-white p-5"
+          style={`left:${LEFTS[i]}%;width:${CARD_W}%;--tx:${shift(i)}%;--tilt:${(i - 1.5) * 3}deg;--i:${i}`}
+        >
+          <div>
+            <p class="font-semibold">{item.name}</p>
+            <p class="mt-1 text-[13px] text-slate">{item.note}</p>
+          </div>
+          <p class="font-mono text-[15px]">${item.price} /user/mo</p>
+        </article>
+      ))
+    }
+
+    <article
+      class="result absolute left-1/2 top-10 w-[300px] -translate-x-1/2 rounded-[8px] bg-ink p-6 text-white shadow-[0_24px_48px_-18px_rgba(15,21,36,.5)]"
+    >
+      <p class="font-display text-[18px] font-extrabold">DocuFlow</p>
+      <p class="mt-2 text-[14px] leading-relaxed text-slate-on-ink">
+        One login. Every hour, screenshot, client and document on the same client project.
+      </p>
+      <p class="mt-4 font-mono text-[15px] font-bold text-hour">${DOCUFLOW_PRICE} /user/mo</p>
+    </article>
+  </div>
+
+  <p class="caption relative mt-6 min-h-[24px] text-center font-mono text-[14px]">
+    <span class="before absolute inset-0">
+      Your stack — <span class="font-bold text-ink">${STACK_TOTAL} /user/mo</span>
+    </span>
+    <span class="after absolute inset-0">
+      One tool — <span class="font-bold text-hour">${DOCUFLOW_PRICE} /user/mo</span>
+    </span>
+  </p>
+</section>
+
+<style>
+  .bill {
+    transition:
+      transform 0.9s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    transition-delay: calc(var(--i) * 90ms), calc(var(--i) * 90ms + 200ms);
+  }
+
+  .result {
+    opacity: 0;
+    transform: translate(-50%, 30px) scale(0.92);
+    transition:
+      transform 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    transition-delay: 550ms;
+  }
+
+  .caption span {
+    transition: opacity 0.32s ease;
+  }
+  .before {
+    opacity: 1;
+    transition-delay: 400ms;
+  }
+  .after {
+    opacity: 0;
+    transition-delay: 620ms;
+  }
+
+  /* État final */
+  .fold.is-folded .bill {
+    transform: translateX(var(--tx)) rotate(var(--tilt)) scale(0.93);
+    opacity: 0;
+  }
+  .fold.is-folded .result {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+  .fold.is-folded ~ .caption .before {
+    opacity: 0;
+  }
+  .fold.is-folded ~ .caption .after {
+    opacity: 1;
+  }
+
+  /* Sous 900px les cartes s'empilent : le repli horizontal n'a plus de sens. */
+  @media (max-width: 900px) {
+    .fold {
+      height: 260px;
+    }
+    .bill {
+      display: none;
+    }
+    .result {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1);
+    }
+    .after {
+      opacity: 1;
+    }
+    .before {
+      opacity: 0;
+    }
+  }
+</style>
+
+<script>
+  const fold = document.querySelector<HTMLElement>("[data-fold]");
+
+  if (fold) {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (reduced) {
+      fold.classList.add("is-folded");
+    } else {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            observer.disconnect();
+            // Double rAF : garantit que l'état initial a été peint avant le
+            // changement de classe. Sans ça le navigateur saute la transition.
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() => fold.classList.add("is-folded"))
+            );
+          }
+        },
+        { threshold: 0.45 }
+      );
+      observer.observe(fold);
+    }
+  }
+</script>
