@@ -33,15 +33,75 @@ export const PROOF_STATS = [
   { value: "1,340", label: "client projects managed" },
 ];
 
+/** `name` et `href` viennent du handoff validé (`docs/design-handoff/Homepage.dc.html`)
+ *  et de la matrice de `docs/site-architecture.md` — ne pas les toucher sans Masdouk.
+ *
+ *  ⚠️ Les `blurb` sont des BROUILLONS, écrits ici le 23 juillet 2026, pas issus du
+ *  handoff. Ils passent par Masdouk avant mise en ligne, au même titre que le reste
+ *  de la copy. Chacun ne décrit que des fonctions qui existent — heures, captures,
+ *  projet client, documents. Aucune promesse de conformité (HIPAA, SOC 2…) ni
+ *  d'intégration tierce : ce sont des affirmations vérifiables, et au Canada une
+ *  indication trompeuse relève de la Loi sur la concurrence.
+ *
+ *  `icon` : nom Lucide, à tenir synchronisé avec `include` dans `astro.config.mjs`
+ *  — un nom absent de cette liste ne rend rien et ne casse pas le build. */
 export const SECTORS = [
-  { tag: "agency", name: "Digital agencies", href: "/solutions/digital-agencies" },
-  { tag: "software", name: "Development teams", href: "/solutions/software-teams" },
-  { tag: "advisory", name: "Consulting firms", href: "/solutions/consulting-firms" },
-  { tag: "finance", name: "Accountants", href: "/solutions/accounting-firms" },
-  { tag: "legal", name: "Legal services", href: "/solutions/legal-services" },
-  { tag: "outsourcing", name: "BPO teams", href: "/solutions/bpo-call-centers" },
-  { tag: "field", name: "Construction", href: "/solutions/construction" },
-  { tag: "placement", name: "Staffing agencies", href: "/solutions/staffing-agencies" },
+  {
+    tag: "agency",
+    name: "Digital agencies",
+    blurb: "Every hour and file on the client that pays for it.",
+    icon: "lucide:palette",
+    href: "/solutions/digital-agencies",
+  },
+  {
+    tag: "software",
+    name: "Development teams",
+    blurb: "Hours and screenshots filed against the project.",
+    icon: "lucide:code-xml",
+    href: "/solutions/software-teams",
+  },
+  {
+    tag: "advisory",
+    name: "Consulting firms",
+    blurb: "Show clients where the retainer actually went.",
+    icon: "lucide:presentation",
+    href: "/solutions/consulting-firms",
+  },
+  {
+    tag: "finance",
+    name: "Accountants",
+    blurb: "Billable hours backed by what happened.",
+    icon: "lucide:calculator",
+    href: "/solutions/accounting-firms",
+  },
+  {
+    tag: "legal",
+    name: "Legal services",
+    blurb: "Time logs and documents ready for review.",
+    icon: "lucide:scale",
+    href: "/solutions/legal-services",
+  },
+  {
+    tag: "outsourcing",
+    name: "BPO teams",
+    blurb: "Team activity without asking for a status update.",
+    icon: "lucide:headset",
+    href: "/solutions/bpo-call-centers",
+  },
+  {
+    tag: "field",
+    name: "Construction",
+    blurb: "Site hours and captures on the right job.",
+    icon: "lucide:hard-hat",
+    href: "/solutions/construction",
+  },
+  {
+    tag: "placement",
+    name: "Staffing agencies",
+    blurb: "Placed staff, their hours and their output.",
+    icon: "lucide:user-search",
+    href: "/solutions/staffing-agencies",
+  },
 ];
 
 export const PLANS = [

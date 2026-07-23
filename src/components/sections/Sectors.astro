@@ -1,24 +1,46 @@
 ---
+import { Icon } from "astro-icon/components";
 import { SECTORS } from "../../data/site";
 ---
 
-<section id="solutions" class="container-page py-[88px]">
+<section id="solutions" class="container-wide py-[88px]">
   <p class="mb-6 font-mono text-[13px]">
     <span class="text-hour">COMPLETED</span>{" "}
-    <span class="text-slate">— who it's for</span>
+    <span class="text-slate">- who it's for</span>
   </p>
 
   <h2 class="max-w-[16ch] text-[clamp(28px,4vw,42px)]">Teams that deliver for clients.</h2>
 
-  <div class="mt-10 grid grid-cols-1 gap-4 min-[561px]:grid-cols-2 min-[901px]:grid-cols-4">
+  {/* `auto-rows-fr` : toutes les rangées prennent la hauteur de la plus haute, donc
+      les huit tuiles sont identiques même quand un texte passe sur deux lignes et
+      son voisin sur une. Réglé par la grille et non en rognant la copy — la copy
+      change, et à chaque point de rupture ce n'est pas le même texte qui déborde. */}
+  <div
+    class="mt-10 grid grid-cols-1 auto-rows-fr gap-4 min-[561px]:grid-cols-2 min-[901px]:grid-cols-4"
+  >
     {
       SECTORS.map((sector) => (
         <a
           href={sector.href}
-          class="rounded-[6px] border border-rule bg-white p-5 transition-all duration-[120ms] hover:-translate-y-[2px] hover:border-hour"
+          class="group rounded-[6px] border border-rule bg-white p-5 transition-all duration-[120ms] hover:-translate-y-[2px] hover:border-hour"
         >
-          <p class="font-mono text-[11px] text-slate">{sector.tag}</p>
-          <p class="mt-1 text-[16px] font-semibold">{sector.name}</p>
+          {/* L'icône remplace l'ancienne étiquette mono (`agency`, `software`…) :
+              elle occupait la même ligne et disait la même chose en moins lisible.
+              Encre, jamais ambre — l'ambre marque l'étape courante ou l'action, une
+              seule fois par écran, et huit tuiles en feraient de la décoration.
+              `aria-hidden` : le nom du secteur juste dessous porte déjà le sens.
+
+              Le frisson est déclenché par la tuile entière (`group`), pas par
+              l'icône : viser l'icône obligerait à la survoler précisément alors
+              que c'est la carte qui est cliquable. */}
+          <Icon
+            name={sector.icon}
+            class="h-[22px] w-[22px] text-ink group-hover:animate-icon-shake"
+            aria-hidden="true"
+          />
+
+          <p class="mt-4 text-[16px] font-semibold">{sector.name}</p>
+          <p class="mt-1 text-[14px] leading-[1.6] text-slate">{sector.blurb}</p>
         </a>
       ))
     }
