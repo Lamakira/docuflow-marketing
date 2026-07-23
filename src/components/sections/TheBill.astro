@@ -3,8 +3,8 @@ import { STACK, STACK_TOTAL, DOCUFLOW_PRICE, PLANS } from "../../data/site";
 ---
 
 <section id="pricing" class="bg-ink py-[92px] text-slate-on-ink">
-  <div class="container-page">
-    <p class="mb-6 font-mono text-[13px] text-hour">COMPLETED — the bill</p>
+  <div class="container-wide">
+    <p class="mb-6 font-mono text-[13px] text-hour">COMPLETED - the bill</p>
 
     <div class="grid items-start gap-14 min-[901px]:grid-cols-2">
       <h2 class="text-[clamp(34px,5vw,56px)] text-white">Four tools.<br />One bill.</h2>
@@ -21,12 +21,16 @@ import { STACK, STACK_TOTAL, DOCUFLOW_PRICE, PLANS } from "../../data/site";
           ))
         }
 
+        {/* La hiérarchie des deux dernières lignes se joue au ton, plus à l'ambre :
+            le total de la pile s'efface, DocuFlow passe en blanc gras. L'ambre est
+            réservé à l'étape courante et à l'action suivante (règle de l'ambre
+            unique) — ici c'est le CTA qui la porte, pas un chiffre de reçu. */}
         <div class="mt-3 border-t border-ink-border pt-3">
-          <div class="flex justify-between py-[6px] font-medium text-white">
+          <div class="flex justify-between py-[6px]">
             <span>Your stack</span>
             <span>${STACK_TOTAL} /user/mo</span>
           </div>
-          <div class="flex justify-between py-[6px] font-bold text-hour">
+          <div class="flex justify-between py-[6px] font-bold text-white">
             <span>DocuFlow</span>
             <span>${DOCUFLOW_PRICE} /user/mo</span>
           </div>
@@ -35,10 +39,19 @@ import { STACK, STACK_TOTAL, DOCUFLOW_PRICE, PLANS } from "../../data/site";
     </div>
 
     <div class="mt-12 flex flex-wrap items-center justify-between gap-4">
-      <span class="rounded-[3px] border border-hour px-3 py-[5px] font-mono text-[12px] text-hour">
-        Beta pricing — subject to change
+      {/* Mise en garde, pas appel à l'action : elle sort de l'ambre. En ambre elle
+          rivalisait avec le CTA alors qu'elle dit « ne vous fiez pas encore à ce
+          prix » — le contraire d'une invitation à cliquer. */}
+      <span
+        class="rounded-[3px] border border-slate-on-ink px-3 py-[5px] font-mono text-[12px] text-slate-on-ink"
+      >
+        Beta pricing - subject to change
       </span>
-      <a href="/pricing" class="text-[15px] transition-colors hover:text-paper">
+
+      {/* `py-2` : la cible ne faisait que 23px de haut, sous le minimum de 24px
+          (WCAG 2.2 AA, 2.5.8). Padding et non hauteur fixe, pour que la zone
+          cliquable grandisse avec le texte s'il est traduit. */}
+      <a href="/pricing" class="py-2 text-[15px] transition-colors hover:text-paper">
         Compare all plans →
       </a>
     </div>
@@ -46,28 +59,52 @@ import { STACK, STACK_TOTAL, DOCUFLOW_PRICE, PLANS } from "../../data/site";
     <div class="mt-6 grid grid-cols-1 gap-4 min-[561px]:grid-cols-2 min-[901px]:grid-cols-4">
       {
         PLANS.map((plan) => (
+          /* `flex flex-col` + `mt-auto` sur le CTA : les notes font une ou deux
+             lignes selon le plan, et les boutons se retrouvaient décalés de 18px
+             d'une carte à l'autre. La grille égalisait déjà la hauteur des cartes,
+             pas celle de leur contenu. */
           <article
-            class={`rounded-[8px] p-6 ${
+            class={`flex flex-col rounded-[8px] p-6 ${
               plan.featured
                 ? "border-2 border-hour bg-paper text-ink"
                 : "border border-ink-border bg-ink-raised"
             }`}
           >
-            <p class={`font-semibold ${plan.featured ? "text-ink" : "text-white"}`}>{plan.name}</p>
+            {/* `h3` et non `p` : quatre offres tarifées sous le `h2` de la section
+                n'avaient aucune structure de titre. Police et graisse ramenées à
+                celles du `p` d'origine — c'est la sémantique qui change, pas le
+                rendu. */}
+            <h3
+              class={`font-sans font-semibold leading-normal tracking-normal ${plan.featured ? "text-ink" : "text-white"}`}
+            >
+              {plan.name}
+            </h3>
             <p
               class={`mt-2 font-mono text-[34px] font-bold ${plan.featured ? "text-ink" : "text-white"}`}
             >
               {plan.price}
             </p>
-            <p class={`mt-3 text-[13px] leading-snug ${plan.featured ? "text-slate" : ""}`}>
+            {/* `mb-6` porte l'écart minimal sous la note ; `mt-auto` sur le bouton
+                absorbe le reste. Un `pt-6` sur le lien serait écrasé par son
+                propre `py-[9px]`. */}
+            <p class={`mt-3 mb-6 text-[13px] leading-snug ${plan.featured ? "text-slate" : ""}`}>
               {plan.note}
             </p>
+
+            {/* Trois liens s'appelaient tous « Start free trial » et pointaient sur
+                la même URL : dans une liste de liens de lecteur d'écran ils étaient
+                indiscernables, et le plan choisi se perdait en chemin. Le `aria-label`
+                les distingue, le paramètre transporte le choix.
+                Bordure au repos en `slate-on-ink` : en `ink-border` elle tombait à
+                1,33:1 sur la carte, seul repère indiquant qu'il s'agit d'un bouton
+                (WCAG 1.4.11 exige 3:1 pour identifier un composant). */}
             <a
-              href="/signup"
-              class={`mt-6 block rounded-[6px] py-[9px] text-center text-[14px] font-medium transition-colors ${
+              href={`/signup?plan=${plan.name.toLowerCase()}`}
+              aria-label={`${plan.cta} - ${plan.name}`}
+              class={`mt-auto block rounded-[6px] py-[9px] text-center text-[14px] font-medium transition-colors ${
                 plan.featured
                   ? "bg-hour text-ink hover:bg-hour-hover"
-                  : "border border-ink-border text-white hover:border-slate-on-ink"
+                  : "border border-slate-on-ink text-white hover:border-white"
               }`}
             >
               {plan.cta}
