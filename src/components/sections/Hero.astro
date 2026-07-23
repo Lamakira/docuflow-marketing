@@ -3,18 +3,38 @@ import { STAGES } from "../../data/site";
 
 const CURRENT_STAGE = "IN PROGRESS";
 
+/** Barres neutres : la longueur porte la comparaison. Colorer les heures
+ *  donnerait à l'ambre un troisième sens (ni « étape courante », ni « action »)
+ *  et au vert un sens qu'il n'a pas ici. */
 const team = [
-  { initials: "AR", hours: "38.5 h", pct: 96, tone: "live" },
-  { initials: "JM", hours: "21.0 h", pct: 62, tone: "hour" },
-  { initials: "KT", hours: "12.2 h", pct: 32, tone: "slate" },
+  { initials: "AR", hours: "38.5 h", pct: 96 },
+  { initials: "JM", hours: "21.0 h", pct: 62 },
+  { initials: "KT", hours: "12.2 h", pct: 32 },
 ];
 
-const shots = [9.1, 10.3, 11.4, 13.3, 14.6, 16.1, 17.2];
-const tasks = [9.66, 12.9, 15.5, 17.8];
-const docs = [8.5, 13.4, 15.9, 16.8];
+/** Trois personnes, trois neutres. Un avatar vert ferait dire au vert
+ *  « confirmé » à propos d'un contact, ce qui ne veut rien dire. */
+const AVATAR_TONES = ["#0F1524", "#2A3348", "#59657A"];
 
-/** Position horizontale d'un marqueur sur la journée 08:00–18:00. */
-const at = (hour: number) => `${((hour - 8) / 10) * 100}%`;
+/** Les marqueurs étaient positionnés sur un axe 08:00–18:00 — le concept
+ *  « journée de travail » abandonné (docs/landing-corrections.md). L'axe n'était
+ *  jamais tracé ni légendé, donc il ne se lisait pas ; sous 400px il faisait se
+ *  chevaucher les vignettes. Ce qui compte est le nombre, pas l'heure. */
+const SHOT_COUNT = 7;
+const TASK_COUNT = 4;
+const DOC_COUNT = 4;
+
+/** Vignettes de capture — un rendu de l'interface DocuFlow à l'échelle du
+ *  pouce, dessiné en DOM. Ce sont des maquettes du produit (qui existe et
+ *  tourne en production), pas des preuves client : aucun logo, aucun chiffre
+ *  d'usage, aucun témoignage. La rayure « image retenue » se lisait
+ *  « rien à montrer » chez un prospect sceptique.
+ *  3 vignettes + « +4 » = les 7 captures annoncées par l'inspecteur. */
+const CAPTURES = [
+  { lines: [72, 48, 61], bars: [40, 65, 35, 80, 55] },
+  { lines: [58, 70, 44], bars: [70, 45, 85, 50, 62] },
+  { lines: [66, 52, 74], bars: [35, 75, 55, 45, 90] },
+];
 
 const layers = [
   { id: "record", detail: "Client record · 3 contacts · $48,000 budget · 62% used · 2 tags" },
@@ -24,185 +44,419 @@ const layers = [
 ];
 ---
 
-<section class="container-page pb-16 pt-[84px]">
-  <p class="mb-5 flex items-center gap-2 font-mono text-[13px]">
-    <span class="inline-block h-2 w-2 rounded-full bg-hour"></span>
-    <span class="text-hour">LEAD</span>
-    <span class="text-slate">— a new client project</span>
-  </p>
-
-  <h1 class="max-w-[15ch] text-[clamp(38px,6vw,66px)] leading-[1.02]">
-    One place for everything a client project leaves behind.
-  </h1>
-
-  <p class="mt-6 max-w-[62ch] text-[19px] leading-[1.55] text-slate">
-    Contacts, budgets, tasks, hours, screenshots and documents — all attached to the same client
-    project, in one tool. Service teams replace four subscriptions with DocuFlow.
-  </p>
-
-  <div class="mt-8 flex flex-wrap items-center gap-3">
-    <a
-      href="/signup"
-      class="rounded-[6px] bg-hour px-[22px] py-[13px] font-medium text-ink transition-colors hover:bg-hour-hover"
-    >
-      Start free trial
-    </a>
-    <a
-      href="/demo"
-      class="rounded-[6px] border border-rule bg-white px-[22px] py-[13px] font-medium transition-colors hover:border-ink"
-    >
-      Book a 15-minute demo
-    </a>
-  </div>
-
-  <p class="mt-4 font-mono text-[12.5px] text-slate">
-    No credit card. Desktop app for Windows, macOS and Linux.
-  </p>
-
-  {/* Carte projet : chaque couche est rattachée au même mandat client.
-      C'est la thèse de la page rendue littérale. */}
-  <div class="mt-12 rounded-[8px] border border-rule bg-white p-[22px_24px]" data-project-card>
-    <div class="flex items-baseline justify-between gap-4">
-      <p class="label-mono text-[11px] text-slate">One client project · everything attached</p>
-      <p class="font-mono text-[11px] text-slate">hover a layer →</p>
-    </div>
-
-    <div class="mt-3 flex items-center gap-3">
-      <p class="font-display text-[17px] font-bold">Northwind · Ledger rebuild</p>
-      <span class="rounded-[3px] bg-hour px-2 py-[3px] font-mono text-[10px] font-bold text-ink">
-        {CURRENT_STAGE}
-      </span>
-    </div>
-
-    <ol class="mt-3 flex flex-wrap items-center gap-2 font-mono text-[10px]">
-      {
-        STAGES.map((stage, i) => {
-          const index = STAGES.indexOf(CURRENT_STAGE as (typeof STAGES)[number]);
-          const tone =
-            i < index ? "text-slate" : i === index ? "text-hour font-bold" : "text-rule";
-          return (
-            <>
-              {i > 0 && <li class="h-px w-6 bg-rule" aria-hidden="true" />}
-              <li class={tone}>{stage}</li>
-            </>
-          );
-        })
-      }
-    </ol>
-
-    <div class="mt-5 space-y-4">
-      {/* Couche 1 — le dossier client */}
-      <div
-        class="layer flex flex-wrap items-center gap-3 rounded-[6px] p-2"
-        data-layer="record"
-        tabindex="0"
-      >
-        <div class="flex -space-x-2">
-          {
-            ["EP", "RA", "SD"].map((initials, i) => (
-              <span
-                class="grid h-6 w-6 place-items-center rounded-full border border-white font-mono text-[9px] text-white"
-                style={`background:${["#0F1524", "#59657A", "#1F9D6B"][i]}`}
-              >
-                {initials}
-              </span>
-            ))
-          }
-        </div>
-        <span class="font-mono text-[11px] text-slate">3 contacts</span>
-        <span class="font-mono text-[13px] font-bold">$48,000</span>
-        <span class="h-[6px] flex-1 min-w-[120px] overflow-hidden rounded-full bg-paper">
-          <span class="block h-full w-[62%] bg-live"></span>
-        </span>
-        <span class="font-mono text-[11px] text-slate">62% used</span>
-        <span class="rounded-[3px] border border-rule px-2 py-[2px] font-mono text-[10px] text-slate">
-          retainer
-        </span>
-        <span class="rounded-[3px] border border-rule px-2 py-[2px] font-mono text-[10px] text-slate">
-          Q2
-        </span>
-      </div>
-
-      {/* Couche 2 — les heures, un attribut du mandat parmi d'autres */}
-      <div class="layer rounded-[6px] p-2" data-layer="hours" tabindex="0">
-        <div class="space-y-[6px]">
-          {
-            team.map((member) => (
-              <div class="flex items-center gap-3">
-                <span class="w-6 font-mono text-[10px] text-slate">{member.initials}</span>
-                <span class="h-[6px] flex-1 overflow-hidden rounded-full bg-paper">
-                  <span
-                    class="block h-full"
-                    style={`width:${member.pct}%;background:var(--color-${member.tone})`}
-                  />
-                </span>
-                <span class="w-[52px] text-right font-mono text-[11px]">{member.hours}</span>
-              </div>
-            ))
-          }
-        </div>
-      </div>
-
-      {/* Couche 3 — les captures */}
-      <div class="layer relative h-10 rounded-[6px] p-2" data-layer="shots" tabindex="0">
-        <span class="label-mono absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-slate">
-          Shots
-        </span>
-        <div class="relative ml-14 h-full">
-          {
-            shots.map((hour) => (
-              <span
-                class="absolute top-1/2 h-[26px] w-[34px] -translate-y-1/2 rounded-[3px] border border-rule"
-                style={`left:${at(hour)};background:repeating-linear-gradient(45deg,#F3F5F7 0 4px,#fff 4px 8px)`}
-              />
-            ))
-          }
-        </div>
-      </div>
-
-      {/* Couche 4 — tâches et documents */}
-      <div class="layer relative h-8 rounded-[6px] p-2" data-layer="markers" tabindex="0">
-        <span class="label-mono absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-slate">
-          Tasks · docs
-        </span>
-        <div class="relative ml-14 h-full">
-          {
-            tasks.map((hour) => (
-              <span
-                class="absolute top-1/2 h-[7px] w-[7px] -translate-y-1/2 rounded-[1px] bg-hour"
-                style={`left:${at(hour)}`}
-              />
-            ))
-          }
-          {
-            docs.map((hour) => (
-              <span
-                class="absolute top-1/2 h-[7px] w-[7px] -translate-y-1/2 rounded-full bg-live"
-                style={`left:${at(hour)}`}
-              />
-            ))
-          }
-        </div>
-      </div>
-    </div>
-
-    {/* Inspecteur — hauteur réservée pour garder CLS ≈ 0. */}
-    <div class="mt-4 flex min-h-[58px] items-center border-t border-rule pt-4">
-      <p class="text-[14px] text-slate" data-inspector>
-        Every layer is attached to the same client project — hover to see what the record holds.
+{/* Deux colonnes au-dessus de 1240px : la preuve (la carte) doit tenir dans le
+    premier écran, sinon la thèse de la page reste une affirmation. En dessous,
+    on empile — c'est aussi le seuil d'apparition du rail. */}
+{/* overflow-x clip : la carte penchée déborde de quelques pixels, on ne veut
+    pas d'ascenseur horizontal pour autant. `clip` plutôt que `hidden` — hidden
+    créerait un conteneur de défilement et casserait le sticky de la nav. */}
+<section class="pb-16 pt-16 [overflow-x:clip]">
+  {/* Ratio rééquilibré : le conteneur porte désormais le débord droit, la
+      carte n'a plus de marge négative — sans réajustement elle rétrécirait. */}
+  <div class="container-wide grid items-center gap-14 min-[1240px]:grid-cols-[1fr_1.2fr]">
+    <div>
+      {/* L'ambre est réservé à deux marques dans cet écran : le CTA et la puce
+          d'étape de la carte. L'étiquette d'étape passe en ink — #E9A23B sur
+          paper ne fait que 1,98:1. */}
+      <p class="mb-5 flex items-center gap-2 font-mono text-[13px]">
+        <span class="inline-block h-2 w-2 rounded-full bg-slate"></span>
+        <span class="text-ink">LEAD</span>
+        <span class="text-slate">- a new client project</span>
       </p>
+
+      <h1 class="max-w-[15ch] text-[clamp(38px,6vw,66px)] leading-[1.02]">
+        One place for everything a client project leaves behind.
+      </h1>
+
+      <p class="mt-6 max-w-[62ch] text-[19px] leading-[1.55] text-slate">
+        Contacts, budgets, tasks, hours, screenshots and documents - all attached to the same client
+        project, in one tool. Service teams replace four subscriptions with DocuFlow.
+      </p>
+
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <a
+          href="/signup"
+          class="rounded-[6px] bg-hour px-[22px] py-[13px] font-medium text-ink transition-colors hover:bg-hour-hover"
+        >
+          Start free trial
+        </a>
+        <a
+          href="/demo"
+          class="rounded-[6px] border border-rule bg-white px-[22px] py-[13px] font-medium transition-colors hover:border-ink"
+        >
+          Book a 15-minute demo
+        </a>
+      </div>
+
+      <p class="mt-4 font-mono text-[13px] text-slate">
+        No credit card. Desktop app for Windows, macOS and Linux.
+      </p>
+    </div>
+
+    {/* Carte projet : chaque couche est rattachée au même mandat client.
+        C'est la thèse de la page rendue littérale. Les quatre couches partagent
+        une gouttière d'étiquettes — « quatre choses, un projet » doit se lire
+        sans survol. */}
+    <div class="project-card rounded-[8px] border border-rule bg-white p-5" data-project-card>
+      <div class="flex items-baseline justify-between gap-4">
+        <p class="label-mono text-[11px] text-slate">One client project · everything attached</p>
+        <p class="font-mono text-[11px] text-slate">hover a layer →</p>
+      </div>
+
+      <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <p class="font-display text-[17px] font-bold">Northwind · Ledger rebuild</p>
+        <span class="rounded-[3px] bg-hour px-2 py-[3px] font-mono text-[10px] font-bold text-ink">
+          {CURRENT_STAGE}
+        </span>
+      </div>
+
+      <ol class="mt-3 flex flex-wrap items-center gap-2 font-mono text-[10px]">
+        {
+          /* Les cinq libellés restent lisibles (slate, 5,8:1). C'est le filet
+             de liaison — décoratif, aria-hidden — qui porte la progression :
+             plein jusqu'à l'étape courante, pâle ensuite. Encoder « à venir »
+             par du texte à 1,35:1 revenait à l'effacer. */
+          STAGES.map((stage, i) => {
+            const index = STAGES.indexOf(CURRENT_STAGE as (typeof STAGES)[number]);
+            const tone = i === index ? "text-ink font-bold" : "text-slate";
+            return (
+              /* Le filet de liaison vit dans le <li> : une liste de cinq
+                 étapes, pas de neuf éléments dont quatre décoratifs. */
+              <li class="flex items-center gap-2">
+                {i > 0 && (
+                  <span
+                    class={`h-px w-6 ${i <= index ? "bg-slate" : "bg-rule"}`}
+                    aria-hidden="true"
+                  />
+                )}
+                <span class={tone}>{stage}</span>
+              </li>
+            );
+          })
+        }
+      </ol>
+
+      {/* Quatre lignes de registre : filet 1 px entre chacune, 16 px de part et
+          d'autre. La gouttière d'étiquettes aligne les quatre piliers. */}
+      <div class="mt-4 divide-y divide-rule border-y border-rule">
+        {/* Couche 1 — le dossier client */}
+        <div
+          class="layer grid grid-cols-[56px_1fr] items-center gap-3 py-4"
+          data-layer="record"
+        >
+          <span class="gutter label-mono text-[9px] break-words text-slate" id="layer-label-record">Client</span>
+
+          <div>
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <div class="flex -space-x-2">
+                {
+                  ["EP", "RA", "SD"].map((initials, i) => (
+                    <span
+                      class="grid h-6 w-6 place-items-center rounded-full border border-white font-mono text-[9px] text-white"
+                      style={`background:${AVATAR_TONES[i]}`}
+                    >
+                      {initials}
+                    </span>
+                  ))
+                }
+              </div>
+              <span class="font-mono text-[11px] text-slate">3 contacts</span>
+              <span
+                class="rounded-[3px] border border-rule px-2 py-[2px] font-mono text-[10px] text-slate"
+              >
+                retainer
+              </span>
+              <span
+                class="rounded-[3px] border border-rule px-2 py-[2px] font-mono text-[10px] text-slate"
+              >
+                Q2
+              </span>
+            </div>
+
+            <div class="mt-2 flex items-center gap-3">
+              <span class="font-mono text-[13px] font-bold">$48,000</span>
+              <span
+                class="h-[6px] w-full max-w-[180px] overflow-hidden rounded-full bg-paper"
+              >
+                <span class="block h-full w-[62%] bg-live"></span>
+              </span>
+              <span class="font-mono text-[11px] text-slate">62% used</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Couche 2 — les heures, un attribut du mandat parmi d'autres */}
+        <div
+          class="layer grid grid-cols-[56px_1fr] items-center gap-3 py-4"
+          data-layer="hours"
+        >
+          <span class="gutter label-mono text-[9px] break-words text-slate" id="layer-label-hours">Hours</span>
+
+          <div class="space-y-[6px]">
+            {
+              team.map((member) => (
+                <div class="flex items-center gap-3">
+                  <span class="w-6 font-mono text-[10px] text-slate">{member.initials}</span>
+                  <span class="h-[6px] flex-1 overflow-hidden rounded-full bg-paper">
+                    <span class="block h-full bg-slate" style={`width:${member.pct}%`} />
+                  </span>
+                  <span class="w-[52px] text-right font-mono text-[11px]">{member.hours}</span>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+
+        {/* Couche 3 — les captures */}
+        <div
+          class="layer grid grid-cols-[56px_1fr] items-center gap-3 py-4"
+          data-layer="shots"
+        >
+          <span class="gutter label-mono text-[9px] break-words text-slate" id="layer-label-shots">Shots</span>
+
+          {/* Filmstrip : les vignettes rétrécissent au lieu de se chevaucher. */}
+          <div class="flex items-stretch gap-2">
+            {
+              /* Sous 561px on n'en montre que deux : trois vignettes dans
+                 200px donneraient des rectangles verticaux, ce qui ne
+                 ressemble plus à une capture d'écran. */
+              CAPTURES.map((capture, i) => (
+                <span class={`capture ${i === 2 ? "capture-extra" : ""}`}>
+                  <span class="capture-bar">
+                    <i /><i /><i />
+                  </span>
+                  <span class="capture-body">
+                    <span class="capture-side" />
+                    <span class="capture-main">
+                      {capture.lines.map((w) => <i style={`width:${w}%`} />)}
+                      <span class="capture-chart">
+                        {capture.bars.map((h) => <i style={`height:${h}%`} />)}
+                      </span>
+                    </span>
+                  </span>
+                </span>
+              ))
+            }
+            <span class="capture-more font-mono">
+              <span class="min-[561px]:hidden">+{SHOT_COUNT - 2}</span>
+              <span class="hidden min-[561px]:inline">+{SHOT_COUNT - CAPTURES.length}</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Couche 4 — tâches et documents */}
+        <div
+          class="layer grid grid-cols-[56px_1fr] items-center gap-3 py-4"
+          data-layer="markers"
+        >
+          <span class="gutter label-mono text-[9px] break-words text-slate" id="layer-label-markers">Tasks · docs</span>
+
+          {/* Carré = tâche, rond = document : la forme porte la légende, la
+              couleur n'a donc pas à dépenser l'ambre pour l'encoder. Groupés
+              plutôt qu'éparpillés — « quatre et quatre » se compte à l'œil. */}
+          <div class="flex h-4 items-center gap-5">
+            <div class="flex items-center gap-2">
+              {
+                Array.from({ length: TASK_COUNT }).map(() => (
+                  <span class="h-[7px] w-[7px] shrink-0 rounded-[1px] bg-ink" />
+                ))
+              }
+            </div>
+            <div class="flex items-center gap-2">
+              {
+                Array.from({ length: DOC_COUNT }).map(() => (
+                  <span class="h-[7px] w-[7px] shrink-0 rounded-full bg-live" />
+                ))
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Inspecteur — hauteur réservée pour garder CLS ≈ 0. Le texte passe à
+          trois lignes sous 561px : la réserve suit, sinon la garantie saute
+          précisément là où elle compte le plus. */}
+      <div class="mt-4 flex min-h-[80px] items-center min-[561px]:min-h-[58px]">
+        <p
+          class="text-[14px] text-slate"
+          id="project-inspector"
+          aria-live="polite"
+          data-inspector
+        >
+          Every layer is attached to the same client project - hover to see what the record holds.
+        </p>
+      </div>
     </div>
   </div>
 </section>
 
 <style>
-  .layer {
-    transition: background-color 0.12s ease;
+  /* La carte penche au repos et se redresse au survol. Micro-interaction sur
+     un seul élément — l'animation majeure de la page reste le repli de la pile.
+     Uniquement au-dessus de 1240px : empilée en pleine largeur, une carte
+     penchée déborderait et n'aurait plus de contrepoint. */
+  @media (min-width: 1240px) {
+    .project-card {
+      /* Le débord droit vit maintenant sur `container-wide`, partagé avec
+         l'en-tête et toutes les sections : la carte remplit simplement sa
+         colonne et son bord droit EST le bord droit de la page. */
+      transform: rotate(1.6deg);
+      transform-origin: center;
+      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      /* Exception assumée à « pas d'ombre là où un filet suffit » : un plan
+         incliné sans profondeur se lit comme un bug de rendu, pas comme une
+         intention. Même valeur que l'ombre d'arrivée du repli. */
+      box-shadow: 0 24px 48px -18px rgb(15 21 36 / 0.5);
+    }
+
+    .project-card:hover,
+    .project-card:focus-within {
+      transform: rotate(0deg);
+    }
   }
 
-  .layer:hover,
-  .layer:focus-visible {
+  /* Vignettes de capture : une fenêtre DocuFlow à l'échelle du pouce. */
+  .capture {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 0;
+    height: 48px;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--color-rule);
+    border-radius: 3px;
+    background: #fff;
+  }
+
+  /* Masquage dans la feuille scopée : le sélecteur d'Astro (.capture[data-astro-cid])
+     bat `.hidden` de Tailwind en spécificité, une utilitaire n'aurait rien fait. */
+  .capture-extra {
+    display: none;
+  }
+
+  @media (min-width: 561px) {
+    .capture {
+      height: 84px;
+    }
+
+    .capture-extra {
+      display: flex;
+    }
+  }
+
+  .capture-bar {
+    display: flex;
+    height: 10px;
+    flex: none;
+    align-items: center;
+    gap: 2px;
+    border-bottom: 1px solid var(--color-rule);
+    background: var(--color-paper);
+    padding-inline: 4px;
+  }
+
+  .capture-bar i {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--color-rule);
+  }
+
+  .capture-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .capture-side {
+    width: 13px;
+    flex: none;
+    border-right: 1px solid var(--color-rule);
+    background: var(--color-paper);
+  }
+
+  .capture-main {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 3px;
+    padding: 5px;
+  }
+
+  .capture-main > i {
+    display: block;
+    height: 2px;
+    flex: none;
+    border-radius: 1px;
+    background: var(--color-rule);
+  }
+
+  .capture-chart {
+    display: flex;
+    height: 22px;
+    margin-top: auto;
+    align-items: flex-end;
+    gap: 2px;
+  }
+
+  .capture-chart i {
+    min-width: 0;
+    flex: 1;
+    border-radius: 1px;
+    background: var(--color-rule);
+  }
+
+  .capture-more {
+    display: grid;
+    width: 34px;
+    flex: none;
+    place-items: center;
+    border: 1px solid var(--color-rule);
+    border-radius: 3px;
+    background: var(--color-paper);
+    font-size: 10px;
+    color: var(--color-slate);
+  }
+
+  /* Les couches ne deviennent interactives que si le script s'exécute — sans
+     JS elles restent du contenu lisible, pas de faux boutons. */
+  .layer.is-interactive {
+    cursor: pointer;
+    transition:
+      background-color 0.12s ease,
+      color 0.12s ease;
+  }
+
+  .layer.is-interactive:focus-visible,
+  .layer.is-active {
     background-color: var(--color-paper);
+  }
+
+  .layer.is-interactive:focus-visible .gutter,
+  .layer.is-active .gutter {
+    color: var(--color-ink);
+  }
+
+  /* Le survol n'existe que là où il existe vraiment : sur tactile il
+     laisserait un état collé après le tap. */
+  @media (hover: hover) {
+    .layer.is-interactive:hover {
+      background-color: var(--color-paper);
+    }
+
+    .layer.is-interactive:hover .gutter {
+      color: var(--color-ink);
+    }
+  }
+
+  /* Le fond paper disparaît en contraste forcé : garder un repère de forme. */
+  @media (forced-colors: active) {
+    .layer.is-interactive:hover,
+    .layer.is-interactive:focus-visible,
+    .layer.is-active {
+      outline: 1px solid CanvasText;
+    }
   }
 </style>
 
@@ -213,16 +467,68 @@ const layers = [
   if (inspector && card) {
     const fallback = inspector.textContent;
     const details = Object.fromEntries(layers.map((layer) => [layer.id, layer.detail]));
+    const els = [...card.querySelectorAll("[data-layer]")];
 
-    const show = (event) => {
-      const layer = event.target.closest("[data-layer]");
-      if (layer) inspector.textContent = details[layer.dataset.layer] ?? fallback;
+    // Amélioration progressive : le balisage livre des lignes inertes, le
+    // script les promeut en boutons. Nom accessible repris de l'étiquette de
+    // gouttière déjà à l'écran — aucune chaîne nouvelle.
+    for (const el of els) {
+      el.setAttribute("role", "button");
+      el.setAttribute("tabindex", "0");
+      el.setAttribute("aria-controls", "project-inspector");
+      el.setAttribute("aria-labelledby", `layer-label-${el.dataset.layer}`);
+      el.classList.add("is-interactive");
+    }
+
+    let pinned = null;
+    let shown = null;
+
+    const render = (id) => {
+      if (shown === id) return; // évite de réécrire le live region à chaque mouseover
+      shown = id;
+      inspector.textContent = id ? details[id] : fallback;
     };
 
-    card.addEventListener("mouseover", show);
-    card.addEventListener("focusin", show);
-    card.addEventListener("mouseleave", () => {
-      inspector.textContent = fallback;
+    const clear = () => render(pinned ? pinned.dataset.layer : null);
+
+    const pin = (el) => {
+      pinned = el;
+      for (const other of els) other.classList.toggle("is-active", other === el);
+      render(el.dataset.layer);
+    };
+
+    const layerFrom = (event) => event.target.closest("[data-layer]");
+
+    card.addEventListener("mouseover", (event) => {
+      const layer = layerFrom(event);
+      // Repasser par clear() dans les 16 px entre deux lignes, sinon
+      // l'inspecteur garde le texte d'une couche qu'on a déjà quittée.
+      layer ? render(layer.dataset.layer) : clear();
+    });
+    card.addEventListener("mouseleave", clear);
+
+    card.addEventListener("focusin", (event) => {
+      const layer = layerFrom(event);
+      if (layer) render(layer.dataset.layer);
+    });
+    card.addEventListener("focusout", (event) => {
+      if (!card.contains(event.relatedTarget)) clear();
+    });
+
+    // Tactile : sans clic, la carte n'a aucune interaction sur mobile.
+    card.addEventListener("click", (event) => {
+      const layer = layerFrom(event);
+      if (layer) pin(layer);
+    });
+
+    // role="button" impose de câbler Entrée et Espace à la main.
+    card.addEventListener("keydown", (event) => {
+      const layer = layerFrom(event);
+      if (!layer) return;
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        pin(layer);
+      }
     });
   }
 </script>
