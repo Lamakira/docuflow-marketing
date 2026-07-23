@@ -1,4 +1,6 @@
 ---
+import { Icon } from "astro-icon/components";
+
 const guarantees = [
   "A visible indicator shows the team exactly when the timer is running.",
   "Screenshots can be blurred so content is never legible.",
@@ -9,11 +11,14 @@ const guarantees = [
 
 {/* Section à part entière, pas une note de bas de page : c'est l'objection
     principale d'un dirigeant, et au Québec c'est aussi un sujet de conformité (Loi 25). */}
-<section class="bg-paper py-[88px]">
-  <div class="container-page">
-    <div class="grid gap-12 rounded-[8px] border border-rule bg-white p-12 min-[901px]:grid-cols-2">
+{/* Bande blanche pleine largeur. Le blanc était sur une carte posée sur du paper —
+    deux surfaces pour un seul rôle. Promu à la bande, il sépare `AiAnswer` (paper)
+    en amont et `Sectors` (paper) en aval sans ajouter de token ni de filet. */}
+<section class="bg-white py-[88px]">
+  <div class="container-wide">
+    <div class="grid gap-12 min-[901px]:grid-cols-2">
       <div>
-        <p class="label-mono text-[11px] text-live">Transparency</p>
+        <p class="label-mono text-[11px] text-live-on-light">Transparency</p>
         <h2 class="mt-4 max-w-[16ch] text-[clamp(28px,4vw,42px)]">
           Monitoring people can live with.
         </h2>
@@ -24,13 +29,24 @@ const guarantees = [
         </p>
       </div>
 
+      {/* La carte qui les contenait a disparu : sans son filet, du paper sur blanc
+          (1,09:1) ne délimite plus rien. Le filet 1 px porte le bord, le fond ne fait
+          plus que nuancer. Le texte, lui, reste à 16,7:1 sur la puce. */}
       <ul class="space-y-3">
         {
           guarantees.map((item) => (
-            <li class="flex items-start gap-3 rounded-[6px] bg-paper p-4">
-              <span class="mt-[2px] grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full bg-live text-[11px] text-white">
-                ✓
-              </span>
+            <li class="flex items-start gap-3 rounded-[6px] border border-rule bg-paper p-4">
+              {/* Le cercle fait partie du tracé : plus de pastille pleine autour,
+                  l'icône se colore seule en `currentColor`. `mt-[2px]` la cale sur
+                  la première ligne de texte, pas sur le haut de la puce.
+                  `aria-hidden` : les quatre icônes sont identiques, elles ne disent
+                  rien que la ligne ne dise déjà — les annoncer ajouterait « coche »
+                  quatre fois devant chaque garantie. */}
+              <Icon
+                name="lucide:circle-check"
+                class="mt-[2px] h-[18px] w-[18px] shrink-0 text-live-on-light"
+                aria-hidden="true"
+              />
               <span class="text-[15px] leading-snug">{item}</span>
             </li>
           ))

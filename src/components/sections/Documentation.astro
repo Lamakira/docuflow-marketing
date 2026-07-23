@@ -1,13 +1,21 @@
 ---
 import PillarSection from "../PillarSection.astro";
+
+interface Props {
+  /** Posé par `index.astro` d'après le rang du pilier — jamais en dur ici. */
+  reverse?: boolean;
+}
+
+const { reverse = false } = Astro.props;
 ---
 
 <PillarSection
   stage="IN PROGRESS"
   note="the documentation"
   heading="Write it where the work is."
-  body="The block editor lives inside the client project — specs, meeting notes, statements of work, nested pages, reusable templates. Not a separate wiki nobody opens, because it's already where the work is."
+  body="The block editor lives inside the client project - specs, meeting notes, statements of work, nested pages, reusable templates. Not a separate wiki nobody opens, because it's already where the work is."
   band="bg-band-warm"
+  reverse={reverse}
 >
   {/* Maquette d'éditeur de blocs. La poignée à six points signale un vrai éditeur —
       c'est le détail qui distingue d'un simple champ de texte. */}
@@ -24,13 +32,13 @@ import PillarSection from "../PillarSection.astro";
       </div>
 
       <p class="text-[14px] leading-[1.7] text-slate">
-        Move the existing ledger to the new schema. No new reporting surface in this phase — the
+        Move the existing ledger to the new schema. No new reporting surface in this phase - the
         April 3 call fixed the scope to a two-sprint window.
       </p>
 
       <label class="flex items-center gap-2 text-[14px]">
         <span
-          class="grid h-[18px] w-[18px] place-items-center rounded-[3px] bg-live text-[11px] text-white"
+          class="grid h-[18px] w-[18px] place-items-center rounded-[3px] bg-live-on-light text-[11px] text-white"
           >✓</span
         >
         <span class="text-slate line-through">Sign off migration plan with Elena</span>

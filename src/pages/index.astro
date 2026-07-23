@@ -12,20 +12,35 @@ import Sectors from "../components/sections/Sectors.astro";
 import TheBill from "../components/sections/TheBill.astro";
 import FinalCta from "../components/sections/FinalCta.astro";
 
-const title = "DocuFlow — clients, hours and documentation in one tool";
+const title = "DocuFlow - clients, hours and documentation in one tool";
 const description =
   "Contacts, budgets, tasks, hours, screenshots and documents on the same client project. Service teams replace four subscriptions with DocuFlow.";
+
+/** Les quatre piliers, dans l'ordre du cycle de vie d'un mandat : un pilier, une section.
+ *  C'est la source unique de l'alternance — le visuel passe à gauche un rang sur deux
+ *  (rang pair = visuel à gauche), et `reverse` en découle. Aucune section ne pose ce
+ *  drapeau elle-même : réordonner, insérer ou retirer un pilier ici garde le rythme juste.
+ *  L'alternance est purement visuelle — voir `PillarSection.astro` pour l'ordre du DOM. */
+const PILLARS = [ClientRecord, Hours, Documentation, AiAnswer];
+
+/** Rythme des bandes — indépendant de l'alternance des visuels ci-dessus, mais soumis
+ *  à une règle : **deux sections voisines ne partagent jamais le même fond**, c'est
+ *  la seule frontière entre elles (pas de filet de séparation, brief §5).
+ *
+ *    paper → ink → paper → mint → paper → warm → paper → white → paper → ink → hour
+ *    Hero   Proof  Stack   Client  Hours   Docs   Ai      Transp  Sectors Bill  Cta
+ *
+ *  Les teintes alternent avec paper au lieu de se grouper, et le warm reste tardif :
+ *  la progression froid → chaud du brief est préservée. Le vert `live` du libellé
+ *  d'étape suit la bande mint — les deux appartiennent à la même section.
+ *  Insérer une section ici, c'est vérifier ses deux voisins. */
 ---
 
 <Layout title={title} description={description}>
-  {/* L'ordre suit le cycle de vie d'un mandat client : un pilier, une section. */}
   <Hero />
   <ProofBand />
   <StackFold />
-  <ClientRecord />
-  <Hours />
-  <Documentation />
-  <AiAnswer />
+  {PILLARS.map((Pillar, i) => <Pillar reverse={i % 2 === 0} />)}
   <Transparency />
   <Sectors />
   <TheBill />

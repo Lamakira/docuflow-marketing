@@ -7,7 +7,9 @@ interface Props {
   /** Fond de bande — uni, jamais de dégradé (brief §5). */
   band?: string;
   stageTone?: "hour" | "live";
-  /** Place le visuel à gauche pour casser l'alternance. */
+  /** Place le visuel à gauche. Dérivé du rang du pilier dans `index.astro` — la
+   *  section ne décide pas de son propre côté, sinon l'alternance se perd au
+   *  premier réordonnancement. Purement visuel : voir l'ordre du DOM plus bas. */
   reverse?: boolean;
 }
 
@@ -22,22 +24,164 @@ const {
 } = Astro.props;
 ---
 
-<section class={`${band} py-[88px]`}>
-  <div class="container-page">
-    <p class="mb-6 font-mono text-[13px]">
-      <span class={stageTone === "live" ? "text-live" : "text-hour"}>{stage}</span>{" "}
-      <span class="text-slate">— {note}</span>
+{/* `data-pillar` / `data-reveal` : le script est hissé une seule fois par Astro
+    pour les quatre instances, il lui faut donc des crochets dans le DOM plutôt
+    qu'une portée de composant. L'ordre des `data-reveal` dans le balisage EST
+    l'ordre d'arrivée du stagger — le libellé d'étape mène. */}
+<section class={`pillar ${band} py-[88px]`} data-pillar>
+  <div class="container-wide">
+    <p class="mb-6 font-mono text-[13px]" data-reveal>
+      <span class={stageTone === "live" ? "text-live-on-light" : "text-hour"}>{stage}</span>{" "}
+      <span class="text-slate">- {note}</span>
     </p>
 
-    <div class="grid items-center gap-14 min-[901px]:grid-cols-2">
-      <div class={reverse ? "min-[901px]:order-2" : ""}>
+    {/* Titre puis visuel dans le DOM, dans les quatre sections sans exception :
+        le côté se joue à l'affichage (`order-*`), pas dans le balisage, pour que
+        la narration et le parcours au clavier restent identiques d'une section à
+        l'autre. Ordres scopés à `min-[901px]:` — en colonne unique, le titre
+        arrive toujours avant son visuel. */}
+    <div class="pillar-grid grid items-center gap-14 min-[901px]:grid-cols-2">
+      <div class={reverse ? "min-[901px]:order-2" : ""} data-reveal>
         <h2 class="max-w-[18ch] text-[clamp(28px,4vw,42px)]">{heading}</h2>
         <p class="mt-5 max-w-[52ch] text-[18px] leading-[1.55] text-slate">{body}</p>
       </div>
 
-      <div class={reverse ? "min-[901px]:order-1" : ""}>
+      <div class={reverse ? "min-[901px]:order-1" : ""} data-reveal>
         <slot />
       </div>
     </div>
   </div>
 </section>
+
+<style>
+  /* Point de fuite commun aux trois éléments : c'est lui qui les fait lire
+     comme une seule étoffe et non trois objets pivotant chacun pour soi.
+     Posé sur le conteneur, jamais sur les éléments.
+
+     `perspective` ne s'applique qu'aux ENFANTS directs. Le libellé en est un ;
+     les deux colonnes sont des petits-enfants, d'où `preserve-3d` sur la grille
+     — sans lui elles seraient aplaties et le pivot n'aurait aucune profondeur.
+
+     Aucune de ces deux règles ne masque quoi que ce soit : sans JS, elles ne
+     font rien du tout. L'état initial vient de `gsap.set()`, jamais d'ici. */
+  .pillar .container-wide {
+    perspective: 1200px;
+  }
+
+  .pillar-grid {
+    transform-style: preserve-3d;
+  }
+
+  /* Le bord bas bascule VERS le spectateur : la perspective l'agrandit et le
+     projette ~43px hors du conteneur (mesuré à 1920). Aucune barre n'apparaît
+     pour autant — la bande est pleine largeur, le débord tombe hors viewport,
+     et `scrollWidth` ne bouge pas à 1920 / 1440 / 900 / 375. Le garde-fou reste :
+     la marge est mince à droite et un futur ajustement de `--edge-extra` la
+     mangerait. `clip` et non `hidden` : `hidden` créerait un conteneur de
+     défilement et casserait le collant de la nav. */
+  .pillar {
+    overflow-x: clip;
+  }
+</style>
+
+<script>
+  import gsap from "gsap";
+  import ScrollTrigger from "gsap/ScrollTrigger";
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  /** Réversibilité à l'essai : le reveal se rejoue dans les deux sens, aux deux
+   *  bords du trigger. Si le fondu de sortie par le haut se révèle distrayant,
+   *  repasser en déclenchement unique tient en une ligne — remplacer par :
+   *  const TOGGLE_ACTIONS = "play none none none";
+   *  Ordre des quatre actions : onEnter, onLeave, onEnterBack, onLeaveBack. */
+  const TOGGLE_ACTIONS = "play reverse play reverse";
+
+  /** Réglages de direction artistique — les deux seuls chiffres à toucher pour
+   *  régler l'allure. Ils se lisent ensemble, pas séparément : c'est leur RAPPORT
+   *  qui décide si la cascade se lit ou non.
+   *
+   *  Avec 0,7 s et 0,09 s de décalage, les trois fenêtres d'animation étaient
+   *  [0–0,70] [0,09–0,79] [0,18–0,88] : plus de 90 % de recouvrement. À l'aller
+   *  l'étoffe arrivait quasiment d'un bloc, et au retour les trois éléments se
+   *  dissolvaient ensemble — l'ordre inverse existait dans la timeline mais
+   *  restait invisible. D'où : durée plus longue, et surtout décalage bien plus
+   *  ample par rapport à elle.
+   *
+   *  Fenêtres actuelles : [0–1,00] [0,22–1,22] [0,44–1,44]. */
+  const REVEAL_DURATION = 1;
+  const REVEAL_STAGGER = 0.22;
+
+  /** Combien de pixels de la section doivent être dans la fenêtre pour qu'elle
+   *  compte comme « à l'écran ». Sert aux DEUX bornes, donc à l'apparition comme
+   *  à la disparition, dans les deux sens de défilement. Trop petit : le reveal
+   *  se joue pendant que la section est encore sous la ligne de flottaison et on
+   *  n'en voit que la fin. Trop grand : elle se vide sous les yeux du lecteur. */
+  const ENTER_MARGIN = 120;
+
+  const sections = gsap.utils.toArray<HTMLElement>("[data-pillar]");
+
+  if (sections.length) {
+    const mm = gsap.matchMedia();
+
+    // Mouvement réduit : pas de version raccourcie, pas d'animation du tout.
+    // La branche n'est jamais montée, donc `gsap.set()` n'est jamais appelé et
+    // le contenu n'a jamais d'état masqué à récupérer.
+    mm.add("(prefers-reduced-motion: no-preference)", () => {
+      sections.forEach((section) => {
+        const targets = gsap.utils.toArray<HTMLElement>("[data-reveal]", section);
+
+        // L'état masqué est posé PAR le script, jamais par une règle CSS : si ce
+        // fichier ne s'exécute pas, rien n'est jamais caché et la page reste lisible.
+        gsap.set(targets, { opacity: 0, y: 12, rotationX: 15, transformOrigin: "top center" });
+
+        gsap.to(targets, {
+          opacity: 1,
+          y: 0,
+          rotationX: 0,
+          duration: REVEAL_DURATION,
+          // Charnière amortie : léger dépassement puis retour au repos. C'est ce
+          // dépassement qui distingue « se poser » de « claquer » — il doit se
+          // sentir sans se voir. Au-delà de ~1.4 il devient un rebond visible.
+          ease: "back.out(1.2)",
+          // La cascade est l'ingrédient qui fait lire de l'étoffe plutôt qu'une
+          // planche. Une arrivée simultanée tue l'effet.
+          //
+          // Décalage POSITIF, jamais `from: "end"` : `reverse()` rejoue la
+          // timeline à l'envers, donc le dernier parti est le premier à repartir.
+          // L'ordre de sortie — visuel, puis texte, puis libellé — est le miroir
+          // exact de l'entrée, et il vient de la timeline elle-même. Inverser le
+          // stagger ici casserait l'entrée pour « corriger » une sortie déjà juste.
+          stagger: REVEAL_STAGGER,
+          scrollTrigger: {
+            trigger: section,
+            // Les deux bornes disent la même chose des deux côtés : « au moins
+            // ENTER_MARGIN px de la section sont dans la fenêtre ». La section
+            // se révèle en entrant et ne se replie qu'une fois VRAIMENT sortie,
+            // par le haut comme par le bas.
+            //
+            // L'ancien couple `top 80%` / `bottom 20%` posait la ligne à 20% À
+            // L'INTÉRIEUR de la fenêtre. En descendant ça allait — on ne voit pas
+            // ce qui sort par le haut. En remontant, la même ligne servait à
+            // MASQUER : la section se vidait alors qu'il en restait un cinquième
+            // à l'écran, sous les yeux du lecteur. Une borne ne peut pas servir
+            // d'entrée dans un sens et de sortie dans l'autre sans ce défaut.
+            start: `top bottom-=${ENTER_MARGIN}`,
+            end: `bottom top+=${ENTER_MARGIN}`,
+            // Jamais `scrub` : lier la progression au défilement remplacerait
+            // l'amorti par la vitesse de scroll de l'utilisateur, c'est-à-dire
+            // exactement l'effet recherché en moins.
+            toggleActions: TOGGLE_ACTIONS,
+          },
+        });
+      });
+    });
+
+    // Les polices auto-hébergées changent la hauteur des blocs : les positions
+    // mesurées au premier paint seraient fausses. `refresh()` recalcule tous les
+    // triggers de la page, y compris ceux posés par StackFold.
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => ScrollTrigger.refresh());
+    }
+  }
+</script>

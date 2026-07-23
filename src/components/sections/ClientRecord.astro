@@ -1,19 +1,32 @@
 ---
 import PillarSection from "../PillarSection.astro";
 
+interface Props {
+  /** Posé par `index.astro` d'après le rang du pilier — jamais en dur ici. */
+  reverse?: boolean;
+}
+
+const { reverse = false } = Astro.props;
+
 const contacts = [
   { initials: "EP", name: "Elena Park", role: "VP Finance" },
   { initials: "RA", name: "Rob Adeyemi", role: "Controller" },
   { initials: "SD", name: "Sofia Duarte", role: "Project sponsor" },
 ];
+
+/** Mêmes personnes que la carte du héros — les deux listes doivent rester
+ *  identiques. Neutres : un avatar vert ferait dire « confirmé » à un contact. */
+const AVATAR_TONES = ["#0F1524", "#2A3348", "#59657A"];
 ---
 
 <PillarSection
   stage="WON"
   note="the client"
   heading="The client record everything hangs off."
-  body="Companies, contacts, budgets, stages and notes live in the CRM. Every project, task, hour, screenshot and document files itself against the right client — not because someone tagged it, but because that's where it was created."
-  reverse
+  body="Companies, contacts, budgets, stages and notes live in the CRM. Every project, task, hour, screenshot and document files itself against the right client - not because someone tagged it, but because that's where it was created."
+  band="bg-band-mint"
+  stageTone="live"
+  reverse={reverse}
 >
   {/* La fiche client elle-même. Les heures n'y sont qu'une ligne parmi d'autres —
       c'est délibéré : le mandat est le sujet, pas le chronomètre. */}
@@ -21,7 +34,7 @@ const contacts = [
     <div class="flex items-center justify-between gap-3">
       <p class="font-display text-[17px] font-bold">Northwind Systems</p>
       <span class="rounded-[3px] bg-hour px-2 py-[3px] font-mono text-[10px] font-bold text-ink">
-        Won — In progress
+        Won - In progress
       </span>
     </div>
 
@@ -31,7 +44,7 @@ const contacts = [
           <li class="flex items-center gap-3">
             <span
               class="grid h-6 w-6 place-items-center rounded-full font-mono text-[9px] text-white"
-              style={`background:${["#0F1524", "#59657A", "#1F9D6B"][i]}`}
+              style={`background:${AVATAR_TONES[i]}`}
             >
               {contact.initials}
             </span>
@@ -47,10 +60,13 @@ const contacts = [
         <span class="font-mono text-[11px] text-slate">Budget</span>
         <span class="font-mono text-[15px] font-bold">$48,000</span>
       </div>
+      {/* La jauge et son relevé énoncent la même chose : même vert. Le relevé étant
+          du texte, c'est la variante lisible qui gagne, et la barre la suit — deux
+          verts à 8 px l'un de l'autre se liraient comme une erreur. */}
       <span class="mt-2 block h-[6px] overflow-hidden rounded-full bg-paper">
-        <span class="block h-full w-[62%] bg-live"></span>
+        <span class="block h-full w-[62%] bg-live-on-light"></span>
       </span>
-      <p class="mt-1 text-right font-mono text-[11px] text-live">62% used</p>
+      <p class="mt-1 text-right font-mono text-[11px] text-live-on-light">62% used</p>
     </div>
 
     <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-rule pt-4">

@@ -1,5 +1,12 @@
 ---
 import PillarSection from "../PillarSection.astro";
+
+interface Props {
+  /** Posé par `index.astro` d'après le rang du pilier — jamais en dur ici. */
+  reverse?: boolean;
+}
+
+const { reverse = false } = Astro.props;
 ---
 
 <PillarSection
@@ -7,6 +14,7 @@ import PillarSection from "../PillarSection.astro";
   note="the answer"
   heading="Ask your own company a question."
   body="Documentation, company files and meeting recordings are indexed as they're written. Ask “what did we agree on the Ledger rebuild?” and get the answer with its source, not a list of files."
+  reverse={reverse}
 >
   <div class="rounded-[8px] border border-rule bg-white p-5">
     <p class="rounded-[6px] bg-paper px-3 py-2 font-mono text-[13px]">
@@ -19,10 +27,10 @@ import PillarSection from "../PillarSection.astro";
     </p>
 
     <div class="mt-4 flex flex-wrap gap-2">
-      <span class="rounded-[3px] border border-live px-2 py-[3px] font-mono text-[11px] text-live">
+      <span class="rounded-[3px] border border-live-on-light px-2 py-[3px] font-mono text-[11px] text-live-on-light">
         doc · Ledger SOW
       </span>
-      <span class="rounded-[3px] border border-live px-2 py-[3px] font-mono text-[11px] text-live">
+      <span class="rounded-[3px] border border-live-on-light px-2 py-[3px] font-mono text-[11px] text-live-on-light">
         call · Apr 3
       </span>
     </div>

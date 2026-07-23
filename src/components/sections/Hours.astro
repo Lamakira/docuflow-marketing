@@ -1,6 +1,13 @@
 ---
 import PillarSection from "../PillarSection.astro";
 
+interface Props {
+  /** Posé par `index.astro` d'après le rang du pilier — jamais en dur ici. */
+  reverse?: boolean;
+}
+
+const { reverse = false } = Astro.props;
+
 /** Niveaux d'activité sur la session : > 70 % live, > 40 % hour, sinon rule. */
 const activity = [
   52, 78, 84, 61, 47, 73, 91, 12, 58, 66, 44, 55, 81, 88, 39, 72, 95, 63, 49, 77, 85, 31, 68, 74,
@@ -16,13 +23,12 @@ const tone = (value: number) =>
   note="the hours"
   heading="What happened, not what was reported."
   body="The desktop agent records screenshots, keyboard and mouse activity and idle time in the background, and files everything against the project the timer was running on. Nobody writes a timesheet from memory."
-  band="bg-band-mint"
-  stageTone="live"
+  reverse={reverse}
 >
   <div class="rounded-[8px] border border-rule bg-white p-5">
     <div class="flex items-baseline justify-between">
       <p class="font-mono text-[12px] text-slate">Northwind · Ledger rebuild</p>
-      <p class="font-mono text-[12px] font-bold text-live">88% active</p>
+      <p class="font-mono text-[12px] font-bold text-live-on-light">88% active</p>
     </div>
 
     <div class="mt-4 grid grid-cols-4 gap-3">
