@@ -4,6 +4,7 @@ import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
+import icon from 'astro-icon';
 
 // https://astro.build/config
 export default defineConfig({
@@ -15,5 +16,28 @@ export default defineConfig({
     plugins: [tailwindcss()]
   },
 
-  integrations: [react(), sitemap()]
+  integrations: [
+    react(),
+    sitemap(),
+    // Icônes Lucide inlinées en SVG à la compilation : zéro JS, zéro requête
+    // tierce, et seuls les glyphes réellement utilisés atterrissent dans le HTML.
+    // `include` fige la liste — sans lui, tout le jeu Lucide devient importable
+    // et le budget dérive sans que personne le voie.
+    icon({
+      include: {
+        lucide: [
+          'circle-check',
+          // Un par secteur, dans l'ordre de SECTORS (src/data/site.ts).
+          'palette',
+          'code-xml',
+          'presentation',
+          'calculator',
+          'scale',
+          'headset',
+          'hard-hat',
+          'user-search',
+        ],
+      },
+    }),
+  ],
 });
