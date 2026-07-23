@@ -13,6 +13,13 @@
   --color-hour: #e9a23b;
   --color-hour-hover: #d8912f;
   --color-live: #1f9d6b;
+  /* Même vert, assombri de 24 % sur le même rayon RVB (teinte identique).
+     `live` plein ne fait que 3,45:1 sur blanc, 3,02:1 sur mint — sous AA dès qu'il
+     porte du texte ou un glyphe. Règle : le vert qui porte un signe utilise cette
+     variante, le vert de remplissage pur (jauges, points, barres) reste `live`.
+     Valide sur blanc (5,53:1), paper (5,06), mint (4,85), warm (5,02).
+     Pas sur `ink` : 3,29:1 — sur fond sombre c'est `live` qui reste lisible. */
+  --color-live-on-light: #187751;
   --color-slate: #59657a;
   --color-slate-on-ink: #9aa6b8;
   --color-rule: #d8dee6;
@@ -21,14 +28,51 @@
   --color-band-mint: #eaf2ed;
   --color-band-warm: #fbf3e6;
 
+  /* Seule ombre « flottante » du système : la pastille de nav détachée du bord.
+     L'ombre d'arrivée (0 24px 48px -18px) est calibrée pour une carte de 590px
+     et écraserait une pastille de 44px. Voir « The Off-Plane Rule ». */
+  --shadow-float: 0 6px 16px -8px rgb(15 21 36 / 0.18);
+
   --font-display: "Cabinet Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Switzer", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Frisson de l'icône d'une tuile secteur au survol. Une seule passe, jamais
+     `infinite` : une icône qui s'agite en continu attire l'œil hors du texte.
+     L'amplitude décroît (8° → 6° → 4° → 2° → 0) pour que ça se termine posé
+     plutôt que coupé net. Rotation seule : rien ne change de place, donc CLS
+     intact. Le bloc `prefers-reduced-motion` plus bas écrase déjà la durée de
+     TOUTE animation — celle-ci n'a pas besoin de sa propre garde. */
+  --animate-icon-shake: icon-shake 420ms ease-out;
+
+  @keyframes icon-shake {
+    0% {
+      transform: rotate(0deg);
+    }
+    22% {
+      transform: rotate(-8deg);
+    }
+    44% {
+      transform: rotate(6deg);
+    }
+    66% {
+      transform: rotate(-4deg);
+    }
+    84% {
+      transform: rotate(2deg);
+    }
+    100% {
+      transform: rotate(0deg);
+    }
+  }
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* Sans ça, une ancre interne gare son titre sous l'en-tête collant
+       (64px) ou sous la pastille flottante. */
+    scroll-padding-top: 80px;
   }
 
   body {
@@ -47,9 +91,18 @@
     line-height: 1.05;
   }
 
+  /* Anneau de focus à deux tons. L'ambre seul suffisait sur les bandes claires et
+     sombres (8,4:1 sur `ink`), mais il tombe à 1,98:1 sur `paper` — donc sur la
+     carte du plan mis en avant — et à ~1:1 quand il borde le bouton ambre lui-même,
+     c'est-à-dire précisément sur le CTA principal de la page.
+     Le liseré `ink` remplit exactement l'écart de 2px laissé par `outline-offset`
+     et prend le relais partout où l'ambre s'efface ; sur fond sombre c'est
+     l'inverse. Un des deux tons tient toujours le 3:1 exigé (WCAG 2.4.11).
+     Ce n'est pas une ombre d'élévation : rien ne flotte, c'est un indicateur. */
   :focus-visible {
     outline: 2px solid var(--color-hour);
     outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--color-ink);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -67,10 +120,30 @@
   }
 }
 
+/* Débord droit partagé. Tout est exprimé en `100%` — donc relatif au <body>,
+   scrollbar exclue — et jamais en `vw`, sinon le bord gauche des sections
+   larges décalerait de la largeur de la barre de défilement par rapport aux
+   sections normales. Déclaré ici, résolu là où il est utilisé. */
+:root {
+  --edge-extra: min(180px, max(0px, calc((100% - 1200px) / 2 - 24px)));
+  --edge-side: max(0px, calc((100% - 1200px) / 2));
+}
+
 @utility container-page {
   margin-inline: auto;
   max-width: 1200px;
   padding-inline: 24px;
+}
+
+/* Même bord gauche que `container-page`, bord droit repoussé jusqu'à celui de
+   la carte du héros. La page cesse d'être centrée : c'est assumé — un seul
+   bord droit vaut mieux qu'un visuel qui dépasse tout seul. */
+@utility container-wide {
+  margin-left: var(--edge-side);
+  margin-right: 0;
+  max-width: none;
+  padding-left: 24px;
+  padding-right: calc(24px + var(--edge-side) - var(--edge-extra));
 }
 
 @utility label-mono {

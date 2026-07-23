@@ -3,25 +3,34 @@ import { PROOF_STATS } from "../../data/site";
 ---
 
 <section class="bg-ink py-16 text-slate-on-ink">
-  <div class="container-page grid gap-12 min-[901px]:grid-cols-[1.3fr_1fr]">
+  {/* `auto` sur la colonne des chiffres plutôt que deux moitiés égales : le
+      bloc se dimensionne sur son contenu et vient se caler sur le bord droit
+      partagé. Le mou part dans la colonne de texte, où une prose qui s'arrête
+      en drapeau est normale — entre deux blocs alignés, il se verrait. */}
+  <div class="container-wide grid items-start gap-12 min-[901px]:grid-cols-[1fr_auto]">
     <div>
-      <h2 class="text-[26px] font-bold text-white">
+      <h2 class="max-w-[30ch] text-balance text-[26px] text-white">
         Built by an agency that got tired of paying four vendors.
       </h2>
-      <p class="mt-4 max-w-[48ch] leading-relaxed">
-        DocuFlow runs TECHMA's own operations every day — the timers, the screenshots, the client
+      <p class="mt-4 max-w-[48ch] leading-[1.55]">
+        DocuFlow runs TECHMA's own operations every day - the timers, the screenshots, the client
         records, the docs. We ship what we use.
       </p>
     </div>
 
     {/* ⚠️ Valeurs provisoires — voir src/data/site.ts avant mise en ligne. */}
-    <dl class="grid grid-cols-2 gap-6">
+    {/* Chaque poste est une paire terme/définition : le libellé visible EST le
+        <dt>, `flex-col-reverse` remonte le chiffre — pas de libellé dupliqué
+        pour les lecteurs d'écran. `items-start` est nécessaire : sans lui les
+        postes s'étirent à la hauteur de la ligne et, l'ordre étant inversé,
+        les chiffres se calent en bas et se désalignent dès qu'un libellé passe
+        sur deux lignes (dès 375px). */}
+    <dl class="grid grid-cols-[auto_auto] items-start gap-x-10 gap-y-8">
       {
         PROOF_STATS.map((stat) => (
-          <div class="border-l-2 border-hour pl-[14px]">
-            <dt class="sr-only">{stat.label}</dt>
+          <div class="flex flex-col-reverse border-l border-slate pl-[14px]">
+            <dt class="font-mono text-[12px]">{stat.label}</dt>
             <dd class="font-mono text-[24px] font-bold text-white">{stat.value}</dd>
-            <p class="font-mono text-[12px]">{stat.label}</p>
           </div>
         ))
       }
