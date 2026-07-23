@@ -241,8 +241,10 @@ amber for *now* and green for *confirmed*.
 - **Cold Stock** (`#F3F5F7`): The page ground, and also the inset surface *inside* white cards —
   query bubbles, guarantee rows, an unfilled meter track. Deliberately cool: no cream, no warmth,
   no "document paper" cliché.
-- **Card White** (`#FFFFFF`): The record itself. Every dossier card, every plan card, every sector
-  tile. White is what a filed page is made of; Cold Stock is the desk it sits on.
+- **Card White** (`#FFFFFF`): The record itself — every dossier card, every plan card, and the
+  receipt's selected stub. White is what a filed page is made of; Cold Stock is the desk it sits on.
+  It also appears at 55% as the sector index's hover wash, which is the same idea at a whisper: the
+  row you are pointing at lifts toward paper without becoming a card.
 - **Archive Slate** (`#59657A`): Running body text, secondary labels, roles, and captions. Carries
   most of the reading on light bands.
 - **Slate on Ink** (`#9AA6B8`): The same voice inverted — body text on dark bands, footer links.
@@ -313,7 +315,7 @@ are self-hosted; no third-party font request is ever made.
 - **Annotation** (400, 9px, `0.06em`, uppercase): The smallest step. Gutter labels on a record row
   (`CLIENT` / `HOURS` / `SHOTS`) and avatar initials. Below this, nothing.
 
-Sizes outside this ramp are one-offs, not steps: `16px` (sector tile name), `22px` (block-editor
+Sizes outside this ramp are one-offs, not steps: `14.5px` (sector blurb), `22px` (block-editor
 heading), `24px` (proof figure), `26px` (proof heading), `34px` (plan price). Each appears exactly
 once. Treat them as unsystematized rather than as license to add a size — if one starts repeating,
 promote it to a role here instead of copying the literal.
@@ -361,7 +363,15 @@ and footer; `84px` on the hero top.
 deliberate and sparing: the CRM section reverses to put the client record on the left, breaking what
 would otherwise be a metronome.
 
-**Card grids** run 4-up above 901px, 2-up above 561px, 1-up below, with a `16px` gap.
+**Card grids** run 4-up above 901px, 2-up above 561px, 1-up below, with a `16px` gap. The plan cards
+are the remaining example.
+
+**The sector index** is not a card grid and is the one place the page abandons boxes entirely: two
+columns above 901px, one below, `72px` between columns and **zero** between rows, because a 1px rule
+on top of every entry is what separates them. Entries carry `24px 20px` of padding against a
+`-16px` inline margin, so the hover wash bleeds past the type while the type itself stays on the
+column. Below 620px the header row wraps and the arrow is dropped rather than allowed to squeeze the
+sector name.
 
 **Breakpoints** are three, and they are semantic rather than device-named:
 
@@ -432,8 +442,8 @@ Radii are small and stepped by function, never by size:
   legible at 7px.
 - **3px** (`sm`) — annotations: badges, tags, source chips, screenshot tiles, checkboxes. Anything
   that behaves like a label stuck onto a record.
-- **6px** (`md`) — interactive and inset: buttons, sector tiles, plan CTAs, inset surfaces inside a
-  card, the hover target on a hero layer.
+- **6px** (`md`) — interactive and inset: buttons, sector index entries, plan CTAs, inset surfaces
+  inside a card, the hover target on a hero layer.
 - **8px** (`lg`) — records: every dossier card, plan card and panel. The largest radius in the
   system, and it marks "this is a document".
 - **full** — only for genuinely circular things: avatars, meter tracks and fills, the rail dot,
@@ -555,13 +565,16 @@ immediately with no transition; below 900px the bills are not rendered at all.
 - **Easing:** `cubic-bezier(0.4, 0, 0.2, 1)` for anything choreographed; plain `ease` for state.
 - **Durations:** 0.12s for a hover fill, ~0.15s for color transitions, 0.32s for a cross-fade,
   0.7–0.9s for the fold's staged transforms.
-- **Hover displacement** belongs to the sector tile and nowhere else. The tile rises 2px over 120ms
-  and its border turns amber; its icon simultaneously runs a single damped wobble — `rotate` through
-  −8°, +6°, −4°, +2°, back to 0 over 420ms, `ease-out`. Two things move, but they are one object
-  responding once to one pointer. The decay is what keeps it from reading as a toy: it settles rather
-  than stopping, and it never repeats while the pointer rests. Never `infinite` — an icon that keeps
-  twitching pulls the eye off the label it exists to support, and eight of them compete with each
-  other. No other surface in the system moves on hover; everything else changes color only.
+- **Nothing is displaced on hover.** Surfaces change color and nothing else — no lift, no scale, no
+  shadow. The sector index makes the point: hovering an entry washes it with white at 55% over
+  `0.25s`, and the rule, the position and the type all hold still. A row in a ruled index that jumps
+  under the pointer stops being an index.
+- **One thing moves on hover, and it is an icon.** The sector entry's Lucide glyph runs a single
+  damped wobble — `rotate` through −8°, +6°, −4°, +2°, back to 0 over 420ms, `ease-out` — triggered
+  by the whole entry, never by the glyph itself, which would be a 20px hover target inside a
+  full-width link. The decay is what keeps it from reading as a toy: it settles rather than stopping,
+  and it never repeats while the pointer rests. Never `infinite` — an icon that keeps twitching pulls
+  the eye off the label it exists to support, and eight competing with each other is noise.
 - `prefers-reduced-motion` collapses all animation and transition durations to 0.01ms globally and
   disables smooth scrolling.
 

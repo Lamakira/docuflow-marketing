@@ -11,38 +11,141 @@ import { SECTORS } from "../../data/site";
 
   <h2 class="max-w-[16ch] text-[clamp(28px,4vw,42px)]">Teams that deliver for clients.</h2>
 
-  {/* `auto-rows-fr` : toutes les rangées prennent la hauteur de la plus haute, donc
-      les huit tuiles sont identiques même quand un texte passe sur deux lignes et
-      son voisin sur une. Réglé par la grille et non en rognant la copy — la copy
-      change, et à chaque point de rupture ce n'est pas le même texte qui déborde. */}
-  <div
-    class="mt-10 grid grid-cols-1 auto-rows-fr gap-4 min-[561px]:grid-cols-2 min-[901px]:grid-cols-4"
-  >
+  {/* Un index, pas une grille de cartes : plus de boîtes blanches, des filets
+      1 px et des numéros. Une vraie liste — le lecteur d'écran annonce « liste,
+      8 éléments », ce qu'une suite de liens ne dit pas.
+
+      Le filet est en haut de CHAQUE entrée, première rangée comprise : c'est ce
+      qui fait lire un registre réglé plutôt que huit blocs séparés. */}
+  <ul class="mt-12 grid grid-cols-1 gap-x-[72px] gap-y-0 min-[901px]:grid-cols-2">
     {
-      SECTORS.map((sector) => (
-        <a
-          href={sector.href}
-          class="group rounded-[6px] border border-rule bg-white p-5 transition-all duration-[120ms] hover:-translate-y-[2px] hover:border-hour"
-        >
-          {/* L'icône remplace l'ancienne étiquette mono (`agency`, `software`…) :
-              elle occupait la même ligne et disait la même chose en moins lisible.
-              Encre, jamais ambre — l'ambre marque l'étape courante ou l'action, une
-              seule fois par écran, et huit tuiles en feraient de la décoration.
-              `aria-hidden` : le nom du secteur juste dessous porte déjà le sens.
+      SECTORS.map((sector, i) => (
+        <li>
+          <a href={sector.href} class="entry group">
+            <span class="entry-head">
+              {/* Numéro et flèche sont décoratifs : l'un ordonne à l'œil, l'autre
+                  signale un lien qu'un lecteur d'écran annonce déjà. Les lire
+                  donnerait « zéro un … flèche droite » avant chaque secteur. */}
+              <span class="entry-index" aria-hidden="true">
+                {String(i + 1).padStart(2, "0")}
+              </span>
 
-              Le frisson est déclenché par la tuile entière (`group`), pas par
-              l'icône : viser l'icône obligerait à la survoler précisément alors
-              que c'est la carte qui est cliquable. */}
-          <Icon
-            name={sector.icon}
-            class="h-[22px] w-[22px] text-ink group-hover:animate-icon-shake"
-            aria-hidden="true"
-          />
+              {/* Le frisson est déclenché par l'entrée entière (`group`), pas par
+                  l'icône : viser 20 px de glyphe alors que toute la ligne est
+                  cliquable rendrait l'effet inatteignable. */}
+              <Icon
+                name={sector.icon}
+                class="entry-icon group-hover:animate-icon-shake"
+                aria-hidden="true"
+              />
 
-          <p class="mt-4 text-[16px] font-semibold">{sector.name}</p>
-          <p class="mt-1 text-[14px] leading-[1.6] text-slate">{sector.blurb}</p>
-        </a>
+              <span class="entry-name">{sector.name}</span>
+              <span class="entry-tag">{sector.tag}</span>
+
+              <span class="entry-arrow" aria-hidden="true">
+                →
+              </span>
+            </span>
+
+            <span class="entry-blurb">{sector.blurb}</span>
+          </a>
+        </li>
       ))
     }
-  </div>
+  </ul>
 </section>
+
+<style>
+  .entry {
+    display: block;
+    padding: 24px 20px;
+    /* Le lavis de survol déborde du texte : l'entrée se pose sur la page, elle
+       n'y est pas encadrée. Les 16 px tiennent dans la gouttière de 72 px. */
+    margin-inline: -16px;
+    border-top: 1px solid var(--color-rule);
+    border-radius: 6px;
+    color: var(--color-ink);
+    /* Survol volontairement doux : ni filet qui change, ni soulèvement. Le
+       blanc à 55 % sur `paper` suffit à désigner la ligne visée. */
+    transition: background-color 0.25s ease;
+  }
+
+  .entry:hover {
+    background-color: rgb(255 255 255 / 0.55);
+  }
+
+  .entry-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .entry-index {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-slate-on-ink);
+  }
+
+  .entry-icon {
+    width: 20px;
+    height: 20px;
+    flex: none;
+    color: var(--color-ink);
+  }
+
+  .entry-name {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+  }
+
+  .entry-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+    border: 1px solid var(--color-rule);
+    border-radius: 3px;
+    padding: 3px 7px;
+    white-space: nowrap;
+  }
+
+  .entry-arrow {
+    margin-left: auto;
+    padding-left: 8px;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    color: var(--color-hour);
+  }
+
+  /* 34px = 11px de numéro + 14px de gouttière + le début de l'icône : le texte
+     s'aligne sous l'icône et le nom, pas sous le numéro. */
+  .entry-blurb {
+    display: block;
+    margin: 8px 0 0 34px;
+    max-width: 44ch;
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--color-slate);
+  }
+
+  /* Sous 620px le nom en 24px, la puce et la flèche ne tiennent plus sur une
+     ligne. La flèche sort du flux plutôt que de comprimer le nom — elle est
+     décorative, elle ne doit jamais gagner contre le libellé. */
+  @media (max-width: 620px) {
+    .entry-head {
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .entry-arrow {
+      display: none;
+    }
+
+    .entry-blurb {
+      margin-left: 0;
+    }
+  }
+</style>
