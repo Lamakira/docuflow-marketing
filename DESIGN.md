@@ -14,6 +14,7 @@ colors:
   slate: "#59657A"
   slate-on-ink: "#9AA6B8"
   rule: "#D8DEE6"
+  receipt-rule: "#B9C2CF"
   band-mint: "#EAF2ED"
   band-warm: "#FBF3E6"
 typography:
@@ -101,6 +102,8 @@ rounded:
   md: "6px"
   lg: "8px"
   full: "9999px"
+  receipt-xs: "2px"
+  receipt-sm: "4px"
 spacing:
   tight: "8px"
   card-sm: "20px"
@@ -245,6 +248,10 @@ amber for *now* and green for *confirmed*.
 - **Slate on Ink** (`#9AA6B8`): The same voice inverted — body text on dark bands, footer links.
 - **Divider Grey** (`#D8DEE6`): Every hairline, every resting border, and the "not yet reached" state
   of a stage in a stage list. It is the most-used color in the system.
+- **Receipt Rule** (`#B9C2CF`): One step darker than Divider Grey, and used *only* on the pricing
+  receipt — its dashed dividers, dotted leaders and inter-stub perforations. Divider Grey vanishes
+  against Cold Stock at these dash weights, and Slate on Ink draws a line too hard for paper. It has
+  no use anywhere else; if a second surface wants it, that surface is probably not paper.
 
 ### Tertiary — band grounds
 
@@ -379,8 +386,9 @@ concern.
 resting shadow on any surface in the system — not on the sticky nav, not on hover, not on a card
 that sits square to the page.
 
-Exactly one shadow value exists, and it is licensed for exactly two things — both of which are
-objects that have left the plane of the page.
+Shadows are licensed one object at a time, and every licensed object has physically left the plane of
+the page. There are three, and the test is the same each time: could a hairline describe this? If yes,
+the shadow is decoration.
 
 ### Shadow Vocabulary
 
@@ -389,7 +397,16 @@ objects that have left the plane of the page.
   tilted. Four flat bills collapse and one object arrives lifted; the hero card sits at `1.6°` and
   straightens under the pointer. In both cases the element is off-plane, and a hairline genuinely
   cannot describe an off-plane object — it would read as a rendering fault rather than an intention.
-  A third use requires the same argument, not a preference for depth.
+- **The receipt** (`filter: drop-shadow(0 30px 44px rgba(0, 0, 0, .55))`): The pricing receipt is a
+  sheet of paper lying on the ink band — a real object on a real surface, not a panel drawn on it.
+  It is a `drop-shadow` filter rather than a `box-shadow` because the stubs below it have torn zigzag
+  edges, and `box-shadow` would trace their rectangular boxes instead of the teeth.
+- **The torn stub** (`filter: drop-shadow(0 20px 26px rgba(0, 0, 0, .5))`): The selected plan stub,
+  which lifts `16px` and rotates `±1°` as if half-pulled from the perforation. Same argument as the
+  arrival lift, and it is the *only* hover- or selection-driven shadow in the system.
+
+A fourth use needs the same argument — an object that has genuinely left the page — not a preference
+for depth. Nothing that sits square to the grid gets one, including on hover.
 
 ### Named Rules
 
@@ -422,10 +439,24 @@ Radii are small and stepped by function, never by size:
 - **full** — only for genuinely circular things: avatars, meter tracks and fills, the rail dot,
   status dots.
 
-Borders are always exactly 1px, in Divider Grey on light and Ink Border on dark. The single exception
-is the featured plan card, which takes a 2px amber border to mark itself — a deliberate break, and
-the only 2px border in the system. The proof-band statistics take a 2px amber *left* rule, which is
-the same idea rotated: amber marks the entry that counts.
+**The paper exception.** The pricing receipt is the one surface that steps outside this scale, and it
+does so as a set, not one value at a time: `3px 3px 0 0` on the receipt body (square along the bottom,
+because the tear-off stubs continue it), `2px` on the amber price chip and the `MOST TEAMS` flag,
+`3px` on a stub checkbox, `4px` on a stub CTA. The reason is literal — a printed receipt has cut
+corners, not the softened corners of a card, and 6px on a stub CTA immediately reads as a web button
+sitting on paper rather than as ink printed on it. They are named `receipt-xs` (2px) and `receipt-sm`
+(4px) precisely so the scope travels with the value: these belong to the receipt object, not to the
+scale. A component elsewhere reaching for either has no argument.
+
+Borders are always exactly 1px, in Divider Grey on light and Ink Border on dark. Two deliberate
+breaks: the featured plan card takes a 2px amber border to mark itself, and the proof-band statistics
+take a 2px amber *left* rule — the same idea rotated, amber marking the entry that counts.
+
+The receipt is the third, and again it is the paper argument rather than a preference: `1.5px dashed`
+section dividers, `2px dotted` dot leaders, a `2px dashed` perforation across the stub strip, and
+`2px dashed` between adjacent stubs, all in Receipt Rule except the perforation, which uses Slate on
+Ink so the tear line reads as harder than the folds above it. Dashes and dots exist nowhere else in
+the system; solid hairlines separate every other surface.
 
 Screenshot placeholders share one recurring texture — a 45° repeating stripe of Cold Stock and white
 at 4px intervals. It reads as "image withheld" without inventing fake screen content, and it is used
@@ -524,8 +555,13 @@ immediately with no transition; below 900px the bills are not rendered at all.
 - **Easing:** `cubic-bezier(0.4, 0, 0.2, 1)` for anything choreographed; plain `ease` for state.
 - **Durations:** 0.12s for a hover fill, ~0.15s for color transitions, 0.32s for a cross-fade,
   0.7–0.9s for the fold's staged transforms.
-- **Hover displacement** exists in exactly one place: sector tiles rise 2px over 120ms and their
-  border turns amber. Nothing else in the system moves on hover.
+- **Hover displacement** belongs to the sector tile and nowhere else. The tile rises 2px over 120ms
+  and its border turns amber; its icon simultaneously runs a single damped wobble — `rotate` through
+  −8°, +6°, −4°, +2°, back to 0 over 420ms, `ease-out`. Two things move, but they are one object
+  responding once to one pointer. The decay is what keeps it from reading as a toy: it settles rather
+  than stopping, and it never repeats while the pointer rests. Never `infinite` — an icon that keeps
+  twitching pulls the eye off the label it exists to support, and eight of them compete with each
+  other. No other surface in the system moves on hover; everything else changes color only.
 - `prefers-reduced-motion` collapses all animation and transition durations to 0.01ms globally and
   disables smooth scrolling.
 
@@ -552,14 +588,16 @@ immediately with no transition; below 900px the bills are not rendered at all.
 ### Don't:
 
 - **Don't** use a gradient. Anywhere, in any direction, at any opacity. Bands are single held colors.
-- **Don't** add a shadow where a hairline would do. The arrival lift is the only shadow value in the
-  system and it belongs to off-plane objects only — the fold's arriving card and the hero's tilted
-  card. A third use needs the same argument, not a preference for depth.
+- **Don't** add a shadow where a hairline would do. Three objects carry one — the fold's arriving
+  card and the hero's tilted card, the receipt, and the torn stub — and all three have physically
+  left the plane of the page. A fourth needs that same argument, not a preference for depth.
 - **Don't** put amber twice in the same screenful, or use it as a resting border, body text or
   decoration. One mark, and it means *now*.
 - **Don't** swap the amber/green meanings. Amber is a present state; green is a confirmed result.
-- **Don't** introduce a fourth typeface, a new radius step outside 1 / 3 / 6 / 8 / full, or a 2px
-  border beyond the featured plan card and the proof-band left rule.
+- **Don't** introduce a fourth typeface, or a new radius step outside 1 / 3 / 6 / 8 / full. The
+  receipt's 2px and 4px belong to that object because it is paper; they are not available elsewhere.
+- **Don't** use a 2px border beyond the featured plan card and the proof-band left rule, or a dashed
+  or dotted rule anywhere but the receipt. Every other separation in the system is a solid hairline.
 - **Don't** route the stage rail's scroll progress — or any per-pixel value — through framework
   state. It writes to the DOM directly, throttled in `requestAnimationFrame`.
 - **Don't** load a font, script or asset from a third-party domain. Everything is self-hosted; the
