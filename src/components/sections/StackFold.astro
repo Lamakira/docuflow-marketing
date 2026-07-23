@@ -3,149 +3,495 @@ import { STACK, STACK_TOTAL, DOCUFLOW_PRICE } from "../../data/site";
 
 const CARD_W = 22; // % du conteneur
 const TARGET = 39; // point de convergence, en % du conteneur
-const LEFTS = [2, 26.3, 50.6, 74.9];
+/** Bord à bord : 4 × 22% + 3 × 4% = 100%. L'ancien jeu ([2, 26.3, 50.6, 74.9])
+ *  laissait 2% à gauche et 3,1% à droite, si bien que la rangée ne touchait
+ *  aucun des deux bords de la page. Le point de convergence reste 39% (50%
+ *  moins la demi-largeur d'une carte). */
+const LEFTS = [0, 26, 52, 78];
 
 /** Décalage vers le centre, exprimé en % de la largeur de la carte
  *  (translateX en % est relatif à l'élément, pas au parent). */
 const shift = (i: number) => ((TARGET - LEFTS[i]) / CARD_W) * 100;
+
+/** Chaque carte montre ce que son outil détient — contacts, durées, captures,
+ *  pages — dessiné en DOM, monochrome, dans le même vocabulaire que les
+ *  vignettes du héros. Le milieu des cartes était vide ; le remplir de
+ *  structure plutôt que d'ornement est la seule richesse que « The Client
+ *  Dossier » autorise. L'ordre suit STACK : CRM, temps, monitoring, docs. */
+const CONTACT_ROWS = [
+  [40, 24],
+  [48, 18],
+  [32, 28],
+];
+const DURATION_BARS = [74, 46, 88];
+const DOC_LINES = [44, 92, 76, 62];
 ---
 
-<section class="container-page py-[88px]">
-  <h2 class="max-w-[16ch] text-[clamp(28px,4vw,42px)]">Your stack has four logins and no memory.</h2>
+{/* Section centrée : c'est le moment où la page demande qu'on s'arrête et
+    qu'on regarde. Le CTA final est déjà centré — « centré = moment » est une
+    convention établie ici, pas une exception. */}
+<section class="py-[88px] text-center" data-stackfold>
+  <div class="container-wide">
+  <h2 class="mx-auto max-w-[16ch] text-[clamp(28px,4vw,42px)]">
+    Your stack has four logins and no memory.
+  </h2>
 
-  <p class="mt-6 max-w-[62ch] text-[18px] leading-[1.55] text-slate">
+  {/* 48ch et non 62ch : à cette mesure un texte centré devient pénible, l'œil
+      ne retrouve plus le début de ligne. */}
+  <p class="mx-auto mt-6 max-w-[48ch] text-[18px] leading-[1.55] text-slate">
     A CRM that doesn't know the hours. A time tracker that doesn't know the client. A monitoring
     tool that doesn't know the project. A wiki nobody opens. Four bills, four exports, and a
     spreadsheet to glue it together.
   </p>
 
-  <div class="fold relative mt-12 h-[300px]" data-fold>
+  {/* Disposition par défaut = comparaison statique verticale, complète et
+      lisible. La disposition superposée n'existe que si GSAP s'exécute et
+      pose `.is-scrub` : sans JS, sans souris ou en mouvement réduit, les
+      quatre cartes, le total et DocuFlow restent tous visibles. */}
+  <div class="fold mt-12" data-fold>
     {
       STACK.map((item, i) => (
         <article
-          class="bill absolute top-0 flex h-[220px] flex-col justify-between rounded-[6px] border border-rule bg-white p-5"
-          style={`left:${LEFTS[i]}%;width:${CARD_W}%;--tx:${shift(i)}%;--tilt:${(i - 1.5) * 3}deg;--i:${i}`}
+          class="bill rounded-[6px] border border-rule bg-white p-5"
+          style={`--left:${LEFTS[i]}%;--w:${CARD_W}%;--i:${i}`}
+          data-tx={shift(i)}
+          data-tilt={(i - 1.5) * 3}
         >
-          <div>
+          <div class="bill-head">
             <p class="font-semibold">{item.name}</p>
             <p class="mt-1 text-[13px] text-slate">{item.note}</p>
           </div>
-          <p class="font-mono text-[15px]">${item.price} /user/mo</p>
+
+          <div class="glyph" aria-hidden="true">
+            {
+              i === 0 &&
+                CONTACT_ROWS.map(([a, b]) => (
+                  <span class="g-row">
+                    <span class="g-dot" />
+                    <span class="g-bar" style={`width:${a}%`} />
+                    <span class="g-bar g-bar--faint" style={`width:${b}%`} />
+                  </span>
+                ))
+            }
+            {
+              i === 1 &&
+                DURATION_BARS.map((w) => (
+                  <span class="g-row">
+                    <span class="g-track">
+                      <span class="g-fill" style={`width:${w}%`} />
+                    </span>
+                  </span>
+                ))
+            }
+            {i === 2 && <span class="g-tiles">{Array.from({ length: 6 }).map(() => <span />)}</span>}
+            {
+              i === 3 && (
+                <span class="g-doc">
+                  <span class="g-head" />
+                  {DOC_LINES.map((w) => <span class="g-line" style={`width:${w}%`} />)}
+                </span>
+              )
+            }
+          </div>
+
+          <p class="bill-price font-mono text-[15px]">${item.price} /user/mo</p>
         </article>
       ))
     }
 
-    <article
-      class="result absolute left-1/2 top-10 w-[300px] -translate-x-1/2 rounded-[8px] bg-ink p-6 text-white shadow-[0_24px_48px_-18px_rgba(15,21,36,.5)]"
-    >
+    {/* Total de la pile — porte l'argument dans la disposition statique, où la
+        légende animée n'a pas lieu d'être. */}
+    <p class="fold-total font-mono text-[15px]">
+      Your stack - <span class="font-bold text-ink">${STACK_TOTAL} /user/mo</span>
+    </p>
+
+    <article class="result rounded-[8px] bg-ink p-6 text-left text-white">
       <p class="font-display text-[18px] font-extrabold">DocuFlow</p>
-      <p class="mt-2 text-[14px] leading-relaxed text-slate-on-ink">
+      <p class="mt-2 text-[14px] leading-[1.6] text-slate-on-ink">
         One login. Every hour, screenshot, client and document on the same client project.
       </p>
-      <p class="mt-4 font-mono text-[15px] font-bold text-hour">${DOCUFLOW_PRICE} /user/mo</p>
+
+      {/* Les quatre miniatures des cartes de la pile, réunies dans un seul
+          objet : la carte porte l'argument au lieu de l'annoncer. */}
+      <div class="result-glyphs" aria-hidden="true">
+        <span class="rg">
+          {CONTACT_ROWS.slice(0, 2).map(([a]) => (
+            <span class="g-row">
+              <span class="g-dot" />
+              <span class="g-bar" style={`width:${a}%`} />
+            </span>
+          ))}
+        </span>
+        <span class="rg">
+          {DURATION_BARS.slice(0, 2).map((w) => (
+            <span class="g-row">
+              <span class="g-track">
+                <span class="g-fill" style={`width:${w}%`} />
+              </span>
+            </span>
+          ))}
+        </span>
+        <span class="rg">
+          <span class="g-tiles g-tiles--mini">{Array.from({ length: 4 }).map(() => <span />)}</span>
+        </span>
+        <span class="rg">
+          <span class="g-doc">
+            <span class="g-head" />
+            {DOC_LINES.slice(0, 2).map((w) => <span class="g-line" style={`width:${w}%`} />)}
+          </span>
+        </span>
+      </div>
+
+      <p class="result-price font-mono text-[15px] font-bold text-hour">
+        ${DOCUFLOW_PRICE} /user/mo
+      </p>
     </article>
   </div>
 
-  <p class="caption relative mt-6 min-h-[24px] text-center font-mono text-[14px]">
-    <span class="before absolute inset-0">
-      Your stack — <span class="font-bold text-ink">${STACK_TOTAL} /user/mo</span>
+  {/* Légende à fondu croisé — uniquement en mode scrubbé. */}
+  <p class="caption mt-6 font-mono text-[14px]">
+    <span class="before">
+      Your stack - <span class="font-bold text-ink">${STACK_TOTAL} /user/mo</span>
     </span>
-    <span class="after absolute inset-0">
-      One tool — <span class="font-bold text-hour">${DOCUFLOW_PRICE} /user/mo</span>
+    <span class="after">
+      One tool - <span class="font-bold text-hour">${DOCUFLOW_PRICE} /user/mo</span>
     </span>
-  </p>
+    </p>
+  </div>
 </section>
 
 <style>
+  /* ---- Disposition statique (défaut) : la comparaison complète ---- */
+
+  .fold {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-inline: auto;
+    max-width: 460px;
+  }
+
   .bill {
-    transition:
-      transform 0.9s cubic-bezier(0.4, 0, 0.2, 1),
-      opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-    transition-delay: calc(var(--i) * 90ms), calc(var(--i) * 90ms + 200ms);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    text-align: left;
+  }
+
+  /* ---- Miniatures : structure, pas ornement. Tout en `rule` sur blanc pour
+     rester au second plan derrière le nom et le prix. ---- */
+
+  /* Deux tons plutôt qu'un : tout en `rule`, la miniature se lisait comme un
+     squelette de chargement. Le porteur d'information passe en slate atténué,
+     le secondaire reste en filet. */
+  .glyph {
+    --g-strong: color-mix(in srgb, var(--color-slate) 58%, transparent);
+    --g-soft: var(--color-rule);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 7px;
+  }
+
+  .g-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .g-dot {
+    width: 9px;
+    height: 9px;
+    flex: none;
+    border-radius: 9999px;
+    background: var(--g-strong);
+  }
+
+  .g-bar {
+    height: 3px;
+    border-radius: 1px;
+    background: var(--g-soft);
+  }
+
+  .g-bar--faint {
+    opacity: 0.55;
+  }
+
+  .g-track {
+    height: 5px;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 9999px;
+    background: color-mix(in srgb, var(--color-rule) 45%, transparent);
+  }
+
+  .g-fill {
+    display: block;
+    height: 100%;
+    border-radius: 9999px;
+    background: var(--g-strong);
+  }
+
+  .g-tiles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+  }
+
+  .g-tiles > span {
+    height: 20px;
+    border-radius: 3px;
+    border: 1px solid var(--color-rule);
+    background: repeating-linear-gradient(45deg, #f3f5f7 0 4px, #fff 4px 8px);
+  }
+
+  .g-doc {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .g-head {
+    height: 5px;
+    width: 44%;
+    border-radius: 1px;
+    background: var(--g-strong);
+  }
+
+  .g-line {
+    height: 3px;
+    border-radius: 1px;
+    background: var(--g-soft);
+  }
+
+  /* Filet de pied : le prix devient une ligne de registre, pas un texte
+     flottant en bas d'un vide. */
+  .bill-price {
+    border-top: 1px solid var(--color-rule);
+    padding-top: 12px;
+  }
+
+  /* ---- Carte résultat : les quatre miniatures réunies ---- */
+
+  .result-glyphs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 18px;
+    border-top: 1px solid var(--color-ink-border);
+    padding-top: 16px;
+  }
+
+  .rg {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    min-height: 26px;
+  }
+
+  /* Sur ink, `ink-border` tombe à 1,44:1 — invisible. `slate` tient à 3,1:1. */
+  .result-glyphs {
+    --g-strong: var(--color-slate);
+    --g-soft: color-mix(in srgb, var(--color-slate) 55%, transparent);
+  }
+
+  .result-glyphs .g-track {
+    background: color-mix(in srgb, var(--color-slate) 40%, transparent);
+  }
+
+  .result-glyphs .g-dot {
+    width: 7px;
+    height: 7px;
+  }
+
+  .g-tiles--mini {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3px;
+  }
+
+  .g-tiles--mini > span {
+    height: 11px;
+    /* 1px = pas « marque de donnée » documenté ; 3px, le pas des vignettes
+       pleine taille, serait proportionnellement trop rond sur 11px. */
+    border-radius: 1px;
+    border-color: var(--color-slate);
+    background: repeating-linear-gradient(45deg, #2a3348 0 3px, #161d30 3px 6px);
+  }
+
+  .result-price {
+    margin-top: 16px;
+  }
+
+  .fold-total {
+    margin-top: 4px;
+    border-top: 1px solid var(--color-rule);
+    padding-top: 12px;
   }
 
   .result {
-    opacity: 0;
-    transform: translate(-50%, 30px) scale(0.92);
-    transition:
-      transform 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-      opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-    transition-delay: 550ms;
+    margin-top: 4px;
   }
 
-  .caption span {
-    transition: opacity 0.32s ease;
-  }
-  .before {
-    opacity: 1;
-    transition-delay: 400ms;
-  }
-  .after {
-    opacity: 0;
-    transition-delay: 620ms;
+  /* La légende animée ne sert à rien quand tout est déjà affiché. */
+  .caption {
+    display: none;
   }
 
-  /* État final */
-  .fold.is-folded .bill {
-    transform: translateX(var(--tx)) rotate(var(--tilt)) scale(0.93);
-    opacity: 0;
-  }
-  .fold.is-folded .result {
-    opacity: 1;
-    transform: translate(-50%, 0) scale(1);
-  }
-  .fold.is-folded ~ .caption .before {
-    opacity: 0;
-  }
-  .fold.is-folded ~ .caption .after {
-    opacity: 1;
+  /* ---- Disposition scrubbée : posée par GSAP via `.is-scrub` ---- */
+
+  /* Épinglée, la section doit tenir dans le viewport, sinon la légende de
+     résolution — le « $14 » qui est la chute — se fait rogner sur un portable
+     13 pouces. 88px de padding + 300px de pile dépassaient de 39px en 757px de
+     haut. 64px est le pas compressé déjà documenté. */
+  .is-scrub {
+    padding-block: 64px;
   }
 
-  /* Sous 900px les cartes s'empilent : le repli horizontal n'a plus de sens. */
-  @media (max-width: 900px) {
-    .fold {
-      height: 260px;
-    }
-    .bill {
-      display: none;
-    }
-    .result {
-      opacity: 1;
-      transform: translate(-50%, 0) scale(1);
-    }
-    .after {
-      opacity: 1;
-    }
-    .before {
-      opacity: 0;
-    }
+  .is-scrub .fold {
+    display: block;
+    position: relative;
+    height: 300px;
+    max-width: none;
+  }
+
+  .is-scrub .bill {
+    position: absolute;
+    top: 0;
+    left: var(--left);
+    width: var(--w);
+    height: 260px;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  /* La miniature absorbe l'espace libre : c'est elle qui remplissait le vide. */
+  .is-scrub .glyph {
+    flex: 1;
+  }
+
+  .is-scrub .bill-price {
+    margin-top: 0;
+  }
+
+  .is-scrub .fold-total {
+    display: none;
+  }
+
+  .is-scrub .result {
+    position: absolute;
+    left: 50%;
+    top: 40px;
+    width: 300px;
+    margin-top: 0;
+    /* Ombre d'arrivée : la carte quitte le plan de la page (The Off-Plane Rule). */
+    box-shadow: 0 24px 48px -18px rgb(15 21 36 / 0.5);
+  }
+
+  .is-scrub .caption {
+    display: block;
+    position: relative;
+    min-height: 24px;
+  }
+
+  .is-scrub .caption > span {
+    position: absolute;
+    inset: 0;
   }
 </style>
 
 <script>
-  const fold = document.querySelector<HTMLElement>("[data-fold]");
+  import gsap from "gsap";
+  import ScrollTrigger from "gsap/ScrollTrigger";
 
-  if (fold) {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // ScrollTrigger n'est pas enregistré par défaut.
+  gsap.registerPlugin(ScrollTrigger);
 
-    if (reduced) {
-      fold.classList.add("is-folded");
-    } else {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            if (!entry.isIntersecting) continue;
-            observer.disconnect();
-            // Double rAF : garantit que l'état initial a été peint avant le
-            // changement de classe. Sans ça le navigateur saute la transition.
-            requestAnimationFrame(() =>
-              requestAnimationFrame(() => fold.classList.add("is-folded"))
-            );
-          }
-        },
-        { threshold: 0.45 }
-      );
-      observer.observe(fold);
+  const section = document.querySelector<HTMLElement>("[data-stackfold]");
+
+  if (section) {
+    const result = section.querySelector<HTMLElement>(".result")!;
+    const before = section.querySelector<HTMLElement>(".before")!;
+    const after = section.querySelector<HTMLElement>(".after")!;
+
+    const mm = gsap.matchMedia();
+
+    // Pas de pin sur tactile (détourner le scroll d'un téléphone est pire
+    // qu'une disposition statique), ni en mouvement réduit, ni sous 901px.
+    mm.add(
+      "(min-width: 901px) and (prefers-reduced-motion: no-preference) and (pointer: fine)",
+      () => {
+        section.classList.add("is-scrub");
+
+        const bills = gsap.utils.toArray<HTMLElement>(".bill", section);
+
+        // Aucune utilitaire Tailwind de transform sur ces éléments : Tailwind 4
+        // émet la propriété `translate`, qui se COMPOSE avec `transform` au lieu
+        // de le remplacer. GSAP est seul propriétaire du transform ici.
+        gsap.set(result, { xPercent: -50, y: 30, scale: 0.92, opacity: 0 });
+        gsap.set(after, { opacity: 0 });
+
+        const tl = gsap.timeline({
+          defaults: { ease: "none" },
+          scrollTrigger: {
+            trigger: section,
+            start: "center center",
+            // Relatif à la hauteur du viewport, jamais en pixels fixes : en
+            // fonction pour être réévalué à chaque refresh.
+            end: () => "+=" + window.innerHeight * 1.2,
+            pin: true,
+            pinSpacing: true,
+            // Léger retard d'inertie : un 1:1 strict amplifie le jitter du trackpad.
+            scrub: 0.5,
+            invalidateOnRefresh: true,
+          },
+        });
+
+        // 0.00 → 0.30 : temps de lecture. Rien ne bouge — la première position
+        // à 0.30 laisse volontairement le début de la timeline vide.
+
+        // 0.30 → 0.70 : convergence.
+        tl.to(
+          bills,
+          {
+            xPercent: (_i, el) => Number(el.dataset.tx),
+            rotation: (_i, el) => Number(el.dataset.tilt),
+            scale: 0.93,
+            opacity: 0,
+            duration: 0.34,
+            stagger: 0.02,
+          },
+          0.3
+        );
+
+        // 0.55 → 0.80 : la carte DocuFlow monte, chevauchant la fin de la convergence.
+        tl.to(result, { y: 0, scale: 1, opacity: 1, duration: 0.25 }, 0.55);
+
+        // 0.70 → 0.85 : fondu enchaîné SÉQUENTIEL, pas simultané. Les deux
+        // légendes sont superposées ; en simultané, le point milieu affiche les
+        // deux textes à 50% l'un sur l'autre — illisible. En animation par
+        // scroll l'utilisateur peut s'y arrêter indéfiniment, ce qui transforme
+        // un flou de 300 ms en bouillie permanente.
+        tl.to(before, { opacity: 0, duration: 0.075 }, 0.7);
+        tl.to(after, { opacity: 1, duration: 0.075 }, 0.775);
+
+        // 0.85 → 1.00 : maintien du résultat avant relâchement.
+        tl.to({}, { duration: 0.15 }, 0.85);
+
+        return () => {
+          section.classList.remove("is-scrub");
+        };
+      }
+    );
+
+    // Les polices auto-hébergées changent la largeur des cartes : les positions
+    // mesurées au premier paint seraient fausses.
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => ScrollTrigger.refresh());
     }
+
+    // ⚠️ Si le site adopte le routeur client / view transitions d'Astro, il
+    // faudra tuer et reconstruire les triggers à chaque navigation, sinon ils
+    // s'accumulent et fuient.
   }
 </script>
