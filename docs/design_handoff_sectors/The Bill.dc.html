@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+@font-face { font-family: 'Cabinet Grotesk'; src: url('fonts/cabinet-grotesk-800.woff2') format('woff2'); font-weight: 800; font-display: swap; }
+@font-face { font-family: 'Cabinet Grotesk'; src: url('fonts/cabinet-grotesk-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Switzer'; src: url('fonts/switzer-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Switzer'; src: url('fonts/switzer-500.woff2') format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Switzer'; src: url('fonts/switzer-600.woff2') format('woff2'); font-weight: 600; font-display: swap; }
+body { margin: 0; background: #E4E8EE; font-family: 'Switzer', ui-sans-serif, system-ui, sans-serif; color: #0F1524; -webkit-font-smoothing: antialiased; }
+a { color: #9AA6B8; text-decoration: none; }
+a:hover { color: #F3F5F7; }
+@keyframes icon-shake { 0% { transform: rotate(0deg); } 22% { transform: rotate(-8deg); } 44% { transform: rotate(6deg); } 66% { transform: rotate(-4deg); } 84% { transform: rotate(2deg); } 100% { transform: rotate(0deg); } }
+a[data-sector]:hover svg { animation: icon-shake 420ms ease-out; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+</style>
+<script src="https://unpkg.com/lucide@0.525.0/dist/umd/lucide.min.js"></script>
+</helmet>
+<section style="display: flex; flex-wrap: wrap; gap: 110px 72px; padding: 96px 72px 0; align-items: flex-start;">
+  <div style="flex: 0 0 100%; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: .08em; color: #59657A; margin-bottom: -70px;">TURN 3 — "COMPLETED — WHO IT'S FOR" · CURRENT (<a href="#3a" style="color: #59657A; text-decoration: underline;">3a</a>) + THREE DIRECTIONS (<a href="#3b" style="color: #59657A; text-decoration: underline;">3b</a>, <a href="#3c" style="color: #59657A; text-decoration: underline;">3c</a>, <a href="#3d" style="color: #59657A; text-decoration: underline;">3d</a>)</div>
+
+  <!-- ============ 3a — CURRENT SECTORS (recreated from Sectors.astro) ============ -->
+  <div id="3a" data-screen-label="3a — Current sectors (recreated)" style="position: relative; width: 1240px; flex: 0 0 auto;">
+    <a href="#3a" style="position: absolute; top: -36px; left: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; background: #0F1524; color: #F3F5F7; padding: 4px 11px; border-radius: 4px;">3a</a>
+    <div style="border-radius: 8px; overflow: hidden; box-shadow: 0 18px 40px -20px rgba(15,21,36,.35);">
+      <sc-if value="{{ showNeighbors }}" hint-placeholder-val="{{ true }}">
+        <div style="background: #F3F5F7; height: 72px; overflow: hidden; padding: 18px 56px 0; opacity: .6;">
+          <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 8px; padding: 22px 26px;">
+            <div style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #0F1524;"><span style="color: #187751; font-weight: 700;">✓</span> A visible indicator whenever the timer is running</div>
+          </div>
+        </div>
+      </sc-if>
+      <section style="background: #F3F5F7; color: #0F1524; padding: 88px 56px;">
+        <p style="margin: 0 0 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px;"><span style="color: #E9A23B;">COMPLETED</span> <span style="color: #59657A;">- who it's for</span></p>
+        <h2 style="margin: 0; max-width: 16ch; font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 42px; letter-spacing: -.03em; line-height: 1.05;">Teams that deliver for clients.</h2>
+        <div style="margin-top: 40px; display: grid; grid-template-columns: repeat(4,1fr); grid-auto-rows: 1fr; gap: 16px;">
+          <sc-for list="{{ sectors }}" as="s" hint-placeholder-count="8">
+            <a href="{{ s.href }}" data-sector style="display: block; background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 20px; color: #0F1524; transition: border-color .12s, transform .12s;" style-hover="border-color: #E9A23B; transform: translateY(-2px); color: #0F1524;">
+              <i data-lucide="{{ s.icon }}" style="width: 22px; height: 22px; color: #0F1524;"></i>
+              <p style="margin: 16px 0 0; font-size: 16px; font-weight: 600;">{{ s.name }}</p>
+              <p style="margin: 4px 0 0; font-size: 14px; line-height: 1.6; color: #59657A;">{{ s.blurb }}</p>
+            </a>
+          </sc-for>
+        </div>
+      </section>
+      <sc-if value="{{ showNeighbors }}" hint-placeholder-val="{{ true }}">
+        <div style="background: #0F1524; height: 72px; overflow: hidden; padding: 26px 56px 0; opacity: .6;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #E9A23B;">COMPLETED - the bill</div>
+          <div style="margin-top: 18px; font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 40px; letter-spacing: -.03em; color: #fff;">Four tools. One bill.</div>
+        </div>
+      </sc-if>
+    </div>
+    <p style="margin: 18px 0 0; font-size: 13px; color: #59657A; max-width: 72ch;">Current section, recreated from <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">Sectors.astro</span> — 4×2 white cards, Lucide icon (shakes on hover), name + blurb, amber border on hover.</p>
+  </div>
+
+  <!-- ============ 3b — CLIENT LEDGER ROWS ============ -->
+  <div id="3b" data-screen-label="3b — Client ledger rows" style="position: relative; width: 1240px; flex: 0 0 auto;">
+    <a href="#3b" style="position: absolute; top: -36px; left: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; background: #0F1524; color: #F3F5F7; padding: 4px 11px; border-radius: 4px;">3b</a>
+    <div style="border-radius: 8px; overflow: hidden; box-shadow: 0 18px 40px -20px rgba(15,21,36,.35);">
+      <sc-if value="{{ showNeighbors }}" hint-placeholder-val="{{ true }}">
+        <div style="background: #F3F5F7; height: 72px; overflow: hidden; padding: 18px 56px 0; opacity: .6;">
+          <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 8px; padding: 22px 26px;">
+            <div style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #0F1524;"><span style="color: #187751; font-weight: 700;">✓</span> A visible indicator whenever the timer is running</div>
+          </div>
+        </div>
+      </sc-if>
+      <section style="background: #F3F5F7; color: #0F1524; padding: 88px 56px;">
+        <div style="display: grid; grid-template-columns: 380px 1fr; gap: 64px; align-items: start;">
+          <div style="position: sticky; top: 40px;">
+            <p style="margin: 0 0 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px;"><span style="color: #E9A23B;">COMPLETED</span> <span style="color: #59657A;">- who it's for</span></p>
+            <h2 style="margin: 0; font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 46px; letter-spacing: -.03em; line-height: 1.05;">Teams that deliver for clients.</h2>
+          </div>
+          <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 8px; overflow: hidden;">
+            <sc-for list="{{ sectors }}" as="s" hint-placeholder-count="8">
+              <a href="{{ s.href }}" data-sector style="{{ s.rowStyle }}" style-hover="background: #F3F5F7; color: #0F1524;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A; width: 96px; flex: 0 0 auto;">{{ s.tag }}</span>
+                <i data-lucide="{{ s.icon }}" style="width: 20px; height: 20px; color: #0F1524; flex: 0 0 auto;"></i>
+                <span style="font-size: 16px; font-weight: 600; width: 190px; flex: 0 0 auto;">{{ s.name }}</span>
+                <span style="flex: 1; font-size: 14px; line-height: 1.5; color: #59657A;">{{ s.blurb }}</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #E9A23B;">→</span>
+              </a>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+      <sc-if value="{{ showNeighbors }}" hint-placeholder-val="{{ true }}">
+        <div style="background: #0F1524; height: 72px; overflow: hidden; padding: 26px 56px 0; opacity: .6;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #E9A23B;">COMPLETED - the bill</div>
+          <div style="margin-top: 18px; font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 40px; letter-spacing: -.03em; color: #fff;">Four tools. One bill.</div>
+        </div>
+      </sc-if>
+    </div>
+    <p style="margin: 18px 0 0; font-size: 13px; color: #59657A; max-width: 72ch;">The sectors as rows in a CRM client list — mono tag, icon, name, blurb on one ledger card. Reads like the product itself; sticky headline keeps the H2 in view while scanning.</p>
+  </div>
+
+  <!-- ============ 3c — EDITORIAL INDEX ============ -->
+  <div id="3c" data-screen-label="3c — Editorial index" style="position: relative; width: 1240px; flex: 0 0 auto;">
+    <a href="#3c" style="position: absolute; top: -36px; left: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; background: #0F1524; color: #F3F5F7; padding: 4px 11px; border-radius: 4px;">3c</a>
+    <div style="border-radius: 8px; overflow: hidden; box-shadow: 0 18px 40px -20px rgba(15,21,36,.35);">
+      <sc-if value="{{ showNeighbors }}" hint-placeholder-val="{{ true }}">
+        <div style="background: #F3F5F7; height: 72px; overflow: hidden; padding: 18px 56px 0; opacity: .6;">
+          <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 8px; padding: 22px 26px;">
+            <div style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #0F1524;"><span style="color: #187751; font-weight: 700;">✓</span> A visible indicator whenever the timer is running</div>
+          </div>
+        </div>
+      </sc-if>
+      <section style="background: #F3F5F7; color: #0F1524; padding: 88px 56px;">
+        <p style="margin: 0 0 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px;"><span style="color: #E9A23B;">COMPLETED</span> <span style="color: #59657A;">- who it's for</span></p>
+        <h2 style="margin: 0; max-width: 16ch; font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 42px; letter-spacing: -.03em; line-height: 1.05;">Teams that deliver for clients.</h2>
+        <div style="margin-top: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 0 72px;">
+          <sc-for list="{{ sectors }}" as="s" hint-placeholder-count="8">
+            <a href="{{ s.href }}" data-sector style="display: block; padding: 24px 20px; margin: 0 -16px; border-top: 1px solid #D8DEE6; border-radius: 6px; color: #0F1524; transition: background .25s ease;" style-hover="background: rgba(255,255,255,.55); color: #0F1524;">
+              <span style="display: flex; align-items: center; gap: 14px;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #9AA6B8;">{{ s.idx }}</span>
+                <i data-lucide="{{ s.icon }}" style="width: 20px; height: 20px; color: #0F1524;"></i>
+                <span style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -.02em;">{{ s.name }}</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #59657A; border: 1px solid #D8DEE6; border-radius: 3px; padding: 3px 7px;">{{ s.tag }}</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; color: #E9A23B; margin-left: auto;">→</span>
+              </span>
+              <span style="display: block; margin: 8px 0 0 34px; font-size: 14.5px; line-height: 1.55; color: #59657A; max-width: 44ch;">{{ s.blurb }}</span>
+            </a>
+          </sc-for>
+        </div>
+      </section>
+      <sc-if value="{{ showNeighbors }}" hint-placeholder-val="{{ true }}">
+        <div style="background: #0F1524; height: 72px; overflow: hidden; padding: 26px 56px 0; opacity: .6;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #E9A23B;">COMPLETED - the bill</div>
+          <div style="margin-top: 18px; font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 40px; letter-spacing: -.03em; color: #fff;">Four tools. One bill.</div>
+        </div>
+      </sc-if>
+    </div>
+    <p style="margin: 18px 0 0; font-size: 13px; color: #59657A; max-width: 72ch;">Type-forward directory: no card boxes, hairline rules, mono index numbers, display-weight sector names. Calmer and more editorial; blurbs get room to breathe.</p>
+  </div>
+
+  <!-- ============ 3d — PROJECT-CARD GRID ============ -->
+  <div id="3d" data-screen-label="3d — Project-card grid" style="position: relative; width: 1240px; flex: 0 0 auto;">
+    <a href="#3d" style="position: absolute; top: -36px; left: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; background: #0F1524; color: #F3F5F7; padding: 4px 11px; border-radius: 4px;">3d</a>
+    <div style="border-radius: 8px; overflow: hidden; box-shadow: 0 18px 40px -20px rgba(15,21,36,.35);">
+      <sc-if value="{{ showNeighbors }}" hint-placeholder-val="{{ true }}">
+        <div style="background: #F3F5F7; height: 72px; overflow: hidden; padding: 18px 56px 0; opacity: .6;">
+          <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 8px; padding: 22px 26px;">
+            <div style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #0F1524;"><span style="color: #187751; font-weight: 700;">✓</span> A visible indicator whenever the timer is running</div>
+          </div>
+        </div>
+      </sc-if>
+      <section style="background: #F3F5F7; color: #0F1524; padding: 88px 56px;">
+        <p style="margin: 0 0 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px;"><span style="color: #E9A23B;">COMPLETED</span> <span style="color: #59657A;">- who it's for</span></p>
+        <h2 style="margin: 0; max-width: 16ch; font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 42px; letter-spacing: -.03em; line-height: 1.05;">Teams that deliver for clients.</h2>
+        <div style="margin-top: 40px; display: grid; grid-template-columns: repeat(4,1fr); grid-auto-rows: 1fr; gap: 16px;">
+          <sc-for list="{{ sectors }}" as="s" hint-placeholder-count="8">
+            <a href="{{ s.href }}" data-sector style="display: flex; flex-direction: column; background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 18px 20px 16px; color: #0F1524; transition: border-color .12s, transform .12s;" style-hover="border-color: #E9A23B; transform: translateY(-2px); color: #0F1524;">
+              <span style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #59657A; border: 1px solid #D8DEE6; border-radius: 3px; padding: 3px 7px;">{{ s.tag }}</span>
+                <i data-lucide="{{ s.icon }}" style="width: 20px; height: 20px; color: #0F1524;"></i>
+              </span>
+              <span style="display: block; margin-top: 16px; font-size: 16px; font-weight: 600;">{{ s.name }}</span>
+              <span style="display: block; margin: 4px 0 14px; font-size: 13.5px; line-height: 1.55; color: #59657A;">{{ s.blurb }}</span>
+              <span style="display: block; margin-top: auto; padding-top: 12px; border-top: 1px solid #EDF0F4; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #9AA6B8;">{{ s.href }} →</span>
+            </a>
+          </sc-for>
+        </div>
+      </section>
+      <sc-if value="{{ showNeighbors }}" hint-placeholder-val="{{ true }}">
+        <div style="background: #0F1524; height: 72px; overflow: hidden; padding: 26px 56px 0; opacity: .6;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #E9A23B;">COMPLETED - the bill</div>
+          <div style="margin-top: 18px; font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 40px; letter-spacing: -.03em; color: #fff;">Four tools. One bill.</div>
+        </div>
+      </sc-if>
+    </div>
+    <p style="margin: 18px 0 0; font-size: 13px; color: #59657A; max-width: 72ch;">Cards become mini CRM records: restored mono tag chip top-left, icon top-right, and a route footer (<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">/solutions/… →</span>) that echoes the product's data density. Same hover lift.</p>
+  </div>
+</section>
+
+<section style="display: flex; flex-wrap: wrap; gap: 110px 72px; padding: 96px 72px 0; align-items: flex-start;">
+  <div style="flex: 0 0 100%; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: .08em; color: #59657A; margin-bottom: -70px;">TURN 2
+<section style="display: flex; flex-wrap: wrap; gap: 110px 72px; padding: 96px 72px; align-items: flex-start;">
+  <div style="flex: 0 0 100%; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: .08em; color: #59657A; margin-bottom: -70px;">TURN 2 — HYBRID OF <a href="#1c" style="color: #59657A; text-decoration: underline;">1c</a> + <a href="#1d" style="color: #59657A; text-decoration: underline;">1d</a> (<a href="#2a" style="color: #59657A; text-decoration: underline;">2a</a>)</div>
+
+  <!-- ============ 2a — TALLIED RECEIPT + INTERACTIVE STUBS ============ -->
+  <div id="2a" data-screen-label="2a — Receipt with interactive tear-off stubs" style="position: relative; width: 1240px; flex: 0 0 auto;">
+    <a href="#2a" style="position: absolute; top: -36px; left: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; background: #0F1524; color: #F3F5F7; padding: 4px 11px; border-radius: 4px;">2a</a>
+    <div style="border-radius: 8px; overflow: hidden; box-shadow: 0 18px 40px -20px rgba(15,21,36,.35);">
+      <sc-if value="{{ showNeighbors }}" hint-placeholder-val="{{ true }}">
+        <div style="background: #F3F5F7; height: 72px; overflow: hidden; padding: 18px 56px 0; opacity: .6;">
+          <div style="display: grid; grid-template-columns: repeat(4,1fr); gap: 16px;">
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">legal</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">Legal services</div></div>
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">outsourcing</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">BPO teams</div></div>
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">field</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">Construction</div></div>
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">placement</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">Staffing agencies</div></div>
+          </div>
+        </div>
+      </sc-if>
+      <section style="background: #0F1524; color: #9AA6B8; padding: 88px 56px 116px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 24px; margin-bottom: 64px;">
+          <div>
+            <p style="margin: 0 0 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #E9A23B;">COMPLETED - the bill</p>
+            <h2 style="margin: 0; font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 56px; letter-spacing: -.03em; line-height: 1.05; color: #fff;">Four tools. One bill.</h2>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 14px;">
+            <span style="border: 1px solid #9AA6B8; border-radius: 3px; padding: 5px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA6B8;">Beta pricing - subject to change</span>
+            <a href="#" style="font-size: 15px; color: #9AA6B8; padding: 4px 0;" style-hover="color: #F3F5F7;">Compare all plans →</a>
+          </div>
+        </div>
+        <div data-tally style="width: 880px; margin: 0 auto; filter: drop-shadow(0 30px 44px rgba(0,0,0,.55));">
+          <div style="background: #F3F5F7; color: #0F1524; border-radius: 3px 3px 0 0; padding: 30px 36px 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px;">
+            <div style="text-align: center;">
+              <div style="font-size: 11px; font-weight: 700; letter-spacing: .14em;">TECHMA — DOCUFLOW</div>
+              <div style="font-size: 10px; letter-spacing: .1em; color: #59657A; margin-top: 5px;">CLIENT PROJECT · COMPLETED</div>
+            </div>
+            <div style="border-top: 1.5px dashed #B9C2CF; margin: 16px 0 12px;"></div>
+            <div style="font-size: 10px; letter-spacing: .12em; color: #59657A; margin-bottom: 4px;">YOUR CURRENT STACK — FOUR VENDORS</div>
+            <div style="display: flex; align-items: baseline; gap: 8px; padding: 4px 0; color: #59657A;"><span style="font-size: 12.5px;">CRM &amp; projects</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span data-count="12">$12</span></div>
+            <div style="display: flex; align-items: baseline; gap: 8px; padding: 4px 0; color: #59657A;"><span style="font-size: 12.5px;">Time tracker</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span data-count="7">$7</span></div>
+            <div style="display: flex; align-items: baseline; gap: 8px; padding: 4px 0; color: #59657A;"><span style="font-size: 12.5px;">Monitoring</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span data-count="9">$9</span></div>
+            <div style="display: flex; align-items: baseline; gap: 8px; padding: 4px 0; color: #59657A;"><span style="font-size: 12.5px;">Wiki &amp; docs</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span data-count="10">$10</span></div>
+            <div style="display: flex; align-items: baseline; gap: 8px; padding: 6px 0; color: #59657A; font-weight: 700; text-decoration: line-through;"><span style="font-size: 12.5px;">YOUR STACK</span><span style="flex: 1;"></span><span><span data-count="38">$38</span> /user/mo</span></div>
+            <div style="border-top: 1.5px dashed #B9C2CF; margin: 12px 0 8px;"></div>
+            <div style="display: flex; align-items: center; gap: 8px; padding: 6px 0; font-weight: 700;"><span style="font-size: 13px;">DOCUFLOW — {{ pickedName }}</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span style="background: #E9A23B; padding: 2px 7px; border-radius: 2px;">{{ pickedTotal }}</span></div>
+            <div style="margin-top: 16px; text-align: center; font-size: 10px; letter-spacing: .12em; color: #59657A;">PICK A PLAN — TEAR OFF BELOW</div>
+          </div>
+          <div style="display: flex; border-top: 2px dashed #9AA6B8;">
+            <sc-for list="{{ stubs2a }}" as="s" hint-placeholder-count="4">
+              <div onClick="{{ s.pick }}" role="button" tabIndex="0" style="{{ s.wrapStyle }}">
+                <div style="{{ s.bodyStyle }}">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="{{ s.boxStyle }}">{{ s.mark }}</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .08em; color: #59657A;">{{ s.nameUpper }}</span>
+                    <sc-if value="{{ s.featured }}" hint-placeholder-val="{{ false }}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .08em; background: #E9A23B; color: #0F1524; padding: 2px 6px; border-radius: 2px;">MOST TEAMS</span></sc-if>
+                  </div>
+                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700; margin-top: 8px; color: #0F1524;">{{ s.priceText }}</div>
+                  <p style="margin: 8px 0 0; font-size: 11.5px; line-height: 1.45; color: #59657A;">{{ s.note }}</p>
+                  <a href="#" aria-label="{{ s.ctaLabel }}" style="{{ s.btnStyle }}">{{ s.cta }}</a>
+                </div>
+                <div style="{{ s.teethStyle }}"></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+      <sc-if value="{{ showNeighbors }}" hint-placeholder-val="{{ true }}">
+        <div style="background: #E9A23B; height: 72px; overflow: hidden; padding: 24px 56px 0; text-align: center; opacity: .6;">
+          <div style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 38px; letter-spacing: -.03em; color: #0F1524;">Start with your next client project.</div>
+        </div>
+      </sc-if>
+    </div>
+    <p style="margin: 18px 0 0; font-size: 13px; color: #59657A; max-width: 72ch;">Hybrid of <a href="#1c" style="color: #59657A; text-decoration: underline;">1c</a> + <a href="#1d" style="color: #59657A; text-decoration: underline;">1d</a>: struck-out stack tallies on the receipt; the four stubs below are clickable — picking one lifts its stub and rewrites the DOCUFLOW line above. Growth pre-selected.</p>
+  </div>
+</section>
+
+<section style="display: flex; flex-wrap: wrap; gap: 110px 72px; padding: 0 72px 96px; align-items: flex-start;">
+  <div style="flex: 0 0 100%; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: .08em; color: #59657A; margin-bottom: -70px;">TURN 1 — "COMPLETED — THE BILL" · CURRENT (<a href="#1a" style="color: #59657A; text-decoration: underline;">1a</a>) + THREE DIRECTIONS (<a href="#1b" style="color: #59657A; text-decoration: underline;">1b</a>, <a href="#1c" style="color: #59657A; text-decoration: underline;">1c</a>, <a href="#1d" style="color: #59657A; text-decoration: underline;">1d</a>)</div>
+
+  <!-- ============ 1a — CURRENT (recreated from TheBill.astro) ============ -->
+  <div id="1a" data-screen-label="1a — Current section (recreated)" style="position: relative; width: 1240px; flex: 0 0 auto;">
+    <a href="#1a" style="position: absolute; top: -36px; left: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; background: #0F1524; color: #F3F5F7; padding: 4px 11px; border-radius: 4px;">1a</a>
+    <div style="border-radius: 8px; overflow: hidden; box-shadow: 0 18px 40px -20px rgba(15,21,36,.35);">
+      <sc-if value="{{ showNeighbors }}" hint-placeholder-val="{{ true }}">
+        <div style="background: #F3F5F7; height: 72px; overflow: hidden; padding: 18px 56px 0; opacity: .6;">
+          <div style="display: grid; grid-template-columns: repeat(4,1fr); gap: 16px;">
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">legal</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">Legal services</div></div>
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">outsourcing</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">BPO teams</div></div>
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">field</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">Construction</div></div>
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">placement</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">Staffing agencies</div></div>
+          </div>
+        </div>
+      </sc-if>
+      <section style="background: #0F1524; color: #9AA6B8; padding: 92px 56px;">
+        <p style="margin: 0 0 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #E9A23B;">COMPLETED - the bill</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start;">
+          <h2 style="margin: 0; font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 56px; letter-spacing: -.03em; line-height: 1.05; color: #fff;">Four tools.<br>One bill.</h2>
+          <div style="border-radius: 8px; border: 1px solid #2A3348; background: #161D30; padding: 24px; font-family: 'JetBrains Mono', monospace; font-size: 14px;">
+            <div style="display: flex; justify-content: space-between; padding: 6px 0;"><span>CRM &amp; projects</span><span>$12 /user/mo</span></div>
+            <div style="display: flex; justify-content: space-between; padding: 6px 0;"><span>Time tracker</span><span>$ 7 /user/mo</span></div>
+            <div style="display: flex; justify-content: space-between; padding: 6px 0;"><span>Monitoring</span><span>$ 9 /user/mo</span></div>
+            <div style="display: flex; justify-content: space-between; padding: 6px 0;"><span>Wiki &amp; docs</span><span>$10 /user/mo</span></div>
+            <div style="margin-top: 12px; border-top: 1px solid #2A3348; padding-top: 12px;">
+              <div style="display: flex; justify-content: space-between; padding: 6px 0;"><span>Your stack</span><span>$38 /user/mo</span></div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; font-weight: 700; color: #fff;"><span>DocuFlow</span><span>$14 /user/mo</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top: 48px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;">
+          <span style="border: 1px solid #9AA6B8; border-radius: 3px; padding: 5px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA6B8;">Beta pricing - subject to change</span>
+          <a href="#" style="padding: 8px 0; font-size: 15px; color: #9AA6B8;" style-hover="color: #F3F5F7;">Compare all plans →</a>
+        </div>
+        <div style="margin-top: 24px; display: grid; grid-template-columns: repeat(4,1fr); gap: 16px;">
+          <div style="display: flex; flex-direction: column; border-radius: 8px; padding: 24px; border: 1px solid #2A3348; background: #161D30;">
+            <h3 style="margin: 0; font-family: 'Switzer', sans-serif; font-size: 16px; font-weight: 600; color: #fff;">Starter</h3>
+            <div style="margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 34px; font-weight: 700; color: #fff;">$7</div>
+            <p style="margin: 12px 0 24px; font-size: 13px; line-height: 1.45;">Solo &amp; very small teams. Timer, screenshots, one client.</p>
+            <a href="#" aria-label="Start free trial - Starter" style="margin-top: auto; display: block; text-align: center; border-radius: 6px; padding: 9px 0; font-size: 14px; font-weight: 500; border: 1px solid #9AA6B8; color: #fff;" style-hover="border-color: #fff;">Start free trial</a>
+          </div>
+          <div style="display: flex; flex-direction: column; border-radius: 8px; padding: 24px; border: 2px solid #E9A23B; background: #F3F5F7; color: #0F1524;">
+            <h3 style="margin: 0; font-family: 'Switzer', sans-serif; font-size: 16px; font-weight: 600; color: #0F1524;">Growth</h3>
+            <div style="margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 34px; font-weight: 700; color: #0F1524;">$14</div>
+            <p style="margin: 12px 0 24px; font-size: 13px; line-height: 1.45; color: #59657A;">The full stack: time, monitoring, CRM, docs &amp; AI.</p>
+            <a href="#" aria-label="Start free trial - Growth" style="margin-top: auto; display: block; text-align: center; border-radius: 6px; padding: 9px 0; font-size: 14px; font-weight: 500; background: #E9A23B; color: #0F1524;" style-hover="background: #d8912f;">Start free trial</a>
+          </div>
+          <div style="display: flex; flex-direction: column; border-radius: 8px; padding: 24px; border: 1px solid #2A3348; background: #161D30;">
+            <h3 style="margin: 0; font-family: 'Switzer', sans-serif; font-size: 16px; font-weight: 600; color: #fff;">Business</h3>
+            <div style="margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 34px; font-weight: 700; color: #fff;">$22</div>
+            <p style="margin: 12px 0 24px; font-size: 13px; line-height: 1.45;">Advanced analytics, roles and payroll exports.</p>
+            <a href="#" aria-label="Start free trial - Business" style="margin-top: auto; display: block; text-align: center; border-radius: 6px; padding: 9px 0; font-size: 14px; font-weight: 500; border: 1px solid #9AA6B8; color: #fff;" style-hover="border-color: #fff;">Start free trial</a>
+          </div>
+          <div style="display: flex; flex-direction: column; border-radius: 8px; padding: 24px; border: 1px solid #2A3348; background: #161D30;">
+            <h3 style="margin: 0; font-family: 'Switzer', sans-serif; font-size: 16px; font-weight: 600; color: #fff;">Enterprise</h3>
+            <div style="margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 34px; font-weight: 700; color: #fff;">Custom</div>
+            <p style="margin: 12px 0 24px; font-size: 13px; line-height: 1.45;">SSO, data residency and a dedicated contact.</p>
+            <a href="#" aria-label="Talk to us - Enterprise" style="margin-top: auto; display: block; text-align: center; border-radius: 6px; padding: 9px 0; font-size: 14px; font-weight: 500; border: 1px solid #9AA6B8; color: #fff;" style-hover="border-color: #fff;">Talk to us</a>
+          </div>
+        </div>
+      </section>
+      <sc-if value="{{ showNeighbors }}" hint-placeholder-val="{{ true }}">
+        <div style="background: #E9A23B; height: 72px; overflow: hidden; padding: 24px 56px 0; text-align: center; opacity: .6;">
+          <div style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 38px; letter-spacing: -.03em; color: #0F1524;">Start with your next client project.</div>
+        </div>
+      </sc-if>
+    </div>
+    <p style="margin: 18px 0 0; font-size: 13px; color: #59657A; max-width: 72ch;">Current section, recreated from <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">TheBill.astro</span> — dark receipt card, receipt and plan cards visually unrelated.</p>
+  </div>
+
+  <!-- ============ 1b — TORN PAPER RECEIPT ============ -->
+  <div id="1b" data-screen-label="1b — Torn paper receipt" style="position: relative; width: 1240px; flex: 0 0 auto;">
+    <a href="#1b" style="position: absolute; top: -36px; left: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; background: #0F1524; color: #F3F5F7; padding: 4px 11px; border-radius: 4px;">1b</a>
+    <div style="border-radius: 8px; overflow: hidden; box-shadow: 0 18px 40px -20px rgba(15,21,36,.35);">
+      <sc-if value="{{ showNeighbors }}" hint-placeholder-val="{{ true }}">
+        <div style="background: #F3F5F7; height: 72px; overflow: hidden; padding: 18px 56px 0; opacity: .6;">
+          <div style="display: grid; grid-template-columns: repeat(4,1fr); gap: 16px;">
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">legal</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">Legal services</div></div>
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">outsourcing</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">BPO teams</div></div>
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">field</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">Construction</div></div>
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">placement</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">Staffing agencies</div></div>
+          </div>
+        </div>
+      </sc-if>
+      <section style="background: #0F1524; color: #9AA6B8; padding: 88px 56px 80px;">
+        <div style="display: grid; grid-template-columns: 1fr 480px; gap: 72px; align-items: center;">
+          <div>
+            <p style="margin: 0 0 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #E9A23B;">COMPLETED - the bill</p>
+            <h2 style="margin: 0; font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 62px; letter-spacing: -.03em; line-height: 1.02; color: #fff;">Four tools.<br>One bill.</h2>
+            <div style="margin-top: 36px; display: flex; flex-direction: column; align-items: flex-start; gap: 16px;">
+              <span style="border: 1px solid #9AA6B8; border-radius: 3px; padding: 5px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA6B8;">Beta pricing - subject to change</span>
+              <a href="#" style="font-size: 15px; color: #9AA6B8; padding: 4px 0;" style-hover="color: #F3F5F7;">Compare all plans →</a>
+            </div>
+          </div>
+          <div data-tally style="filter: drop-shadow(0 28px 40px rgba(0,0,0,.5)); transform: rotate(-1.4deg); width: 400px; justify-self: end;">
+            <div style="background: #F3F5F7; color: #0F1524; border-radius: 3px 3px 0 0; padding: 28px 26px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px;">
+              <div style="text-align: center;">
+                <div style="font-size: 11px; font-weight: 700; letter-spacing: .14em;">TECHMA — DOCUFLOW</div>
+                <div style="font-size: 10px; letter-spacing: .1em; color: #59657A; margin-top: 5px;">CLIENT PROJECT · COMPLETED</div>
+              </div>
+              <div style="border-top: 1.5px dashed #B9C2CF; margin: 16px 0 10px;"></div>
+              <div style="display: flex; align-items: baseline; gap: 8px; padding: 5px 0;"><span style="font-size: 12.5px;">CRM &amp; projects</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span data-count="12">$12</span></div>
+              <div style="display: flex; align-items: baseline; gap: 8px; padding: 5px 0;"><span style="font-size: 12.5px;">Time tracker</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span data-count="7">$7</span></div>
+              <div style="display: flex; align-items: baseline; gap: 8px; padding: 5px 0;"><span style="font-size: 12.5px;">Monitoring</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span data-count="9">$9</span></div>
+              <div style="display: flex; align-items: baseline; gap: 8px; padding: 5px 0;"><span style="font-size: 12.5px;">Wiki &amp; docs</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span data-count="10">$10</span></div>
+              <div style="border-top: 1.5px dashed #B9C2CF; margin: 12px 0 8px;"></div>
+              <div style="display: flex; align-items: baseline; gap: 8px; padding: 5px 0; color: #59657A; text-decoration: line-through;"><span style="font-size: 12.5px; font-weight: 700;">YOUR STACK</span><span style="flex: 1;"></span><span style="font-weight: 700;"><span data-count="38">$38</span> /user/mo</span></div>
+              <div style="display: flex; align-items: center; gap: 8px; padding: 6px 0; font-weight: 700;"><span style="font-size: 13px;">DOCUFLOW</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span style="background: #E9A23B; padding: 2px 7px; border-radius: 2px;"><span data-count="14">$14</span> /user/mo</span></div>
+              <sc-if value="{{ showSavings }}" hint-placeholder-val="{{ true }}">
+                <div style="display: flex; align-items: baseline; gap: 8px; padding: 5px 0; color: #187751; font-weight: 700; font-size: 12px;"><span>YOU KEEP</span><span style="flex: 1;"></span><span><span data-count="24">$24</span> /user/mo</span></div>
+              </sc-if>
+              <div style="border-top: 1.5px dashed #B9C2CF; margin: 12px 0 14px;"></div>
+              <div style="width: 150px; height: 26px; margin: 0 auto; background: repeating-linear-gradient(90deg, #0F1524 0 2px, transparent 2px 4px, #0F1524 4px 7px, transparent 7px 9px, #0F1524 9px 10px, transparent 10px 13px);"></div>
+              <div style="text-align: center; font-size: 9.5px; letter-spacing: .12em; color: #59657A; margin-top: 8px;">BETA PRICING — SUBJECT TO CHANGE</div>
+            </div>
+            <div style="height: 12px; background-image: linear-gradient(-135deg, #F3F5F7 6px, transparent 0), linear-gradient(135deg, #F3F5F7 6px, transparent 0); background-size: 12px 12px; background-repeat: repeat-x;"></div>
+          </div>
+        </div>
+        <div style="margin-top: 84px; display: grid; grid-template-columns: repeat(4,1fr); gap: 16px;">
+          <div style="display: flex; flex-direction: column; border-radius: 8px; padding: 24px; border: 1px solid #2A3348; background: #161D30;">
+            <h3 style="margin: 0; font-family: 'Switzer', sans-serif; font-size: 16px; font-weight: 600; color: #fff;">Starter</h3>
+            <div style="margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 34px; font-weight: 700; color: #fff;">$7</div>
+            <p style="margin: 12px 0 24px; font-size: 13px; line-height: 1.45;">Solo &amp; very small teams. Timer, screenshots, one client.</p>
+            <a href="#" aria-label="Start free trial - Starter" style="margin-top: auto; display: block; text-align: center; border-radius: 6px; padding: 9px 0; font-size: 14px; font-weight: 500; border: 1px solid #9AA6B8; color: #fff;" style-hover="border-color: #fff;">Start free trial</a>
+          </div>
+          <div style="position: relative; display: flex; flex-direction: column; border-radius: 8px; padding: 24px; border: 2px solid #E9A23B; background: #F3F5F7; color: #0F1524;">
+            <div style="position: absolute; top: -42px; left: 50%; width: 2px; height: 42px; background: #E9A23B;"></div>
+            <div style="position: absolute; top: -66px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #E9A23B;">the $14 line on the receipt</div>
+            <h3 style="margin: 0; font-family: 'Switzer', sans-serif; font-size: 16px; font-weight: 600; color: #0F1524;">Growth</h3>
+            <div style="margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 34px; font-weight: 700; color: #0F1524;">$14</div>
+            <p style="margin: 12px 0 24px; font-size: 13px; line-height: 1.45; color: #59657A;">The full stack: time, monitoring, CRM, docs &amp; AI.</p>
+            <a href="#" aria-label="Start free trial - Growth" style="margin-top: auto; display: block; text-align: center; border-radius: 6px; padding: 9px 0; font-size: 14px; font-weight: 500; background: #E9A23B; color: #0F1524;" style-hover="background: #d8912f;">Start free trial</a>
+          </div>
+          <div style="display: flex; flex-direction: column; border-radius: 8px; padding: 24px; border: 1px solid #2A3348; background: #161D30;">
+            <h3 style="margin: 0; font-family: 'Switzer', sans-serif; font-size: 16px; font-weight: 600; color: #fff;">Business</h3>
+            <div style="margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 34px; font-weight: 700; color: #fff;">$22</div>
+            <p style="margin: 12px 0 24px; font-size: 13px; line-height: 1.45;">Advanced analytics, roles and payroll exports.</p>
+            <a href="#" aria-label="Start free trial - Business" style="margin-top: auto; display: block; text-align: center; border-radius: 6px; padding: 9px 0; font-size: 14px; font-weight: 500; border: 1px solid #9AA6B8; color: #fff;" style-hover="border-color: #fff;">Start free trial</a>
+          </div>
+          <div style="display: flex; flex-direction: column; border-radius: 8px; padding: 24px; border: 1px solid #2A3348; background: #161D30;">
+            <h3 style="margin: 0; font-family: 'Switzer', sans-serif; font-size: 16px; font-weight: 600; color: #fff;">Enterprise</h3>
+            <div style="margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 34px; font-weight: 700; color: #fff;">Custom</div>
+            <p style="margin: 12px 0 24px; font-size: 13px; line-height: 1.45;">SSO, data residency and a dedicated contact.</p>
+            <a href="#" aria-label="Talk to us - Enterprise" style="margin-top: auto; display: block; text-align: center; border-radius: 6px; padding: 9px 0; font-size: 14px; font-weight: 500; border: 1px solid #9AA6B8; color: #fff;" style-hover="border-color: #fff;">Talk to us</a>
+          </div>
+        </div>
+      </section>
+      <sc-if value="{{ showNeighbors }}" hint-placeholder-val="{{ true }}">
+        <div style="background: #E9A23B; height: 72px; overflow: hidden; padding: 24px 56px 0; text-align: center; opacity: .6;">
+          <div style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 38px; letter-spacing: -.03em; color: #0F1524;">Start with your next client project.</div>
+        </div>
+      </sc-if>
+    </div>
+    <p style="margin: 18px 0 0; font-size: 13px; color: #59657A; max-width: 72ch;">Printed paper receipt with torn edge and barcode; prices tally up on scroll. An amber thread ties the $14 total to the Growth plan card below.</p>
+  </div>
+
+  <!-- ============ 1c — ONE CONTINUOUS TAPE (interactive) ============ -->
+  <div id="1c" data-screen-label="1c — One continuous tape" style="position: relative; width: 1240px; flex: 0 0 auto;">
+    <a href="#1c" style="position: absolute; top: -36px; left: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; background: #0F1524; color: #F3F5F7; padding: 4px 11px; border-radius: 4px;">1c</a>
+    <div style="border-radius: 8px; overflow: hidden; box-shadow: 0 18px 40px -20px rgba(15,21,36,.35);">
+      <sc-if value="{{ showNeighbors }}" hint-placeholder-val="{{ true }}">
+        <div style="background: #F3F5F7; height: 72px; overflow: hidden; padding: 18px 56px 0; opacity: .6;">
+          <div style="display: grid; grid-template-columns: repeat(4,1fr); gap: 16px;">
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">legal</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">Legal services</div></div>
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">outsourcing</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">BPO teams</div></div>
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">field</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">Construction</div></div>
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">placement</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">Staffing agencies</div></div>
+          </div>
+        </div>
+      </sc-if>
+      <section style="background: #0F1524; color: #9AA6B8; padding: 88px 56px 96px;">
+        <div style="display: grid; grid-template-columns: 1fr 520px; gap: 72px; align-items: start;">
+          <div style="position: sticky; top: 40px;">
+            <p style="margin: 0 0 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #E9A23B;">COMPLETED - the bill</p>
+            <h2 style="margin: 0; font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 62px; letter-spacing: -.03em; line-height: 1.02; color: #fff;">Four tools.<br>One bill.</h2>
+            <p style="margin: 28px 0 0; font-size: 17px; line-height: 1.55; max-width: 44ch;">The plans live on the receipt itself — pick a line and the total updates.</p>
+            <a href="#" style="display: inline-block; margin-top: 24px; font-size: 15px; color: #9AA6B8; padding: 4px 0;" style-hover="color: #F3F5F7;">Compare all plans →</a>
+          </div>
+          <div data-tally style="filter: drop-shadow(0 28px 40px rgba(0,0,0,.5));">
+            <div style="background: #F3F5F7; color: #0F1524; border-radius: 3px 3px 0 0; padding: 30px 28px 18px; font-family: 'JetBrains Mono', monospace; font-size: 13px;">
+              <div style="text-align: center;">
+                <div style="font-size: 11px; font-weight: 700; letter-spacing: .14em;">TECHMA — DOCUFLOW</div>
+                <div style="font-size: 10px; letter-spacing: .1em; color: #59657A; margin-top: 5px;">ONE BILL — PICK A PLAN</div>
+              </div>
+              <div style="border-top: 1.5px dashed #B9C2CF; margin: 16px 0 12px;"></div>
+              <div style="font-size: 10px; letter-spacing: .12em; color: #59657A; margin-bottom: 4px;">YOUR CURRENT STACK — FOUR VENDORS</div>
+              <div style="display: flex; align-items: baseline; gap: 8px; padding: 4px 0; color: #59657A;"><span style="font-size: 12.5px;">CRM &amp; projects</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span data-count="12">$12</span></div>
+              <div style="display: flex; align-items: baseline; gap: 8px; padding: 4px 0; color: #59657A;"><span style="font-size: 12.5px;">Time tracker</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span data-count="7">$7</span></div>
+              <div style="display: flex; align-items: baseline; gap: 8px; padding: 4px 0; color: #59657A;"><span style="font-size: 12.5px;">Monitoring</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span data-count="9">$9</span></div>
+              <div style="display: flex; align-items: baseline; gap: 8px; padding: 4px 0; color: #59657A;"><span style="font-size: 12.5px;">Wiki &amp; docs</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span data-count="10">$10</span></div>
+              <div style="display: flex; align-items: baseline; gap: 8px; padding: 6px 0; color: #59657A; font-weight: 700; text-decoration: line-through;"><span style="font-size: 12.5px;">YOUR STACK</span><span style="flex: 1;"></span><span><span data-count="38">$38</span> /user/mo</span></div>
+              <div style="border-top: 1.5px dashed #B9C2CF; margin: 12px 0 2px;"></div>
+              <div style="border-top: 1.5px dashed #B9C2CF; margin: 0 0 12px;"></div>
+              <div style="font-size: 10px; letter-spacing: .12em; color: #59657A; margin-bottom: 8px;">REPLACE WITH DOCUFLOW — CHOOSE A PLAN</div>
+              <sc-for list="{{ plans1c }}" as="p" hint-placeholder-count="4">
+                <div onClick="{{ p.pick }}" role="button" tabIndex="0" style="{{ p.rowStyle }}">
+                  <span style="{{ p.boxStyle }}">{{ p.mark }}</span>
+                  <span style="flex: 1;">
+                    <span style="display: block; font-weight: 700; font-size: 13px;">{{ p.name }}</span>
+                    <span style="display: block; font-size: 11px; color: #59657A; margin-top: 2px; font-family: 'Switzer', sans-serif;">{{ p.note }}</span>
+                  </span>
+                  <span style="font-weight: 700; font-size: 13px;">{{ p.priceText }}</span>
+                </div>
+              </sc-for>
+              <div style="border-top: 1.5px dashed #B9C2CF; margin: 14px 0 10px;"></div>
+              <div style="display: flex; align-items: center; gap: 8px; padding: 4px 0; font-weight: 700;"><span style="font-size: 13px;">TOTAL — {{ pickedName }}</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span style="background: #E9A23B; padding: 2px 7px; border-radius: 2px;">{{ pickedTotal }}</span></div>
+              <a href="#" style="display: block; margin-top: 16px; text-align: center; background: #0F1524; color: #F3F5F7; border-radius: 4px; padding: 12px 0; font-family: 'Switzer', sans-serif; font-size: 14px; font-weight: 600;" style-hover="background: #1c2740; color: #F3F5F7;">{{ pickedCta }}</a>
+              <div style="border-top: 1.5px dashed #B9C2CF; margin: 18px 0 14px;"></div>
+              <div style="width: 150px; height: 26px; margin: 0 auto; background: repeating-linear-gradient(90deg, #0F1524 0 2px, transparent 2px 4px, #0F1524 4px 7px, transparent 7px 9px, #0F1524 9px 10px, transparent 10px 13px);"></div>
+              <div style="text-align: center; font-size: 9.5px; letter-spacing: .12em; color: #59657A; margin-top: 8px;">BETA PRICING — SUBJECT TO CHANGE</div>
+            </div>
+            <div style="height: 12px; background-image: linear-gradient(-135deg, #F3F5F7 6px, transparent 0), linear-gradient(135deg, #F3F5F7 6px, transparent 0); background-size: 12px 12px; background-repeat: repeat-x;"></div>
+          </div>
+        </div>
+      </section>
+      <sc-if value="{{ showNeighbors }}" hint-placeholder-val="{{ true }}">
+        <div style="background: #E9A23B; height: 72px; overflow: hidden; padding: 24px 56px 0; text-align: center; opacity: .6;">
+          <div style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 38px; letter-spacing: -.03em; color: #0F1524;">Start with your next client project.</div>
+        </div>
+      </sc-if>
+    </div>
+    <p style="margin: 18px 0 0; font-size: 13px; color: #59657A; max-width: 72ch;">One continuous tape: old stack struck out at the top, the four plans as selectable lines on the same receipt. Clicking a plan updates the total and the CTA — full integration of receipt + plans.</p>
+  </div>
+
+  <!-- ============ 1d — TEAR-OFF STUBS ============ -->
+  <div id="1d" data-screen-label="1d — Tear-off plan stubs" style="position: relative; width: 1240px; flex: 0 0 auto;">
+    <a href="#1d" style="position: absolute; top: -36px; left: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; background: #0F1524; color: #F3F5F7; padding: 4px 11px; border-radius: 4px;">1d</a>
+    <div style="border-radius: 8px; overflow: hidden; box-shadow: 0 18px 40px -20px rgba(15,21,36,.35);">
+      <sc-if value="{{ showNeighbors }}" hint-placeholder-val="{{ true }}">
+        <div style="background: #F3F5F7; height: 72px; overflow: hidden; padding: 18px 56px 0; opacity: .6;">
+          <div style="display: grid; grid-template-columns: repeat(4,1fr); gap: 16px;">
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">legal</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">Legal services</div></div>
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">outsourcing</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">BPO teams</div></div>
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">field</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">Construction</div></div>
+            <div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">placement</div><div style="font-weight: 600; font-size: 14px; margin-top: 6px;">Staffing agencies</div></div>
+          </div>
+        </div>
+      </sc-if>
+      <section style="background: #0F1524; color: #9AA6B8; padding: 88px 56px 110px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 24px; margin-bottom: 64px;">
+          <div>
+            <p style="margin: 0 0 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #E9A23B;">COMPLETED - the bill</p>
+            <h2 style="margin: 0; font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 56px; letter-spacing: -.03em; line-height: 1.05; color: #fff;">Four tools. One bill.</h2>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 14px;">
+            <span style="border: 1px solid #9AA6B8; border-radius: 3px; padding: 5px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA6B8;">Beta pricing - subject to change</span>
+            <a href="#" style="font-size: 15px; color: #9AA6B8; padding: 4px 0;" style-hover="color: #F3F5F7;">Compare all plans →</a>
+          </div>
+        </div>
+        <div data-tally style="width: 720px; margin: 0 auto; filter: drop-shadow(0 30px 44px rgba(0,0,0,.55));">
+          <div style="background: #F3F5F7; color: #0F1524; border-radius: 3px 3px 0 0; padding: 30px 32px 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px;">
+            <div style="text-align: center;">
+              <div style="font-size: 11px; font-weight: 700; letter-spacing: .14em;">TECHMA — DOCUFLOW</div>
+              <div style="font-size: 10px; letter-spacing: .1em; color: #59657A; margin-top: 5px;">CLIENT PROJECT · COMPLETED</div>
+            </div>
+            <div style="border-top: 1.5px dashed #B9C2CF; margin: 16px 0 10px;"></div>
+            <div style="display: flex; align-items: baseline; gap: 8px; padding: 4px 0;"><span style="font-size: 12.5px;">CRM &amp; projects</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span data-count="12">$12</span></div>
+            <div style="display: flex; align-items: baseline; gap: 8px; padding: 4px 0;"><span style="font-size: 12.5px;">Time tracker</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span data-count="7">$7</span></div>
+            <div style="display: flex; align-items: baseline; gap: 8px; padding: 4px 0;"><span style="font-size: 12.5px;">Monitoring</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span data-count="9">$9</span></div>
+            <div style="display: flex; align-items: baseline; gap: 8px; padding: 4px 0;"><span style="font-size: 12.5px;">Wiki &amp; docs</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span data-count="10">$10</span></div>
+            <div style="border-top: 1.5px dashed #B9C2CF; margin: 12px 0 8px;"></div>
+            <div style="display: flex; align-items: baseline; gap: 8px; padding: 4px 0; color: #59657A; text-decoration: line-through;"><span style="font-size: 12.5px; font-weight: 700;">YOUR STACK</span><span style="flex: 1;"></span><span style="font-weight: 700;"><span data-count="38">$38</span> /user/mo</span></div>
+            <div style="display: flex; align-items: center; gap: 8px; padding: 6px 0; font-weight: 700;"><span style="font-size: 13px;">DOCUFLOW</span><span style="flex: 1; border-bottom: 2px dotted #B9C2CF;"></span><span style="background: #E9A23B; padding: 2px 7px; border-radius: 2px;"><span data-count="14">$14</span> /user/mo</span></div>
+            <div style="margin-top: 16px; text-align: center; font-size: 10px; letter-spacing: .12em; color: #59657A;">PICK A PLAN — TEAR OFF BELOW</div>
+          </div>
+          <div style="display: flex; border-top: 2px dashed #9AA6B8;">
+            <div style="flex: 1; display: flex; flex-direction: column;">
+              <div style="background: #F3F5F7; padding: 18px 16px 16px; flex: 1;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .08em; color: #59657A;">STARTER</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700; margin-top: 6px;">$7</div>
+                <p style="margin: 8px 0 0; font-size: 11.5px; line-height: 1.45; color: #59657A;">Solo &amp; very small teams. Timer, screenshots, one client.</p>
+                <a href="#" aria-label="Start free trial - Starter" style="display: inline-block; margin-top: 14px; padding: 7px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; border: 1px solid #59657A; color: #0F1524;" style-hover="border-color: #0F1524; color: #0F1524;">Start free trial</a>
+              </div>
+              <div style="height: 10px; background-image: linear-gradient(-135deg, #F3F5F7 5px, transparent 0), linear-gradient(135deg, #F3F5F7 5px, transparent 0); background-size: 10px 10px; background-repeat: repeat-x;"></div>
+            </div>
+            <div style="flex: 1.15; display: flex; flex-direction: column; transform: translateY(16px) rotate(1deg); filter: drop-shadow(0 20px 26px rgba(0,0,0,.5));">
+              <div style="background: #fff; padding: 18px 16px 16px; flex: 1; border-left: 2px dashed #B9C2CF; border-right: 2px dashed #B9C2CF;">
+                <div style="display: flex; align-items: center; gap: 8px;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .08em; color: #59657A;">GROWTH</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .08em; background: #E9A23B; color: #0F1524; padding: 2px 6px; border-radius: 2px;">MOST TEAMS</span></div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700; margin-top: 6px;">$14</div>
+                <p style="margin: 8px 0 0; font-size: 11.5px; line-height: 1.45; color: #59657A;">The full stack: time, monitoring, CRM, docs &amp; AI.</p>
+                <a href="#" aria-label="Start free trial - Growth" style="display: inline-block; margin-top: 14px; padding: 7px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; background: #E9A23B; color: #0F1524;" style-hover="background: #d8912f; color: #0F1524;">Start free trial</a>
+              </div>
+              <div style="height: 10px; background-image: linear-gradient(-135deg, #fff 5px, transparent 0), linear-gradient(135deg, #fff 5px, transparent 0); background-size: 10px 10px; background-repeat: repeat-x;"></div>
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column;">
+              <div style="background: #F3F5F7; padding: 18px 16px 16px; flex: 1;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .08em; color: #59657A;">BUSINESS</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700; margin-top: 6px;">$22</div>
+                <p style="margin: 8px 0 0; font-size: 11.5px; line-height: 1.45; color: #59657A;">Advanced analytics, roles and payroll exports.</p>
+                <a href="#" aria-label="Start free trial - Business" style="display: inline-block; margin-top: 14px; padding: 7px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; border: 1px solid #59657A; color: #0F1524;" style-hover="border-color: #0F1524; color: #0F1524;">Start free trial</a>
+              </div>
+              <div style="height: 10px; background-image: linear-gradient(-135deg, #F3F5F7 5px, transparent 0), linear-gradient(135deg, #F3F5F7 5px, transparent 0); background-size: 10px 10px; background-repeat: repeat-x;"></div>
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column;">
+              <div style="background: #F3F5F7; padding: 18px 16px 16px; flex: 1; border-left: 2px dashed #B9C2CF;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .08em; color: #59657A;">ENTERPRISE</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700; margin-top: 6px;">Custom</div>
+                <p style="margin: 8px 0 0; font-size: 11.5px; line-height: 1.45; color: #59657A;">SSO, data residency and a dedicated contact.</p>
+                <a href="#" aria-label="Talk to us - Enterprise" style="display: inline-block; margin-top: 14px; padding: 7px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; border: 1px solid #59657A; color: #0F1524;" style-hover="border-color: #0F1524; color: #0F1524;">Talk to us</a>
+              </div>
+              <div style="height: 10px; background-image: linear-gradient(-135deg, #F3F5F7 5px, transparent 0), linear-gradient(135deg, #F3F5F7 5px, transparent 0); background-size: 10px 10px; background-repeat: repeat-x;"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <sc-if value="{{ showNeighbors }}" hint-placeholder-val="{{ true }}">
+        <div style="background: #E9A23B; height: 72px; overflow: hidden; padding: 24px 56px 0; text-align: center; opacity: .6;">
+          <div style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 38px; letter-spacing: -.03em; color: #0F1524;">Start with your next client project.</div>
+        </div>
+      </sc-if>
+    </div>
+    <p style="margin: 18px 0 0; font-size: 13px; color: #59657A; max-width: 72ch;">The plans ARE the receipt: four perforated tear-off stubs hang from the tally, Growth half-torn and lifted. Plans and receipt become one physical object.</p>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: &quot;100%&quot;}, &quot;tallyMotion&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Motion&quot;}, &quot;neighborHints&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Context&quot;}, &quot;savingsLine&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Receipt (1b)&quot;}}">
+class Component extends DCLogic {
+  state = { pick: 'Growth' };
+  plans = [
+    { name: 'Starter', price: 7, priceText: '$7', note: 'Solo & very small teams. Timer, screenshots, one client.', cta: 'Start free trial' },
+    { name: 'Growth', price: 14, priceText: '$14', note: 'The full stack: time, monitoring, CRM, docs & AI.', cta: 'Start free trial' },
+    { name: 'Business', price: 22, priceText: '$22', note: 'Advanced analytics, roles and payroll exports.', cta: 'Start free trial' },
+    { name: 'Enterprise', price: null, priceText: 'Custom', note: 'SSO, data residency and a dedicated contact.', cta: 'Talk to us' }
+  ];
+  sectors = [
+    { idx: '01', tag: 'agency', icon: 'palette', name: 'Digital agencies', blurb: 'Every hour and file on the client that pays for it.', href: '/solutions/digital-agencies' },
+    { idx: '02', tag: 'software', icon: 'code-xml', name: 'Development teams', blurb: 'Hours and screenshots filed against the project.', href: '/solutions/software-teams' },
+    { idx: '03', tag: 'advisory', icon: 'presentation', name: 'Consulting firms', blurb: 'Show clients where the retainer actually went.', href: '/solutions/consulting-firms' },
+    { idx: '04', tag: 'finance', icon: 'calculator', name: 'Accountants', blurb: 'Billable hours backed by what happened.', href: '/solutions/accounting-firms' },
+    { idx: '05', tag: 'legal', icon: 'scale', name: 'Legal services', blurb: 'Time logs and documents ready for review.', href: '/solutions/legal-services' },
+    { idx: '06', tag: 'outsourcing', icon: 'headset', name: 'BPO teams', blurb: 'Team activity without asking for a status update.', href: '/solutions/bpo-call-centers' },
+    { idx: '07', tag: 'field', icon: 'hard-hat', name: 'Construction', blurb: 'Site hours and captures on the right job.', href: '/solutions/construction' },
+    { idx: '08', tag: 'placement', icon: 'user-search', name: 'Staffing agencies', blurb: 'Placed staff, their hours and their output.', href: '/solutions/staffing-agencies' }
+  ];
+  renderVals() {
+    const picked = this.plans.find(p => p.name === this.state.pick);
+    return {
+      sectors: this.sectors.map((s, i) => ({
+        ...s,
+        rowStyle: { display: 'flex', alignItems: 'center', gap: '18px', padding: '17px 22px', borderTop: i > 0 ? '1px solid #D8DEE6' : 'none', color: '#0F1524', transition: 'background .12s' }
+      })),
+      showNeighbors: this.props.neighborHints ?? true,
+      showSavings: this.props.savingsLine ?? true,
+      plans1c: this.plans.map(p => {
+        const sel = p.name === this.state.pick;
+        return {
+          name: p.name, note: p.note, priceText: p.priceText,
+          pick: () => this.setState({ pick: p.name }),
+          mark: sel ? '✓' : '',
+          rowStyle: { display: 'flex', alignItems: 'center', gap: '12px', padding: '9px 10px', margin: '0 -10px', borderRadius: '4px', cursor: 'pointer', background: sel ? '#FFFFFF' : 'transparent', boxShadow: sel ? 'inset 0 0 0 1.5px #E9A23B' : 'none' },
+          boxStyle: { flex: '0 0 auto', width: '15px', height: '15px', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', lineHeight: '1', border: sel ? '1.5px solid #E9A23B' : '1.5px solid #9AA6B8', background: sel ? '#E9A23B' : 'transparent', color: '#0F1524' }
+        };
+      }),
+      stubs2a: this.plans.map((p, i) => {
+        const sel = p.name === this.state.pick;
+        const feat = p.name === 'Growth';
+        const bg = sel ? '#FFFFFF' : '#F3F5F7';
+        return {
+          nameUpper: p.name.toUpperCase(), note: p.note, priceText: p.priceText,
+          cta: p.cta, ctaLabel: p.cta + ' - ' + p.name, featured: feat,
+          pick: () => this.setState({ pick: p.name }),
+          mark: sel ? '✓' : '',
+          wrapStyle: { flex: sel ? '1.12' : '1', display: 'flex', flexDirection: 'column', cursor: 'pointer', transform: sel ? 'translateY(16px) rotate(' + (i % 2 ? 1 : -1) + 'deg)' : 'none', filter: sel ? 'drop-shadow(0 20px 26px rgba(0,0,0,.5))' : 'none', transition: 'transform .25s cubic-bezier(.4,0,.2,1), flex .25s cubic-bezier(.4,0,.2,1)' },
+          bodyStyle: { background: bg, padding: '18px 16px 16px', flex: '1', borderLeft: i > 0 ? '2px dashed #B9C2CF' : 'none' },
+          boxStyle: { flex: '0 0 auto', width: '14px', height: '14px', borderRadius: '3px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', lineHeight: '1', border: sel ? '1.5px solid #E9A23B' : '1.5px solid #9AA6B8', background: sel ? '#E9A23B' : 'transparent', color: '#0F1524' },
+          btnStyle: sel
+            ? { display: 'inline-block', marginTop: '14px', padding: '7px 12px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, background: '#E9A23B', color: '#0F1524' }
+            : { display: 'inline-block', marginTop: '14px', padding: '7px 12px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, border: '1px solid #59657A', color: '#0F1524' },
+          teethStyle: { height: '10px', backgroundImage: 'linear-gradient(-135deg, ' + bg + ' 5px, transparent 0), linear-gradient(135deg, ' + bg + ' 5px, transparent 0)', backgroundSize: '10px 10px', backgroundRepeat: 'repeat-x' }
+        };
+      }),
+      pickedName: picked.name.toUpperCase(),
+      pickedTotal: picked.price ? '$' + picked.price + ' /user/mo' : 'Custom',
+      pickedCta: picked.cta
+    };
+  }
+  componentDidUpdate() { if (window.lucide) window.lucide.createIcons(); }
+  componentDidMount() {
+    // Lucide replaces <i data-lucide> with inline SVGs; poll while the script + template stream in.
+    let tries = 0;
+    this._iconT = setInterval(() => {
+      if (window.lucide) window.lucide.createIcons();
+      if (++tries > 20) clearInterval(this._iconT);
+    }, 350);
+    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced || this.props.tallyMotion === false || !('IntersectionObserver' in window)) return;
+    this._io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        this._io.unobserve(e.target);
+        e.target.querySelectorAll('[data-count]').forEach((el, i) => {
+          const end = parseInt(el.getAttribute('data-count'), 10);
+          const t0 = performance.now() + i * 130, dur = 520;
+          const tick = (now) => {
+            let k = (now - t0) / dur; if (k < 0) k = 0; if (k > 1) k = 1;
+            el.textContent = '$' + Math.round(end * (k * (2 - k)));
+            if (k < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        });
+      });
+    }, { threshold: 0.4 });
+    this._t = setTimeout(() => { document.querySelectorAll('[data-tally]').forEach(n => this._io.observe(n)); }, 400);
+  }
+  componentWillUnmount() { if (this._io) this._io.disconnect(); clearTimeout(this._t); clearInterval(this._iconT); }
+}
+</script>
+</body>
+</html>
