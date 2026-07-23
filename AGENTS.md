@@ -12,6 +12,8 @@ L'application elle-même vit dans un repo séparé : `../techma-documentation-pl
 - **Tailwind 4** via `@tailwindcss/vite` — configuration CSS-first dans `src/styles/global.css`,
   il n'y a **pas** de `tailwind.config.js`
 - `@astrojs/react` pour d'éventuels îlots interactifs, `@astrojs/sitemap` pour le SEO
+- **GSAP + ScrollTrigger** — uniquement pour le repli de la pile piloté au défilement,
+  importé dans ce seul composant (voir « Contraintes techniques »)
 - Polices auto-hébergées dans `public/fonts` — **aucune requête vers un domaine tiers**
 
 ## Le concept de la page — à ne pas perdre
@@ -46,8 +48,41 @@ Définis dans `@theme` (`src/styles/global.css`). **Noms figés par le brief —
 Typo : **Cabinet Grotesk** (display), **Switzer** (corps), **JetBrains Mono** (tout chiffre,
 durée, prix ou badge).
 
-Formes : rayons 4–8 px, filets 1 px plutôt qu'ombres portées, contenu max 1200 px,
+Formes : rayons 4–8 px, filets 1 px plutôt qu'ombres portées,
 bandes de section unies — **jamais de dégradé**.
+
+### Le bord droit partagé — la page n'est plus centrée
+
+Le contenu **n'est plus une colonne centrée de 1200 px**. Il part du bord gauche qu'aurait
+une colonne de 1200 px centrée, et s'étend à droite jusqu'à un bord commun défini par la
+carte du héros. La page est volontairement asymétrique : marge gauche large, marge droite
+étroite. Décision prise le 22 juillet 2026, en connaissance de la règle qu'elle remplace.
+
+Deux utilitaires dans `src/styles/global.css` :
+
+| Utilitaire | Usage |
+|---|---|
+| `container-page` | Colonne centrée 1200 px. Conservé pour un usage ponctuel — **aucune section ne s'en sert**. |
+| `container-wide` | Le conteneur réel du site : même bord gauche, bord droit repoussé de `--edge-extra`. |
+
+```
+--edge-side  = max(0px, (100% - 1200px) / 2)             ← bord gauche, inchangé
+--edge-extra = min(180px, max(0px, --edge-side - 24px))  ← débord droit, plafonné
+```
+
+Trois règles à ne pas casser :
+
+1. **Tout en `100%`, jamais en `vw`.** `100%` est relatif au `<body>`, barre de défilement
+   exclue ; `vw` l'inclut. Mélanger les deux désaligne le bord gauche d'environ 8 px —
+   exactement le défaut que ce système corrige.
+2. **La carte du héros n'a plus de marge négative.** C'est `container-wide` qui porte le
+   débord ; la carte remplit simplement sa colonne. Une seule source de vérité.
+3. **Son débord peint dépasse le bord de ~7,8 px** : c'est le coin de l'inclinaison de 1,6°,
+   pas un désalignement. Sa boîte de mise en page est exacte.
+
+Un bloc dont le contenu ne remplit pas sa colonne (les chiffres de la bande de preuve)
+doit être dimensionné sur son contenu et calé à droite — sinon la section paraît courte
+alors que son conteneur, lui, est bien aligné.
 
 ## Règles de contenu
 
@@ -59,15 +94,56 @@ bandes de section unies — **jamais de dégradé**.
 - **Aucune statistique ni logo client inventés.** DocuFlow n'a pas encore de clients externes ;
   au Canada les indications trompeuses relèvent de la *Loi sur la concurrence*.
 
+## Animation
+
+**C'est une landing page, pas une brochure : le mouvement est attendu.** Le plafond
+« une seule animation majeure » qui figurait ici venait du brief initial, écrit pour le
+concept « journée de travail » abandonné depuis. Il est levé (23 juillet 2026). L'ampleur
+et le nombre d'animations relèvent de la direction artistique — ce sont des décisions de
+Saïd, pas des règles techniques.
+
+**GSAP + ScrollTrigger sont la boîte à outils du site.** Sur la page d'accueil ils sont déjà
+chargés, donc toute animation supplémentaire y coûte zéro octet. Les importer dans un
+composant partagé est autorisé. Seul point de vigilance : un composant qui importe GSAP
+l'emmènera avec lui sur les futures pages produit — arbitrer à ce moment-là, pas avant.
+
+Animations en place :
+
+- **`StackFold`** — repli de la pile, piloté au défilement, section épinglée, `scrub`. Deux
+  temps morts volontaires dans la timeline (lecture au début, résolution à la fin) : **ne pas
+  les raccourcir**, ce sont eux qui laissent comprendre la comparaison.
+- **`Nav`** — repli de la barre en pastille flottante.
+- **`PillarSection`** — reveal « drapé » : bascule `rotateX` de 15° charnière en haut, arrivée
+  amortie, cascade des trois éléments. Réversible dans les deux sens (`toggleActions`, jamais
+  `scrub` — le scrub écraserait l'amorti). Le comportement réversible est **à l'essai** : la
+  chaîne `toggleActions` est isolée dans une constante pour revenir à un déclenchement unique
+  en une ligne.
+- Micro-interactions : carte du héros au survol, lignes de la fiche, cartes secteurs.
+
 ## Contraintes techniques
 
-- Une seule animation majeure sur la page : le repli de la pile d'outils
-  (`src/components/sections/StackFold.astro`). Rien d'autre que des micro-interactions au survol.
+Ces quatre points ne sont pas négociables — ils ne relèvent pas du goût.
+
+- **Le contenu ne dépend jamais du JS pour être visible.** Tout état masqué doit être posé
+  *par* le script (`gsap.set()`, classe sur `<html>`), jamais par une règle CSS statique. Script
+  absent ou en échec → la page reste lisible. À vérifier en désactivant JS dans les devtools.
+- **`prefers-reduced-motion` respecté partout**, via `gsap.matchMedia()`. Pas d'animation
+  raccourcie : pas d'animation du tout, et contenu à son état final.
+- **CLS ≈ 0.** Seuls `opacity` et `transform` s'animent. Hauteurs réservées sur les zones dont
+  le contenu change (inspecteur du héros).
+- **Jamais de barre de défilement horizontale.** Si une transformation déborde, `overflow-x: clip`
+  — jamais `overflow: hidden`, qui crée un conteneur de défilement et casse le sticky de la nav.
+
+Et deux règles de fond qui restent :
+
+- La comparaison de `StackFold` doit survivre **sans** l'animation : sous 901 px, en pointeur
+  grossier, en mouvement réduit ou sans JS, les quatre cartes, le total 38 $ et DocuFlow à 14 $
+  restent tous visibles simultanément. L'animation enjolive l'argument, elle ne le porte jamais seule.
 - La progression du rail s'écrit **directement dans le DOM**, throttlée en `requestAnimationFrame`.
   Ne jamais la router par de l'état framework : ça re-rend la page à chaque pixel.
-- `prefers-reduced-motion` respecté partout.
-- Hauteurs réservées sur les zones dont le contenu change (inspecteur du héros) pour garder CLS ≈ 0.
-- Cible : Lighthouse ≥ 95 sur les quatre axes, LCP < 2 s.
+
+Cible de performance : Lighthouse ≥ 95 sur les quatre axes, LCP < 2 s. C'est un budget à
+surveiller, pas un prétexte pour refuser une animation.
 
 ## À faire
 
