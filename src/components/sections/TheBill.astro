@@ -1,117 +1,498 @@
 ---
-import { STACK, STACK_TOTAL, DOCUFLOW_PRICE, PLANS } from "../../data/site";
+import { STACK, STACK_TOTAL, PLANS } from "../../data/site";
+
+/** Plan pré-sélectionné au chargement. Rendu côté serveur : sans JS, le reçu
+ *  affiche déjà ce plan et la souche correspondante est marquée. */
+const DEFAULT_PLAN = "Growth";
+
+/** Le reçu montre le prix du plan choisi. Enterprise n'a pas de montant :
+ *  « Custom » s'affiche seul, sans « /user/mo » qui n'aurait aucun sens. */
+const chipFor = (price: string) => (price.startsWith("$") ? `${price} /user/mo` : price);
+
+const selected = PLANS.find((p) => p.name === DEFAULT_PLAN) ?? PLANS[0];
 ---
 
-<section id="pricing" class="bg-ink py-[92px] text-slate-on-ink">
+{/* Le reçu papier : la pile de quatre outils est totalisée puis barrée, et les
+    quatre plans pendent sous le bord perforé comme des souches détachables.
+    Choisir une souche réécrit la ligne DOCUFLOW du reçu. */}
+<section id="pricing" class="bg-ink pt-[88px] pb-[116px] text-slate-on-ink">
   <div class="container-wide">
-    <p class="mb-6 font-mono text-[13px] text-hour">COMPLETED - the bill</p>
+    <div class="mb-16 flex flex-wrap items-end justify-between gap-6">
+      <div>
+        <p class="mb-6 font-mono text-[13px] text-hour">COMPLETED - the bill</p>
+        <h2 class="text-[clamp(34px,5vw,56px)] text-white">Four tools. One bill.</h2>
+      </div>
 
-    <div class="grid items-start gap-14 min-[901px]:grid-cols-2">
-      <h2 class="text-[clamp(34px,5vw,56px)] text-white">Four tools.<br />One bill.</h2>
+      <div class="flex flex-col items-end gap-[14px]">
+        <span
+          class="rounded-[3px] border border-slate-on-ink px-3 py-[5px] font-mono text-[12px] text-slate-on-ink"
+        >
+          Beta pricing - subject to change
+        </span>
+        <a href="/pricing" class="py-1 text-[15px] transition-colors hover:text-paper">
+          Compare all plans →
+        </a>
+      </div>
+    </div>
 
-      {/* Le reçu reprend l'ordre des cartes de l'animation — les deux listes
-          doivent rester synchronisées (source unique : src/data/site.ts). */}
-      <div class="rounded-[8px] border border-ink-border bg-ink-raised p-6 font-mono text-[14px]">
+    <div class="receipt" data-receipt>
+      <div class="receipt-body">
+        <div class="receipt-head">
+          <p class="receipt-brand">TECHMA - DOCUFLOW</p>
+          <p class="receipt-sub">CLIENT PROJECT · COMPLETED</p>
+        </div>
+
+        <div class="receipt-rule"></div>
+
+        <p class="receipt-label">YOUR CURRENT STACK - FOUR VENDORS</p>
+
+        {/* Même ordre que les cartes du repli de la pile — source unique
+            `site.ts`, les deux listes ne peuvent pas diverger. */}
         {
           STACK.map((item) => (
-            <div class="flex justify-between py-[6px]">
-              <span>{item.name}</span>
-              <span>${String(item.price).padStart(2, " ")} /user/mo</span>
+            <div class="line">
+              <span class="line-name">{item.name}</span>
+              <span class="leader" />
+              <span data-count={item.price}>${item.price}</span>
             </div>
           ))
         }
 
-        {/* La hiérarchie des deux dernières lignes se joue au ton, plus à l'ambre :
-            le total de la pile s'efface, DocuFlow passe en blanc gras. L'ambre est
-            réservé à l'étape courante et à l'action suivante (règle de l'ambre
-            unique) — ici c'est le CTA qui la porte, pas un chiffre de reçu. */}
-        <div class="mt-3 border-t border-ink-border pt-3">
-          <div class="flex justify-between py-[6px]">
-            <span>Your stack</span>
-            <span>${STACK_TOTAL} /user/mo</span>
-          </div>
-          <div class="flex justify-between py-[6px] font-bold text-white">
-            <span>DocuFlow</span>
-            <span>${DOCUFLOW_PRICE} /user/mo</span>
-          </div>
+        <div class="line line--struck">
+          <span class="line-name">YOUR STACK</span>
+          <span class="leader leader--blank" />
+          <span><span data-count={STACK_TOTAL}>${STACK_TOTAL}</span> /user/mo</span>
         </div>
+
+        <div class="receipt-rule receipt-rule--tight"></div>
+
+        <div class="line line--picked">
+          <span class="line-name" data-total-name>DOCUFLOW - {selected.name.toUpperCase()}</span>
+          <span class="leader" />
+          <span class="chip" data-total-price>{chipFor(selected.price)}</span>
+        </div>
+
+        <p class="receipt-caption">PICK A PLAN - TEAR OFF BELOW</p>
       </div>
-    </div>
 
-    <div class="mt-12 flex flex-wrap items-center justify-between gap-4">
-      {/* Mise en garde, pas appel à l'action : elle sort de l'ambre. En ambre elle
-          rivalisait avec le CTA alors qu'elle dit « ne vous fiez pas encore à ce
-          prix » — le contraire d'une invitation à cliquer. */}
-      <span
-        class="rounded-[3px] border border-slate-on-ink px-3 py-[5px] font-mono text-[12px] text-slate-on-ink"
-      >
-        Beta pricing - subject to change
-      </span>
+      {/* La sélection est un choix parmi quatre : des vrais boutons radio, pas
+          un `role="button"` par souche. Le handoff décrivait ce dernier, mais il
+          aurait mis un lien (le CTA) à l'intérieur d'un élément interactif —
+          imbrication invalide, et la section sort justement d'un audit qui
+          corrigeait des défauts d'identification de contrôles.
+          Bénéfice de bord : l'état visuel tient en CSS (`:has(:checked)`), donc
+          la sélection fonctionne sans JS. Seule la ligne DOCUFLOW du reçu, qui
+          vit hors de la souche, a besoin du script pour suivre. */}
+      <div class="stubs" role="radiogroup" aria-label="Choose a plan">
+        {
+          PLANS.map((plan, i) => (
+            <div class="stub" data-stub style={`--stub-rot:${i % 2 ? "1deg" : "-1deg"}`}>
+              <div class="stub-body">
+                <div class="stub-head">
+                  <input
+                    class="stub-radio"
+                    type="radio"
+                    name="plan"
+                    id={`plan-${plan.name.toLowerCase()}`}
+                    value={plan.name}
+                    checked={plan.name === DEFAULT_PLAN}
+                    data-name={plan.name.toUpperCase()}
+                    data-chip={chipFor(plan.price)}
+                  />
+                  <label class="stub-label" for={`plan-${plan.name.toLowerCase()}`}>
+                    <span class="stub-box" aria-hidden="true" />
+                    <span class="stub-name">{plan.name.toUpperCase()}</span>
+                  </label>
+                  {plan.featured && <span class="stub-flag">MOST TEAMS</span>}
+                </div>
 
-      {/* `py-2` : la cible ne faisait que 23px de haut, sous le minimum de 24px
-          (WCAG 2.2 AA, 2.5.8). Padding et non hauteur fixe, pour que la zone
-          cliquable grandisse avec le texte s'il est traduit. */}
-      <a href="/pricing" class="py-2 text-[15px] transition-colors hover:text-paper">
-        Compare all plans →
-      </a>
-    </div>
+                <p class="stub-price">{plan.price}</p>
+                <p class="stub-note">{plan.note}</p>
 
-    <div class="mt-6 grid grid-cols-1 gap-4 min-[561px]:grid-cols-2 min-[901px]:grid-cols-4">
-      {
-        PLANS.map((plan) => (
-          /* `flex flex-col` + `mt-auto` sur le CTA : les notes font une ou deux
-             lignes selon le plan, et les boutons se retrouvaient décalés de 18px
-             d'une carte à l'autre. La grille égalisait déjà la hauteur des cartes,
-             pas celle de leur contenu. */
-          <article
-            class={`flex flex-col rounded-[8px] p-6 ${
-              plan.featured
-                ? "border-2 border-hour bg-paper text-ink"
-                : "border border-ink-border bg-ink-raised"
-            }`}
-          >
-            {/* `h3` et non `p` : quatre offres tarifées sous le `h2` de la section
-                n'avaient aucune structure de titre. Police et graisse ramenées à
-                celles du `p` d'origine — c'est la sémantique qui change, pas le
-                rendu. */}
-            <h3
-              class={`font-sans font-semibold leading-normal tracking-normal ${plan.featured ? "text-ink" : "text-white"}`}
-            >
-              {plan.name}
-            </h3>
-            <p
-              class={`mt-2 font-mono text-[34px] font-bold ${plan.featured ? "text-ink" : "text-white"}`}
-            >
-              {plan.price}
-            </p>
-            {/* `mb-6` porte l'écart minimal sous la note ; `mt-auto` sur le bouton
-                absorbe le reste. Un `pt-6` sur le lien serait écrasé par son
-                propre `py-[9px]`. */}
-            <p class={`mt-3 mb-6 text-[13px] leading-snug ${plan.featured ? "text-slate" : ""}`}>
-              {plan.note}
-            </p>
+                <a
+                  class="stub-cta"
+                  href={`/signup?plan=${plan.name.toLowerCase()}`}
+                  aria-label={`${plan.cta} - ${plan.name}`}
+                >
+                  {plan.cta}
+                </a>
+              </div>
 
-            {/* Trois liens s'appelaient tous « Start free trial » et pointaient sur
-                la même URL : dans une liste de liens de lecteur d'écran ils étaient
-                indiscernables, et le plan choisi se perdait en chemin. Le `aria-label`
-                les distingue, le paramètre transporte le choix.
-                Bordure au repos en `slate-on-ink` : en `ink-border` elle tombait à
-                1,33:1 sur la carte, seul repère indiquant qu'il s'agit d'un bouton
-                (WCAG 1.4.11 exige 3:1 pour identifier un composant). */}
-            <a
-              href={`/signup?plan=${plan.name.toLowerCase()}`}
-              aria-label={`${plan.cta} - ${plan.name}`}
-              class={`mt-auto block rounded-[6px] py-[9px] text-center text-[14px] font-medium transition-colors ${
-                plan.featured
-                  ? "bg-hour text-ink hover:bg-hour-hover"
-                  : "border border-slate-on-ink text-white hover:border-white"
-              }`}
-            >
-              {plan.cta}
-            </a>
-          </article>
-        ))
-      }
+              <div class="stub-teeth" aria-hidden="true" />
+            </div>
+          ))
+        }
+      </div>
     </div>
   </div>
 </section>
+
+<style>
+  /* ---- Le reçu ---- */
+
+  .receipt {
+    width: 100%;
+    max-width: 880px;
+    margin-inline: auto;
+    /* L'une des deux ombres autorisées du système : le reçu est un objet posé
+       SUR la bande, il a physiquement quitté le plan de la page. Un filet ne
+       peut pas décrire ça (The Off-Plane Rule). */
+    filter: drop-shadow(0 30px 44px rgb(0 0 0 / 0.55));
+  }
+
+  .receipt-body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    /* 3px et non 8px : c'est du papier, pas une carte. */
+    border-radius: 3px 3px 0 0;
+    padding: 30px 36px 20px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+
+  .receipt-head {
+    text-align: center;
+  }
+
+  .receipt-brand {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+  }
+
+  .receipt-sub {
+    margin-top: 5px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--color-slate);
+  }
+
+  .receipt-rule {
+    border-top: 1.5px dashed var(--color-receipt-rule);
+    margin: 16px 0 12px;
+  }
+
+  .receipt-rule--tight {
+    margin: 12px 0 8px;
+  }
+
+  .receipt-label {
+    margin-bottom: 4px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--color-slate);
+  }
+
+  .receipt-caption {
+    margin-top: 16px;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--color-slate);
+  }
+
+  /* ---- Lignes du reçu ---- */
+
+  .line {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 4px 0;
+    color: var(--color-slate);
+  }
+
+  .line-name {
+    font-size: 12.5px;
+  }
+
+  /* Conduit de points : c'est lui qui fait lire une facture plutôt qu'un
+     tableau de prix. Il absorbe toute la largeur libre, donc les montants se
+     calent à droite quelle que soit la longueur du libellé. */
+  .leader {
+    flex: 1;
+    border-bottom: 2px dotted var(--color-receipt-rule);
+  }
+
+  .leader--blank {
+    border-bottom: none;
+  }
+
+  .line--struck {
+    padding: 6px 0;
+    font-weight: 700;
+    text-decoration: line-through;
+  }
+
+  .line--picked {
+    align-items: center;
+    padding: 6px 0;
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+
+  .line--picked .line-name {
+    font-size: 13px;
+  }
+
+  /* Le seul ambre du reçu : le prix du plan choisi. Il désigne l'action
+     suivante, pas un chiffre de plus. */
+  .chip {
+    background: var(--color-hour);
+    color: var(--color-ink);
+    padding: 2px 7px;
+    border-radius: 2px;
+  }
+
+  /* ---- Les souches détachables ---- */
+
+  .stubs {
+    display: flex;
+    /* La perforation. 2px et `slate-on-ink` : elle doit se lire comme une
+       ligne de déchirure, plus franche que les tirets internes. */
+    border-top: 2px dashed var(--color-slate-on-ink);
+  }
+
+  .stub {
+    --stub-bg: var(--color-paper);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition:
+      transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+      flex 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* `:has()` porte tout l'état visuel : la souche choisie se détache sans une
+     ligne de JS. Le script ne sert qu'à réécrire le reçu au-dessus. */
+  .stub:has(.stub-radio:checked) {
+    --stub-bg: #fff;
+    flex: 1.12;
+    transform: translateY(16px) rotate(var(--stub-rot));
+    filter: drop-shadow(0 20px 26px rgb(0 0 0 / 0.5));
+  }
+
+  .stub-body {
+    flex: 1;
+    background: var(--stub-bg);
+    padding: 18px 16px 16px;
+  }
+
+  .stub + .stub .stub-body {
+    border-left: 2px dashed var(--color-receipt-rule);
+  }
+
+  .stub-head {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Le bouton radio reste focusable mais invisible ; c'est le carré qui le
+     représente, et qui porte donc l'anneau de focus à deux tons du système. */
+  .stub-radio {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .stub-radio:focus-visible + .stub-label .stub-box {
+    outline: 2px solid var(--color-hour);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--color-ink);
+  }
+
+  .stub-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .stub-box {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1.5px solid var(--color-slate-on-ink);
+    font-size: 10px;
+    line-height: 1;
+    color: var(--color-ink);
+  }
+
+  .stub:has(.stub-radio:checked) .stub-box {
+    border-color: var(--color-hour);
+    background: var(--color-hour);
+  }
+
+  .stub:has(.stub-radio:checked) .stub-box::after {
+    content: "✓";
+  }
+
+  .stub-name {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--color-slate);
+  }
+
+  .stub-flag {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    background: var(--color-hour);
+    color: var(--color-ink);
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+
+  .stub-price {
+    margin-top: 8px;
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+
+  .stub-note {
+    margin-top: 8px;
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: var(--color-slate);
+  }
+
+  .stub-cta {
+    display: inline-block;
+    margin-top: 14px;
+    padding: 7px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--color-slate);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-ink);
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+
+  .stub-cta:hover {
+    border-color: var(--color-ink);
+  }
+
+  .stub:has(.stub-radio:checked) .stub-cta {
+    border-color: var(--color-hour);
+    background: var(--color-hour);
+  }
+
+  .stub:has(.stub-radio:checked) .stub-cta:hover {
+    border-color: var(--color-hour-hover);
+    background: var(--color-hour-hover);
+  }
+
+  /* Le bord déchiré : des dents en dégradé de la couleur du fond de la souche,
+     donc il suit automatiquement le passage en blanc quand elle est choisie. */
+  .stub-teeth {
+    height: 10px;
+    background-image:
+      linear-gradient(-135deg, var(--stub-bg) 5px, transparent 0),
+      linear-gradient(135deg, var(--stub-bg) 5px, transparent 0);
+    background-size: 10px 10px;
+    background-repeat: repeat-x;
+  }
+
+  /* ---- Sous 561px : les souches passent en 2×2 ---- */
+
+  @media (max-width: 560px) {
+    .stubs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* Le filet vertical ne sépare plus que les deux colonnes. */
+    .stub + .stub .stub-body {
+      border-left: none;
+    }
+
+    .stub:nth-child(even) .stub-body {
+      border-left: 2px dashed var(--color-receipt-rule);
+    }
+
+    /* En grille, une souche qui descend de 16px recouvrirait la rangée
+       suivante. Elle se détache toujours, mais de moins loin. */
+    .stub:has(.stub-radio:checked) {
+      transform: translateY(6px) rotate(var(--stub-rot));
+    }
+  }
+</style>
+
+<script>
+  const receipt = document.querySelector<HTMLElement>("[data-receipt]");
+
+  if (receipt) {
+    const totalName = receipt.querySelector<HTMLElement>("[data-total-name]");
+    const totalPrice = receipt.querySelector<HTMLElement>("[data-total-price]");
+    const radios = Array.from(receipt.querySelectorAll<HTMLInputElement>(".stub-radio"));
+
+    // La souche gère son propre état en CSS ; il ne reste qu'à réécrire la
+    // ligne DOCUFLOW, qui vit au-dessus de la perforation.
+    const sync = () => {
+      const picked = radios.find((r) => r.checked);
+      if (!picked || !totalName || !totalPrice) return;
+      totalName.textContent = `DOCUFLOW - ${picked.dataset.name}`;
+      totalPrice.textContent = picked.dataset.chip ?? "";
+    };
+
+    radios.forEach((radio) => radio.addEventListener("change", sync));
+
+    // Toute la souche est cliquable, pas seulement le carré. On laisse passer
+    // le CTA et le label : le premier doit naviguer, le second coche déjà.
+    receipt.querySelectorAll<HTMLElement>("[data-stub]").forEach((stub) => {
+      stub.addEventListener("click", (event) => {
+        const target = event.target as Element | null;
+        if (target?.closest("a, label, input")) return;
+
+        const radio = stub.querySelector<HTMLInputElement>(".stub-radio");
+        if (!radio || radio.checked) return;
+        radio.checked = true;
+        radio.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+    });
+
+    // Décompte des montants, une seule fois. Le balisage contient déjà les
+    // valeurs finales : script absent ou en échec, le reçu reste juste.
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (!reduced && "IntersectionObserver" in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            observer.disconnect();
+
+            entry.target.querySelectorAll<HTMLElement>("[data-count]").forEach((el, i) => {
+              const end = Number(el.dataset.count);
+              const start = performance.now() + i * 130;
+
+              // Écrit directement dans le DOM, throttlé en rAF — jamais par de
+              // l'état framework, qui re-rendrait la page à chaque image.
+              const tick = (now: number) => {
+                const k = Math.min(1, Math.max(0, (now - start) / 520));
+                el.textContent = `$${Math.round(end * (k * (2 - k)))}`;
+                if (k < 1) requestAnimationFrame(tick);
+              };
+
+              requestAnimationFrame(tick);
+            });
+          }
+        },
+        { threshold: 0.4 }
+      );
+
+      observer.observe(receipt);
+    }
+  }
+</script>

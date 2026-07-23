@@ -28,6 +28,12 @@
   --color-band-mint: #eaf2ed;
   --color-band-warm: #fbf3e6;
 
+  /* Filets du reçu de la section « the bill » : pointillés, tirets et
+     perforations entre souches. Teinte propre au reçu, entre `rule` et
+     `slate-on-ink` — `rule` disparaît sur `paper`, `slate-on-ink` fait
+     une ligne trop dure pour du papier. Sanctionné par le handoff. */
+  --color-receipt-rule: #b9c2cf;
+
   /* Seule ombre « flottante » du système : la pastille de nav détachée du bord.
      L'ombre d'arrivée (0 24px 48px -18px) est calibrée pour une carte de 590px
      et écraserait une pastille de 44px. Voir « The Off-Plane Rule ». */
