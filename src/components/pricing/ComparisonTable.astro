@@ -1,0 +1,231 @@
+---
+import { PLANS, COMPARISON_GROUPS } from "../../data/site";
+---
+
+{/* Un vrai `<table>` plutôt qu'une grille de `<div>` : c'est un comparatif, donc
+    chaque cellule a besoin de sa colonne ET de sa rangée pour vouloir dire quelque
+    chose. Un lecteur d'écran annonce « Payroll-ready exports, Growth, included » ;
+    la même chose en grille n'annonce que « included ». */}
+<section class="compare">
+  <div class="container-wide">
+    <h2>Compare every plan.</h2>
+
+    <table>
+      <caption class="sr-only">Feature availability across the four DocuFlow plans</caption>
+
+      <colgroup>
+        <col class="col-feature" />
+        <col span="4" class="col-plan" />
+      </colgroup>
+
+      <thead>
+        <tr>
+          <th scope="col" class="th-feature">Feature</th>
+          {
+            PLANS.map((plan) => (
+              <th scope="col" class:list={["th-plan", { "th-plan--featured": plan.featured }]}>
+                {plan.name}
+              </th>
+            ))
+          }
+        </tr>
+      </thead>
+
+      {
+        COMPARISON_GROUPS.map((group) => (
+          <tbody>
+            <tr class="group">
+              <th scope="colgroup" colspan={PLANS.length + 1}>
+                {group.title}
+              </th>
+            </tr>
+
+            {group.rows.map((row) => (
+              <tr>
+                <th scope="row">{row.name}</th>
+
+                {row.cells.map((cell) =>
+                  typeof cell === "string" ? (
+                    <td class="limit">{cell}</td>
+                  ) : cell ? (
+                    <td>
+                      <span class="yes" aria-hidden="true">
+                        ✓
+                      </span>
+                      <span class="sr-only">Included</span>
+                    </td>
+                  ) : (
+                    <td>
+                      <span class="no" aria-hidden="true">
+                        —
+                      </span>
+                      <span class="sr-only">Not included</span>
+                    </td>
+                  )
+                )}
+              </tr>
+            ))}
+          </tbody>
+        ))
+      }
+    </table>
+  </div>
+</section>
+
+<style>
+  /* Bande blanche entre deux bandes `paper` : les filets haut et bas sont la seule
+     frontière, comme partout ailleurs. */
+  .compare {
+    border-top: 1px solid var(--color-rule);
+    border-bottom: 1px solid var(--color-rule);
+    background: #fff;
+    padding: 72px 0;
+    /* Hauteur de la barre de nav. Elle sert deux fois : le point d'accroche de
+       l'en-tête collant, et la hauteur du cache au-dessus de lui. Une seule
+       valeur — les deux ne peuvent pas se désynchroniser. */
+    --stick: 64px;
+  }
+
+  /* Le titre passe AU-DESSUS du cache (`z-index` supérieur à celui de l'en-tête).
+     Sans ça, le cache — qui vit juste au-dessus de l'en-tête, donc à cheval sur la
+     marge du titre tant que le tableau n'est pas décollé — blanchirait la moitié
+     basse du `<h2>` au défilement. Aucun décalage : rien ne bouge, c'est de
+     l'ordre de peinture. */
+  h2 {
+    position: relative;
+    z-index: 6;
+    margin-bottom: 32px;
+    max-width: 18ch;
+    font-size: clamp(26px, 3.5vw, 38px);
+    letter-spacing: -0.025em;
+  }
+
+  /* `separate` et non `collapse`, avec un espacement nul : rendu identique à
+     l'oeil, mais les filets appartiennent alors aux CELLULES et non au tableau.
+     En `collapse`, ils sont peints par le tableau, au-dessus du fond des cellules
+     et hors de leur contexte d'empilement : les filets des rangées qui défilent
+     traversaient donc l'en-tête collant, et celui de l'en-tête restait accroché à
+     la position d'origine de la rangée. Un seul réglage règle les deux. */
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+    font-size: 14px;
+    text-align: left;
+  }
+
+  .col-feature {
+    width: 40%;
+  }
+
+  .col-plan {
+    width: 15%;
+  }
+
+  /* L'en-tête suit le défilement sous la barre de nav (64px) : sur un comparatif
+     de dix-huit lignes, une colonne sans titre ne veut plus rien dire à mi-course.
+     Le fond opaque n'est pas décoratif — c'est lui qui fait passer les rangées
+     DERRIÈRE l'en-tête au lieu de les laisser transparaître (voir `border-spacing`
+     plus haut : sans lui, les filets traversaient quand même). */
+  thead th {
+    position: sticky;
+    top: var(--stick);
+    z-index: 5;
+    border-bottom: 2px solid var(--color-ink);
+    background: #fff;
+    padding: 14px 8px 14px 0;
+  }
+
+  /* Cache de la bande de nav. Repliée en pastille, la barre rend son fond
+     transparent — c'est voulu, elle flotte — mais elle laisse alors 64px à
+     découvert au-dessus de l'en-tête collant, dans lesquels les rangées
+     continuaient de défiler à la vue de tous.
+     Le cache est un enfant de la cellule collante : il voyage donc avec elle et
+     n'existe qu'à l'endroit exact où il sert. Une cellule par colonne, les caches
+     se juxtaposent et couvrent toute la largeur du tableau — au-delà, la bande
+     est déjà le fond blanc de la section. */
+  thead th::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: 100%;
+    height: var(--stick);
+    background: #fff;
+  }
+
+  .th-feature {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  .th-plan {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .th-plan--featured {
+    color: var(--color-hour);
+  }
+
+  .group th {
+    padding: 22px 0 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-hour);
+  }
+
+  tbody td,
+  tbody tr:not(.group) th {
+    border-bottom: 1px solid var(--color-rule);
+    padding: 12px 8px 12px 0;
+    vertical-align: middle;
+  }
+
+  tbody tr:not(.group) th {
+    font-weight: 400;
+    color: var(--color-ink);
+  }
+
+  tbody td {
+    padding-right: 0;
+    text-align: center;
+  }
+
+  .yes {
+    font-weight: 700;
+    color: var(--color-live-on-light);
+  }
+
+  /* Le tiret doit s'effacer sans disparaître : `rule` s'évanouit sur blanc, et
+     l'absence d'une fonction reste une information. Le sens ne repose de toute
+     façon pas sur lui — chaque cellule porte son libellé masqué. */
+  .no {
+    color: var(--color-receipt-rule);
+  }
+
+  .limit {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-slate);
+  }
+
+  @media (max-width: 620px) {
+    table {
+      font-size: 12px;
+    }
+
+    .compare {
+      padding: 56px 0;
+    }
+  }
+</style>

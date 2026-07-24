@@ -1,5 +1,12 @@
 ---
 import { NAV_LINKS } from "../data/site";
+
+/** Page courante. Marquée en `ink` et non en ambre : l'ambre désigne l'action à
+ *  faire, pas l'endroit où l'on est, et une page comme `/pricing` en dépense déjà
+ *  son quota. Le contraste seul ne porte pas l'information — `aria-current` la dit. */
+const path = Astro.url.pathname.replace(/\/$/, "") || "/";
+const isCurrent = (href: string) =>
+  href.startsWith("/") && (path === href || path.startsWith(`${href}/`));
 ---
 
 {/* Sentinelle : 64px au sommet du document, hors flux. Tant qu'elle est
@@ -19,7 +26,11 @@ import { NAV_LINKS } from "../data/site";
       {
         NAV_LINKS.map((link) => (
           <li>
-            <a href={link.href} class="nav-link">
+            <a
+              href={link.href}
+              class="nav-link"
+              aria-current={isCurrent(link.href) ? "page" : undefined}
+            >
               {link.label}
             </a>
           </li>
@@ -114,7 +125,8 @@ import { NAV_LINKS } from "../data/site";
     transition: color 0.15s ease;
   }
 
-  .nav-link:hover {
+  .nav-link:hover,
+  .nav-link[aria-current="page"] {
     color: var(--color-ink);
   }
 

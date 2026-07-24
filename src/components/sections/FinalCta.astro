@@ -1,10 +1,19 @@
 ---
+interface Props {
+  /** Chaque page appelle à l'action avec ses mots. Le défaut est celui de
+   *  l'accueil — la copy vient du handoff validé, ne pas l'improviser ici. */
+  title?: string;
+  /** Ligne mono sous les boutons. Absente sur l'accueil, présente sur `/pricing`. */
+  note?: string;
+}
+
+const { title = "Start with your next client project.", note } = Astro.props;
 ---
 
 <section class="bg-hour py-[92px] text-center">
   <div class="container-wide">
     <h2 class="mx-auto max-w-[20ch] text-[clamp(30px,4.5vw,48px)] text-ink">
-      Start with your next client project.
+      {title}
     </h2>
 
     <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -21,5 +30,7 @@
         Book a 15-minute demo
       </a>
     </div>
+
+    {note && <p class="mt-5 font-mono text-[12.5px] text-ink/75">{note}</p>}
   </div>
 </section>

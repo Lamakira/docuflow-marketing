@@ -1,0 +1,229 @@
+---
+import { PRICING_FAQ } from "../../data/site";
+---
+
+{/* Colonne centrée : `container-page`, pas `container-wide` — même raison que la
+    bande d'appel à l'action, le conteneur large est asymétrique et décentrerait la
+    colonne vers la droite. */}
+<section class="faq">
+  <div class="container-page">
+    <div class="col">
+      <h2>Questions before you switch.</h2>
+
+      {/* `<details>` natif : le clavier et les lecteurs d'écran connaissent déjà ce
+          widget, et sans JS l'accordéon fonctionne — instantanément, comme n'importe
+          quel `<details>`. Le script ne fait qu'ajouter le dépliage progressif.
+
+          Le `name` partagé (accordéon exclusif natif) a dû partir : le navigateur
+          referme les frères SÈCHEMENT dès qu'on ouvre, en plein milieu de
+          l'animation du panneau sortant. L'exclusivité est donc gérée par le script,
+          qui referme le frère ouvert avec la même animation. Sans JS, les panneaux
+          deviennent indépendants — plusieurs peuvent rester ouverts, ce qui reste
+          une FAQ parfaitement lisible. */}
+      <div class="list">
+        {
+          PRICING_FAQ.map((item, i) => (
+            <details class="item" open={i === 0} data-faq>
+              <summary>
+                {item.q}
+                <span class="icon" aria-hidden="true">
+                  +
+                </span>
+              </summary>
+              {/* Enveloppe nécessaire : c'est elle qu'on mesure pour connaître la
+                  hauteur d'arrivée. Le contenu d'un `<details>` fermé n'est pas
+                  rendu, donc rien à l'intérieur ne peut s'animer tout seul. */}
+              <div class="panel" data-faq-panel>
+                <p class="answer">{item.a}</p>
+              </div>
+            </details>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .faq {
+    padding: 72px 0;
+  }
+
+  .col {
+    margin-inline: auto;
+    max-width: 820px;
+  }
+
+  h2 {
+    margin-bottom: 28px;
+    text-align: center;
+    font-size: clamp(26px, 3.5vw, 38px);
+    letter-spacing: -0.025em;
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .item {
+    border: 1px solid var(--color-rule);
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    /* Le triangle par défaut ferait doublon avec le « + » du handoff. */
+    list-style: none;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .icon {
+    flex: 0 0 auto;
+    font-family: var(--font-mono);
+    font-size: 20px;
+    line-height: 1;
+    color: var(--color-hour);
+    /* Même durée et même courbe que le panneau : le « + » tourne pendant que la
+       réponse se déplie, pas avant elle. */
+    transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .item[open] .icon {
+    transform: rotate(45deg);
+  }
+
+  /* Pas de `ch` de plus ici : la colonne de 820px EST la mesure de lecture de
+     cette section, et un cap plus étroit laisserait un drapeau au milieu de la
+     carte au lieu d'un bloc. */
+  .answer {
+    margin: 0;
+    padding: 0 20px 20px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--color-slate);
+  }
+</style>
+
+<script>
+  /* Dépliage progressif de la FAQ.
+   *
+   * Pourquoi du JS sur une page qui n'en avait pas : le contenu d'un `<details>`
+   * fermé n'est pas rendu, donc il n'a pas d'état de départ à animer. Quatre pistes
+   * CSS ont été essayées et aucune ne s'anime — transition sur `::details-content`,
+   * `height` physique, `grid-template-rows: 0fr → 1fr`, et `@starting-style`.
+   * La seule méthode fiable est celle-ci : garder l'élément ouvert pendant qu'on
+   * anime SA hauteur, celle du `<details>` lui-même, qui est un élément normal.
+   *
+   * Le contenu ne dépend toujours pas du script : sans lui, `<details>` fonctionne
+   * nativement, en instantané. C'est un enrichissement, pas un rendu. */
+  const DURATION = 320;
+  const EASING = "cubic-bezier(0.4, 0, 0.2, 1)";
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  class Disclosure {
+    el: HTMLDetailsElement;
+    summary: HTMLElement;
+    panel: HTMLElement;
+    animation: Animation | null = null;
+    /** Une animation en cours ne dit pas où l'on va : ces deux drapeaux si. Sans
+     *  eux, un clic pendant la fermeture relancerait une fermeture. */
+    closing = false;
+    expanding = false;
+
+    constructor(el: HTMLDetailsElement) {
+      this.el = el;
+      this.summary = el.querySelector("summary")!;
+      this.panel = el.querySelector<HTMLElement>("[data-faq-panel]")!;
+      this.summary.addEventListener("click", (event) => this.onClick(event));
+    }
+
+    onClick(event: MouseEvent) {
+      // Le navigateur bascule `open` sur le clic : on reprend la main, sinon le
+      // contenu disparaît avant que la fermeture ait pu se jouer.
+      event.preventDefault();
+
+      if (reduced.matches) {
+        this.el.open = !this.el.open;
+        if (this.el.open) closeOthers(this);
+        return;
+      }
+
+      this.el.style.overflow = "hidden";
+      if (this.closing || !this.el.open) this.open();
+      else this.shrink();
+    }
+
+    open() {
+      this.el.style.height = `${this.el.offsetHeight}px`;
+      this.el.open = true;
+      closeOthers(this);
+      // Une image d'attente : le panneau doit être dans le flux avant d'être mesuré.
+      requestAnimationFrame(() => this.expand());
+    }
+
+    expand() {
+      this.expanding = true;
+      this.run(
+        `${this.el.offsetHeight}px`,
+        `${this.summary.offsetHeight + this.panel.offsetHeight}px`,
+        true
+      );
+    }
+
+    shrink() {
+      this.closing = true;
+      this.run(`${this.el.offsetHeight}px`, `${this.summary.offsetHeight}px`, false);
+    }
+
+    run(from: string, to: string, open: boolean) {
+      this.animation?.cancel();
+      this.animation = this.el.animate({ height: [from, to] }, { duration: DURATION, easing: EASING });
+      this.animation.onfinish = () => this.settle(open);
+      this.animation.oncancel = () => {
+        this.closing = false;
+        this.expanding = false;
+      };
+    }
+
+    /** Rendre la hauteur au flux : une valeur en dur survivrait au redimensionnement
+     *  de la fenêtre et couperait la réponse. */
+    settle(open: boolean) {
+      this.el.open = open;
+      this.animation = null;
+      this.closing = false;
+      this.expanding = false;
+      this.el.style.height = "";
+      this.el.style.overflow = "";
+    }
+  }
+
+  const panels = [...document.querySelectorAll<HTMLDetailsElement>("[data-faq]")].map(
+    (el) => new Disclosure(el)
+  );
+
+  /** Un seul panneau ouvert à la fois — le comportement du handoff. L'attribut
+   *  natif `name` le ferait, mais il referme les frères sans transition. */
+  function closeOthers(current: Disclosure) {
+    for (const other of panels) {
+      if (other === current || !other.el.open || other.closing) continue;
+      if (reduced.matches) other.el.open = false;
+      else {
+        other.el.style.overflow = "hidden";
+        other.shrink();
+      }
+    }
+  }
+</script>

@@ -1,0 +1,30 @@
+---
+import Layout from "../layouts/Layout.astro";
+import PlanCards from "../components/pricing/PlanCards.astro";
+import ComparisonTable from "../components/pricing/ComparisonTable.astro";
+import PricingFaq from "../components/pricing/PricingFaq.astro";
+import FinalCta from "../components/sections/FinalCta.astro";
+
+const title = "DocuFlow pricing - one bill for the whole workday";
+const description =
+  "Time tracking, monitoring, CRM, projects and documentation on one bill. Four plans from $7 per user per month, billed monthly or annually.";
+
+/** Rythme des bandes, même règle que l'accueil : deux sections voisines ne
+ *  partagent jamais le même fond.
+ *
+ *    paper → white → paper → hour
+ *    Plans   Table   FAQ     Cta
+ *
+ *  Le rail d'étapes est retiré : il raconte le cycle de vie d'un mandat client,
+ *  qui n'est pas le sujet de cette page. */
+---
+
+<Layout title={title} description={description} rail={false}>
+  <PlanCards />
+  <ComparisonTable />
+  <PricingFaq />
+  <FinalCta
+    title="Start tracking tomorrow morning."
+    note="No credit card. Desktop app for Windows, macOS and Linux."
+  />
+</Layout>

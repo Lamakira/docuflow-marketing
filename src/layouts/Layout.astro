@@ -7,9 +7,13 @@ import StageRail from "../components/StageRail.astro";
 interface Props {
   title: string;
   description: string;
+  /** Le rail suit les étapes CRM du mandat client raconté par l'accueil. Sur une
+   *  page qui ne raconte pas ce mandat, `LEAD → COMPLETED` ne décrit plus rien :
+   *  c'est alors une décoration, ce que le rail n'a jamais été. */
+  rail?: boolean;
 }
 
-const { title, description } = Astro.props;
+const { title, description, rail = true } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url).href;
 ---
 
@@ -42,7 +46,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url).href;
       Skip to content
     </a>
 
-    <StageRail />
+    {rail && <StageRail />}
     <Nav />
     <main id="main">
       <slot />
