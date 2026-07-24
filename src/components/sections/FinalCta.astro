@@ -10,8 +10,13 @@ interface Props {
 const { title = "Start with your next client project.", note } = Astro.props;
 ---
 
+{/* `container-page` et non `container-wide` : le débord droit rend le conteneur
+    asymétrique, donc son milieu tombe ~90px à droite du milieu de la page. Pour du
+    contenu aligné à gauche c'est le but ; pour un bloc centré, ça se voit comme un
+    défaut. Le bord gauche est le même dans les deux conteneurs — cette bande reste
+    donc alignée avec le reste de la page. */}
 <section class="bg-hour py-[92px] text-center">
-  <div class="container-wide">
+  <div class="container-page">
     <h2 class="mx-auto max-w-[20ch] text-[clamp(30px,4.5vw,48px)] text-ink">
       {title}
     </h2>
