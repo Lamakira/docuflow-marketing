@@ -118,7 +118,15 @@ Animations en place :
   `scrub` — le scrub écraserait l'amorti). Le comportement réversible est **à l'essai** : la
   chaîne `toggleActions` est isolée dans une constante pour revenir à un déclenchement unique
   en une ligne.
-- Micro-interactions : carte du héros au survol, lignes de la fiche, cartes secteurs.
+- **`PlanCards`** — arrivée des cartes tarifaires, décalée de 90 ms de l'une à l'autre : la
+  carte se pose (18 px, `opacity` de 0.25 à 1), puis son coin se tourne avec un léger
+  dépassement. **En CSS pur, sans une ligne de JS** (voir « La page `/pricing` »). Le fondu
+  part de 0.25 et non de 0 : un élément à `opacity: 0` est ignoré par la mesure du LCP, et
+  les cartes sont le plus gros bloc au-dessus de la ligne de flottaison.
+- Micro-interactions : carte du héros au survol, lignes de la fiche, cartes secteurs,
+  fondu croisé des deux tarifs à la bascule mensuel/annuel, **coin de la carte tarifaire qui
+  se soulève au survol** (le handoff disait « card hover: none » et `DESIGN.md` interdit le
+  déplacement au survol — les deux ont été levés sur demande, le 24 juillet 2026).
 
 ## Contraintes techniques
 
@@ -145,6 +153,104 @@ Et deux règles de fond qui restent :
 Cible de performance : Lighthouse ≥ 95 sur les quatre axes, LCP < 2 s. C'est un budget à
 surveiller, pas un prétexte pour refuser une animation.
 
+## La page `/pricing`
+
+Intégrée le 24 juillet 2026 d'après `docs/design_handoff_pricing_cards/`. Quatre sections :
+`PlanCards`, `ComparisonTable`, `PricingFaq`, puis le `FinalCta` partagé — désormais paramétré
+(`title`, `note`) parce que chaque page appelle à l'action avec ses mots.
+
+Tout y est en CSS **sauf le dépliage de la FAQ**, qui embarque le seul script propre à la page
+(voir plus bas). Le reste — bascule des tarifs, pli des cartes, survol — ne coûte pas un octet
+de JS, et la règle de fond tient partout : **rien n'attend le script pour être lisible**.
+
+**La bascule mensuel/annuel est en CSS pur.** Deux boutons radio masqués visuellement et un
+`:has()` sur la section : les flèches du clavier fonctionnent sans code, et le tarif mensuel
+est rendu côté serveur. Le bloc annuel est un doublon complet du bloc mensuel, pas un contenu
+que le script révélerait — d'où la seule dérogation apparente à la règle « aucun état masqué
+en CSS statique » : sans `:has()`, la page reste sur le mensuel, entière et lisible. Corollaire :
+l'en-tête condensé et la grille vivent dans **un seul composant**, sinon les radios et les prix
+qu'ils commandent n'ont plus d'ancêtre commun.
+
+**La carte cornée sort de plusieurs règles de `DESIGN.md`, et c'est le handoff qui les lève** :
+rayon 18 px (hors échelle 1/3/6/8), CTA en pastille (« no pill buttons anywhere »), filet
+tireté hors du reçu, et une ombre portée sur la carte Growth. Le `clip-path` rogne tout le
+rendu de l'élément, ombre comprise : celle-ci vit donc sur une enveloppe, en `drop-shadow`,
+ce qui lui fait suivre la silhouette cornée au lieu de retracer un rectangle — même technique
+que le reçu. À arbitrer avec Saïd : soit `DESIGN.md` accueille ces valeurs, soit la carte
+rentre dans le rang.
+
+**Trois teintes du handoff ont été corrigées pour le contraste**, jamais pour le goût : le vert
+qui porte le ✓ passe en `live-on-light` (règle déjà écrite dans `global.css`), et les libellés
+de fonctions absentes montent d'un cran (`slate` sur blanc, `slate-on-ink` sur la carte sombre)
+— ce sont de vraies informations produit, elles ne peuvent pas rester sous AA. Les pastilles et
+le tiret du tableau, eux, gardent leurs valeurs exactes : ils sont `aria-hidden` et doublés d'un
+texte masqué, donc décoratifs au sens strict.
+
+Le rail d'étapes est **retiré** de cette page (`<Layout rail={false}>`) : `LEAD → COMPLETED`
+décrit le cycle d'un mandat client, pas une grille tarifaire.
+
+**Le comparatif est en `border-collapse: separate` avec `border-spacing: 0`** — rendu identique
+à l'oeil, mais c'est ce qui rend son en-tête collant utilisable. En `collapse`, les filets
+appartiennent au TABLEAU et non aux cellules : peints par le tableau, au-dessus du fond des
+cellules et hors de leur contexte d'empilement. Deux défauts en découlaient, et un seul réglage
+les corrige : le filet de l'en-tête restait accroché à la position d'origine de la rangée (il
+« disparaissait » au décollage), et les filets des rangées en cours de défilement traversaient
+l'en-tête, qui semblait alors transparent malgré son fond blanc. Vaut pour toute cellule
+`position: sticky` de ce projet.
+
+**Et l'en-tête porte un cache de 64px au-dessus de lui** (`thead th::before`), parce que la nav
+repliée en pastille rend son fond transparent — c'est le principe de la pastille, elle flotte —
+et laisse donc la hauteur d'une barre de nav à découvert, dans laquelle les rangées défilaient
+à la vue de tous. Le cache est un enfant de la cellule collante : il voyage avec elle et
+n'existe qu'à l'endroit où il sert. Deux conséquences à ne pas défaire : la hauteur du cache et
+le `top` de l'accroche sortent de la même variable (`--stick`), et le `<h2>` de la section prend
+un `z-index` supérieur — sans lui, le cache blanchirait la moitié basse du titre au moment où le
+tableau arrive sous la nav. **Toute section qui rendra un en-tête collant sous cette nav aura le
+même problème.**
+
+**Le dépliage de la FAQ demande du JS — quatre pistes CSS ont été essayées et aucune ne
+s'anime** (transition sur `::details-content`, `height` physique, `grid-template-rows:
+0fr → 1fr`, `@starting-style`). La cause est commune aux quatre : le contenu d'un `<details>`
+fermé **n'est pas rendu**, donc il n'a aucun état de départ à interpoler. La seule méthode
+fiable est d'animer la hauteur du `<details>` lui-même, qui est un élément normal, en le
+gardant ouvert pendant la fermeture. Conséquences assumées :
+
+- L'attribut `name` (accordéon exclusif natif) a dû partir : le navigateur referme les frères
+  sèchement, en plein milieu de l'animation. L'exclusivité est gérée par le script. Sans JS,
+  les panneaux deviennent indépendants — plusieurs ouverts à la fois, ce qui reste lisible.
+- Le script est un **enrichissement** : sans lui, `<details>` fonctionne nativement. La règle
+  « le contenu ne dépend jamais du JS » tient toujours.
+- Vérification : un onglet en arrière-plan suspend `requestAnimationFrame`, donc l'ouverture
+  s'y fige à mi-chemin. Ce n'est pas un bug — mais ça rend tout test d'animation invérifiable
+  dans un onglet masqué. Allonger la durée et regarder, comme pour le pli des cartes.
+
+**Le pli d'arrivée et le fondu des tarifs sont en CSS pur.** Deux points de méthode qui
+expliquent leur forme :
+
+- **Jamais la forme raccourcie `animation:` dans ce projet.** Une déclaration sans nom
+  d'animation — `animation: 520ms ease backwards` — est renormalisée en `animation: none`
+  par Lightning CSS au build. Le nom posé par une règle suivante survit, la durée non :
+  l'animation s'exécute en 0 s, donc invisible, et **rien n'échoue nulle part** — ni au
+  build, ni dans la console. Longhands uniquement (`animation-name`, `-duration`, …).
+  Corollaire de méthode : une animation se vérifie sur le **CSS livré** (`dist/_astro/*.css`)
+  et à l'écran, jamais en injectant les valeurs manquantes depuis la console — c'est
+  exactement ce qui a laissé passer le bug une première fois.
+- Le pli anime **ensemble** l'encoche du `clip-path` et l'échelle du rabat, depuis le même
+  coin et au même rythme : le rabat épouse donc la coupe à chaque image et l'encoche n'est
+  jamais un trou. Découpler les deux, c'est voir la page trouée avant d'être pliée. Les deux
+  séries de pourcentages (`0/42/78/100 %`) doivent rester identiques, et l'échelle du
+  dépassement vaut exactement le rapport des deux coupes (1.2 ↔ 36 px pour 30 px).
+  Contrepartie assumée : `clip-path` repeint hors compositeur, quatre cartes pendant ~1,2 s
+  au chargement, puis une carte à la fois au survol.
+- Le bloc d'animation est sous `prefers-reduced-motion: no-preference`, pas seulement sous la
+  règle globale qui écrase les durées : celle-ci ne touche pas `animation-delay`, et une carte
+  dépliée figée 290 ms avant de claquer serait pire que pas d'animation du tout.
+- Les deux tarifs partagent **une seule cellule de grille** (`opacity` + `visibility`, jamais
+  `display`) : c'est ce qui permet le fondu croisé, ça sort toujours le tarif caché de l'arbre
+  d'accessibilité, et la carte est dimensionnée en permanence sur le plus large des deux — la
+  bascule ne peut donc rien décaler. Une transition ne se déclenchant pas au premier calcul de
+  style, rien ne clignote au chargement.
+
 ## À faire
 
 - [ ] **Remplacer les chiffres de la bande de preuve** (`src/data/site.ts`, `PROOF_STATS`) par
@@ -152,8 +258,8 @@ surveiller, pas un prétexte pour refuser une animation.
 - [ ] Arbitrer le domaine et mettre à jour `site` dans `astro.config.mjs` (actuellement `docuflow.ca`)
 - [ ] Décider EN seul ou bilingue FR/EN — structure tout le routing, à trancher avant d'ajouter des pages
 - [ ] Gabarits restants : page produit, secteur, comparative, méga-menu (voir `docs/site-architecture.md`)
-- [ ] Page `/pricing` — maquette dans `docs/design-handoff/Pricing.dc.html`, pas encore intégrée
-- [ ] Vérifier le rendu mobile réel (points de rupture posés, pas testés visuellement)
+- [ ] Vérifier le rendu mobile réel (points de rupture posés, pas testés visuellement) — fait
+      pour `/pricing` (620 / 560 / 360 px), reste l'accueil
 
 ## Documents de référence
 
@@ -163,6 +269,7 @@ surveiller, pas un prétexte pour refuser une animation.
 | `docs/landing-corrections.md` | Le delta qui a corrigé le concept — **c'est la version qui fait foi** |
 | `docs/site-architecture.md` | Arborescence complète, matrice SEO, fondations techniques |
 | `docs/design-handoff/` | Maquettes HTML de référence — ouvrir dans un navigateur |
+| `docs/design_handoff_pricing_cards/` | Cartes cornées de `/pricing` — **remplace `Pricing.dc.html`** |
 
 ---
 
