@@ -1,4 +1,5 @@
 ---
+import { Icon } from "astro-icon/components";
 import { PLANS, PLAN_FEATURES, planPrice, planYearly } from "../../data/site";
 
 /** L'en-tête condensé et la grille vivent dans le MÊME composant, et ce n'est pas
@@ -111,11 +112,14 @@ const EAR = 30;
                   const on = i < plan.included;
                   return (
                     <li class:list={["feat", { "feat--off": !on }]}>
-                      {/* La pastille est décorative : le sens passe par le texte
-                          masqué juste après, jamais par la couleur seule. */}
-                      <span class="mark" aria-hidden="true">
-                        {on ? "✓" : "✕"}
-                      </span>
+                      {/* Même icône que les garanties de l'accueil : un seul langage
+                          de tracé sur tout le site. Décorative — le sens passe par
+                          le texte masqué juste après, jamais par la couleur seule. */}
+                      <Icon
+                        name={on ? "lucide:circle-check" : "lucide:circle-x"}
+                        class="mark"
+                        aria-hidden="true"
+                      />
                       <span class="sr-only">{on ? "Included:" : "Not included:"}</span>
                       <span class="feat-text">{feature}</span>
                     </li>
@@ -445,33 +449,30 @@ const EAR = 30;
     white-space: nowrap;
   }
 
+  /* 16px et non les 18px des garanties : la rangée fait 12,5px de texte, une
+     icône plus grosse la déséquilibrerait. La taille du disque du handoff est
+     conservée, donc le rythme des sept lignes ne bouge pas. */
   .mark {
-    display: inline-flex;
     flex: 0 0 auto;
-    align-items: center;
-    justify-content: center;
     width: 16px;
     height: 16px;
-    border-radius: 999px;
-    /* `live` plein ne porte que 3,46:1 face au blanc du ✓ : c'est la variante
-       assombrie qui prend le glyphe (5,53:1), règle posée dans global.css. */
-    background: var(--color-live-on-light);
-    font-size: 9px;
-    font-weight: 700;
-    line-height: 1;
-    color: #fff;
+    color: var(--color-live-on-light);
+  }
+
+  /* Le trait EST l'information depuis que la pastille n'est plus pleine : sur
+     fond sombre c'est `live` qui reste lisible (5,3:1 contre 3,3:1), règle déjà
+     posée dans global.css. Sur blanc, l'inverse. */
+  .card--featured .mark {
+    color: var(--color-live);
   }
 
   .feat--off .mark {
-    border: 1.5px solid var(--color-rule);
-    background: none;
     color: var(--color-receipt-rule);
   }
 
   /* Valeur locale du handoff : le seul gris qui se détache de `ink` sans devenir
-     un filet clair. `ink-border` disparaîtrait derrière le ✕. */
+     un filet clair. `ink-border` disparaîtrait derrière l'icône. */
   .card--featured .feat--off .mark {
-    border-color: #3a4560;
     color: #3a4560;
   }
 

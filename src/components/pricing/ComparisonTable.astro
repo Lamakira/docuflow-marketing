@@ -1,4 +1,5 @@
 ---
+import { Icon } from "astro-icon/components";
 import { PLANS, COMPARISON_GROUPS } from "../../data/site";
 ---
 
@@ -49,16 +50,12 @@ import { PLANS, COMPARISON_GROUPS } from "../../data/site";
                     <td class="limit">{cell}</td>
                   ) : cell ? (
                     <td>
-                      <span class="yes" aria-hidden="true">
-                        ✓
-                      </span>
+                      <Icon name="lucide:check" class="yes" aria-hidden="true" />
                       <span class="sr-only">Included</span>
                     </td>
                   ) : (
                     <td>
-                      <span class="no" aria-hidden="true">
-                        —
-                      </span>
+                      <Icon name="lucide:minus" class="no" aria-hidden="true" />
                       <span class="sr-only">Not included</span>
                     </td>
                   )
@@ -201,8 +198,17 @@ import { PLANS, COMPARISON_GROUPS } from "../../data/site";
     text-align: center;
   }
 
+  /* Les cellules sont centrées : une icône est un élément en ligne, donc
+     `inline-block` + `vertical-align` la calent comme le faisait le glyphe. */
+  .yes,
+  .no {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+  }
+
   .yes {
-    font-weight: 700;
     color: var(--color-live-on-light);
   }
 

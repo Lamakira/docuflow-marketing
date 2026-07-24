@@ -179,12 +179,22 @@ ce qui lui fait suivre la silhouette cornée au lieu de retracer un rectangle �
 que le reçu. À arbitrer avec Saïd : soit `DESIGN.md` accueille ces valeurs, soit la carte
 rentre dans le rang.
 
-**Trois teintes du handoff ont été corrigées pour le contraste**, jamais pour le goût : le vert
-qui porte le ✓ passe en `live-on-light` (règle déjà écrite dans `global.css`), et les libellés
-de fonctions absentes montent d'un cran (`slate` sur blanc, `slate-on-ink` sur la carte sombre)
-— ce sont de vraies informations produit, elles ne peuvent pas rester sous AA. Les pastilles et
-le tiret du tableau, eux, gardent leurs valeurs exactes : ils sont `aria-hidden` et doublés d'un
-texte masqué, donc décoratifs au sens strict.
+**Les marques sont des icônes Lucide, pas des glyphes texte** (décidé le 24 juillet 2026, sur
+demande) : `circle-check` / `circle-x` sur les cartes — la même icône que les garanties de
+l'accueil —, `check` / `minus` dans le comparatif, sans cercle parce que quatorze rangées de
+pastilles cerclées feraient un mur. Le handoff décrivait une pastille pleine de 16px avec un ✓
+blanc ; elle est abandonnée, un seul langage de tracé valant mieux sur tout le site. Toute
+nouvelle icône doit être ajoutée à `include` dans `astro.config.mjs` — **un nom absent ne rend
+rien et ne casse pas le build**, donc ça se vérifie en comptant les `<svg>` livrés.
+
+**Deux teintes du handoff ont été corrigées pour le contraste**, jamais pour le goût : les
+libellés de fonctions absentes montent d'un cran (`slate` sur blanc, `slate-on-ink` sur la carte
+sombre) — ce sont de vraies informations produit, elles ne peuvent pas rester sous AA. Le vert
+suit la règle déjà écrite dans `global.css` : `live-on-light` sur fond clair, `live` sur la
+carte sombre où il reste lisible (5,3:1 contre 3,3:1). Depuis que la pastille est un contour et
+non un disque plein, c'est le trait qui porte l'information. Les icônes de fonctions absentes,
+elles, gardent leurs valeurs exactes : `aria-hidden` et doublées d'un texte masqué, donc
+décoratives au sens strict.
 
 Le rail d'étapes est **retiré** de cette page (`<Layout rail={false}>`) : `LEAD → COMPLETED`
 décrit le cycle d'un mandat client, pas une grille tarifaire.
