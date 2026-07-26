@@ -1,0 +1,196 @@
+---
+import { Icon } from "astro-icon/components";
+import { PLATFORM_CARDS, MCP_TOOLS } from "../../data/product";
+---
+
+{/* Bande `ink` : le changement d'altitude est porté par le fond, pas par un
+    titre qui l'annonce. Après quatre piliers listés en détail, cette section dit
+    « et tout ça repose sur la même chose ». */}
+<section class="platform bg-ink" data-reveal-group>
+  <div class="container-wide">
+    {/* Ambre sur `ink` : 8,4:1. Ce libellé et les trois marques de la carte MCP
+        (filet, icône, pastille) forment un seul signal — le différenciateur MCP —
+        mais leur cumul dépasse la One Amber Rule de DESIGN.md : à arbitrer avec
+        Saïd, comme les oeils-de-boeuf de bande claire. */}
+    <p class="mb-4 font-mono text-[13px] text-hour" data-reveal>PLATFORM</p>
+
+    <h2 class="mb-10 max-w-[16ch] text-[clamp(28px,3.6vw,42px)] text-paper" data-reveal>
+      Underneath all four.
+    </h2>
+
+    <ul class="plat-grid" data-reveal>
+      {
+        PLATFORM_CARDS.map((card) => (
+          <li class:list={["plat-card", { "plat-card--mcp": card.featured }]}>
+            <div class="plat-head">
+              <span class="plat-icon" aria-hidden="true">
+                <Icon name={`lucide:${card.icon}`} />
+              </span>
+
+              <h3 class="plat-title">{card.title}</h3>
+
+              {card.featured && <span class="plat-chip">MCP</span>}
+            </div>
+
+            <p class="plat-body">{card.body}</p>
+
+            {/* Les noms d'outils sont l'argument : ils existent, on les écrit
+                tels qu'ils sont exposés. En mono, donc — c'est le produit qui
+                les a nommés, pas nous. */}
+            {
+              card.featured && (
+                <ul class="plat-tools">
+                  {MCP_TOOLS.map((tool) => (
+                    <li class="plat-tool">{tool}</li>
+                  ))}
+                </ul>
+              )
+            }
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .platform {
+    padding-block: 88px;
+    /* Le reveal bascule les blocs vers le spectateur : la perspective les
+       projette hors du conteneur. `clip`, jamais `hidden`. */
+    overflow-x: clip;
+  }
+
+  .platform .container-wide {
+    perspective: 1200px;
+  }
+
+  .plat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    transform-style: preserve-3d;
+  }
+
+  /* Ton sur ton : `ink-raised` posé sur `ink`, cerné d'un filet `ink-border`.
+     Aucune ombre — rien ici n'a quitté le plan de la page. */
+  .plat-card {
+    border: 1px solid var(--color-ink-border);
+    border-radius: 8px;
+    background: var(--color-ink-raised);
+    padding: 22px;
+  }
+
+  /* La carte MCP prend toute la largeur : le brief présente le serveur MCP
+     comme unique dans la catégorie (revendication à substantifier avant
+     publication) et refuse d'en faire une note de bas de page.
+     `1 / -1` et non `span 3` — la carte suit la grille quand elle passe à deux
+     puis à une colonne. Ce filet ambre s'ajoute à l'eyebrow et aux autres marques
+     MCP (icône, pastille) — même signal, mais le cumul dépasse la One Amber Rule
+     de DESIGN.md : à arbitrer avec Saïd. */
+  .plat-card--mcp {
+    grid-column: 1 / -1;
+    border-color: var(--color-hour);
+    padding: 24px;
+  }
+
+  .plat-head {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 13px;
+  }
+
+  .plat-icon {
+    display: inline-flex;
+    height: 40px;
+    width: 40px;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-ink-border);
+    border-radius: 6px;
+    color: var(--color-slate-on-ink);
+  }
+
+  .plat-icon :global(svg) {
+    height: 20px;
+    width: 20px;
+  }
+
+  .plat-card--mcp .plat-icon {
+    border-color: var(--color-hour);
+    color: var(--color-hour);
+  }
+
+  .plat-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--color-paper);
+  }
+
+  .plat-chip {
+    margin-left: auto;
+    border-radius: 3px;
+    background: var(--color-hour);
+    padding: 4px 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--color-ink);
+  }
+
+  .plat-body {
+    margin: 0;
+    max-width: 62ch;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--color-slate-on-ink);
+  }
+
+  .plat-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .plat-tool {
+    border: 1px solid var(--color-ink-border);
+    border-radius: 3px;
+    padding: 4px 9px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-slate-on-ink);
+  }
+
+  /* Trois cartes de 220px sur un écran de 700px, ce n'est plus une carte, c'est
+     une colonne de mots. Deux, puis une. */
+  @media (max-width: 900px) {
+    .platform {
+      padding-block: 64px;
+    }
+
+    .plat-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 560px) {
+    .plat-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>
+
+<script>
+  import "../../scripts/reveal";
+</script>

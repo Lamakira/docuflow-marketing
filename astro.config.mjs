@@ -34,6 +34,16 @@ export default defineConfig({
           // Sans cercle — dix-huit rangées de pastilles cerclées feraient un mur.
           'check',
           'minus',
+          // Cartes de la bande Platform de /product, dans l'ordre de
+          // PLATFORM_CARDS (src/data/product.ts). `share-2` porte le serveur
+          // MCP : trois noeuds reliés, c'est le seul glyphe Lucide qui dessine
+          // un protocole plutôt qu'un objet.
+          'shield-check',
+          'users',
+          'bell',
+          'refresh-cw',
+          'lock',
+          'share-2',
           // Un par secteur, dans l'ordre de SECTORS (src/data/site.ts).
           'palette',
           'code-xml',

@@ -11,14 +11,21 @@ interface Props {
    *  page qui ne raconte pas ce mandat, `LEAD → COMPLETED` ne décrit plus rien :
    *  c'est alors une décoration, ce que le rail n'a jamais été. */
   rail?: boolean;
+  /** Dégagement des ancres internes. Le défaut de `global.css` (80px) couvre la
+   *  barre de nav seule ; une page qui empile une seconde barre collante sous
+   *  elle — la barre de saut de `/product` — doit déclarer la somme, sinon
+   *  l'ancre gare son titre DERRIÈRE. Posé en variable inline plutôt qu'en
+   *  `<style is:global>` dans la page : le style ne peut alors pas fuir vers un
+   *  autre document au moment où Astro regroupe les feuilles. */
+  scrollPad?: string;
 }
 
-const { title, description, rail = true } = Astro.props;
+const { title, description, rail = true, scrollPad } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url).href;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" style={scrollPad ? `--scroll-pad:${scrollPad}` : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

@@ -1,4 +1,5 @@
 ---
+import { CONTACTS } from "../../data/site";
 import PillarSection from "../PillarSection.astro";
 
 interface Props {
@@ -7,16 +8,6 @@ interface Props {
 }
 
 const { reverse = false } = Astro.props;
-
-const contacts = [
-  { initials: "EP", name: "Elena Park", role: "VP Finance" },
-  { initials: "RA", name: "Rob Adeyemi", role: "Controller" },
-  { initials: "SD", name: "Sofia Duarte", role: "Project sponsor" },
-];
-
-/** Mêmes personnes que la carte du héros — les deux listes doivent rester
- *  identiques. Neutres : un avatar vert ferait dire « confirmé » à un contact. */
-const AVATAR_TONES = ["#0F1524", "#2A3348", "#59657A"];
 ---
 
 <PillarSection
@@ -40,11 +31,11 @@ const AVATAR_TONES = ["#0F1524", "#2A3348", "#59657A"];
 
     <ul class="mt-4 space-y-2 border-t border-rule pt-4">
       {
-        contacts.map((contact, i) => (
+        CONTACTS.map((contact) => (
           <li class="flex items-center gap-3">
             <span
               class="grid h-6 w-6 place-items-center rounded-full font-mono text-[9px] text-white"
-              style={`background:${AVATAR_TONES[i]}`}
+              style={`background:${contact.tone}`}
             >
               {contact.initials}
             </span>

@@ -1,5 +1,5 @@
 ---
-import { STAGES } from "../../data/site";
+import { CONTACTS, STAGES } from "../../data/site";
 
 const CURRENT_STAGE = "IN PROGRESS";
 
@@ -11,10 +11,6 @@ const team = [
   { initials: "JM", hours: "21.0 h", pct: 62 },
   { initials: "KT", hours: "12.2 h", pct: 32 },
 ];
-
-/** Trois personnes, trois neutres. Un avatar vert ferait dire au vert
- *  « confirmé » à propos d'un contact, ce qui ne veut rien dire. */
-const AVATAR_TONES = ["#0F1524", "#2A3348", "#59657A"];
 
 /** Les marqueurs étaient positionnés sur un axe 08:00–18:00 — le concept
  *  « journée de travail » abandonné (docs/landing-corrections.md). L'axe n'était
@@ -150,12 +146,14 @@ const layers = [
             <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
               <div class="flex -space-x-2">
                 {
-                  ["EP", "RA", "SD"].map((initials, i) => (
+                  /* Mêmes personnes que la fiche client (`sections/ClientRecord.astro`)
+                     et sa maquette sur `/product` — source unique dans `data/site.ts`. */
+                  CONTACTS.map((contact) => (
                     <span
                       class="grid h-6 w-6 place-items-center rounded-full border border-white font-mono text-[9px] text-white"
-                      style={`background:${AVATAR_TONES[i]}`}
+                      style={`background:${contact.tone}`}
                     >
-                      {initials}
+                      {contact.initials}
                     </span>
                   ))
                 }

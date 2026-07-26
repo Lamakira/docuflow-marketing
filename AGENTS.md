@@ -113,11 +113,19 @@ Animations en place :
   temps morts volontaires dans la timeline (lecture au début, résolution à la fin) : **ne pas
   les raccourcir**, ce sont eux qui laissent comprendre la comparaison.
 - **`Nav`** — repli de la barre en pastille flottante.
-- **`PillarSection`** — reveal « drapé » : bascule `rotateX` de 15° charnière en haut, arrivée
-  amortie, cascade des trois éléments. Réversible dans les deux sens (`toggleActions`, jamais
-  `scrub` — le scrub écraserait l'amorti). Le comportement réversible est **à l'essai** : la
-  chaîne `toggleActions` est isolée dans une constante pour revenir à un déclenchement unique
-  en une ligne.
+- **Le reveal « drapé »** — bascule `rotateX` de 15° charnière en haut, arrivée amortie, cascade
+  des éléments. Réversible dans les deux sens (`toggleActions`, jamais `scrub` — le scrub
+  écraserait l'amorti). Le comportement réversible est **à l'essai** : la chaîne `toggleActions`
+  est isolée dans une constante pour revenir à un déclenchement unique en une ligne.
+
+  Il vit dans **`src/scripts/reveal.ts`** depuis le 24 juillet 2026, extrait de `PillarSection`
+  quand `/product` en a eu besoin sur trois sections qui ne sont pas des piliers d'accueil. Son
+  contrat tient en deux attributs : `[data-reveal-group]` sur la section, `[data-reveal]` sur les
+  éléments **dans l'ordre de la cascade**. Aucune classe, aucun réglage par composant — c'est ce
+  qui permet à plusieurs composants d'une même page de l'importer sans le dupliquer : un module ES
+  ne s'exécute qu'une fois par document, quel que soit le nombre d'`import`.
+  Utilisé par `PillarSection` (accueil) et par `ProductPillar` / `PlatformBand` / `ArgumentSection`
+  (`/product`).
 - **`PlanCards`** — arrivée des cartes tarifaires, décalée de 90 ms de l'une à l'autre : la
   carte se pose (18 px, `opacity` de 0.25 à 1), puis son coin se tourne avec un léger
   dépassement. **En CSS pur, sans une ligne de JS** (voir « La page `/pricing` »). Le fondu
@@ -261,15 +269,81 @@ expliquent leur forme :
   bascule ne peut donc rien décaler. Une transition ne se déclenchant pas au premier calcul de
   style, rien ne clignote au chargement.
 
+## La page `/product`
+
+Intégrée le 24 juillet 2026 d'après `docs/design_handoff_product/`. C'est la **fiche technique** :
+elle ne vend pas la consolidation (c'est l'accueil) ni les plans (c'est `/pricing`), elle défait
+une objection précise — *« un tout-en-un fait tout mal »* — en **publiant les vraies valeurs**.
+Intervalles, comptes, noms de plateformes, limites. Les chiffres portent la persuasion, la prose
+reste courte. Une section qui paraît maigre se corrige en mise en page, **jamais en rallongeant la
+liste** : tout `src/data/product.ts` est vérifié contre le schéma de l'app, et au Canada une
+indication trompeuse relève de la Loi sur la concurrence.
+
+Ordre : héros → barre de saut → quatre piliers → Platform (`ink`) → The argument → liste
+exhaustive → `FinalCta`. Le rail d'étapes est retiré (`rail={false}`), et **le repli de la pile de
+l'accueil n'est pas rejoué** : c'est sa signature à elle.
+
+**La taxonomie `Time → Activity → Clients → Knowledge` est celle du comparatif de `/pricing`**
+(`COMPARISON_GROUPS`). Les deux pages doivent rester d'accord — c'est une source dupliquée à
+surveiller, pas encore fusionnée.
+
+**`ProductPillar` est le gabarit des dix futures pages par fonction**, et c'est pour ça qu'il ne
+réutilise pas `PillarSection` : l'oeil-de-boeuf y vit *dans* la colonne de texte (il change donc de
+côté avec elle), et la colonne porte en plus la liste de capacités et la bande de specs. Ce qui est
+vraiment commun aux deux — le reveal — a été extrait dans `src/scripts/reveal.ts` plutôt que
+recopié (voir « Animation »).
+
+**La barre de saut porte un cache de 64 px au-dessus d'elle**, exactement comme l'en-tête collant du
+comparatif de `/pricing`, et pour la même raison : la nav repliée en pastille rend son fond
+transparent, donc sans cache le contenu défile à découvert entre la pastille et le filet de la
+barre. Trois conséquences à ne pas défaire :
+
+- La hauteur du cache et le `top` de l'accroche sortent de la même variable (`--stick`).
+- La barre est en `z-index: 20`, **sous** la nav (30) : la pastille doit flotter par-dessus le cache.
+- Le cache existe aussi au repos, où il recouvre les 64 px du bas du héros — d'où le `pb-16` de
+  celui-ci (et non les 56 px du handoff), qui lui réserve exactement cette place. **Réduire ce
+  padding, c'est faire mordre un rectangle opaque sur le bas des boutons.**
+
+**Le dégagement des ancres passe par `Layout` et non par un `<style is:global>`.** La page empile
+48 px de barre de saut sous 64 px de nav : `scrollPad="116px"` pose `--scroll-pad` en style inline
+sur `<html>`, que `global.css` lit en `scroll-padding-top: var(--scroll-pad, 80px)`. Un style global
+déclaré depuis une page peut se retrouver dans une feuille partagée au regroupement ; une variable
+inline, non.
+
+**Une piste de grille implicite se dimensionne sur son min-content** — mesuré à 410 px pour la
+colonne d'un pilier, soit une barre horizontale garantie dès 360 px. Les grilles qui passent à une
+colonne déclarent donc `grid-cols-1` explicitement (`minmax(0, 1fr)`, qui peut descendre sous le
+min-content) au lieu de laisser la piste implicite décider. Vaut pour toute grille responsive du
+projet.
+
+**Trois écarts au handoff, tous documentés dans le code** : l'oeil-de-boeuf du héros passe en `ink`
+(l'ambre y voisinerait le CTA, et il ne fait que 1,98:1 sur `paper` — c'est l'arbitrage déjà rendu
+sur le héros de l'accueil) ; les flèches de la carte d'index sont `slate` au repos et ne passent à
+l'ambre qu'au survol ; le bouton « Compare plans → » est le bouton secondaire du système (blanc,
+filet `rule`, rayon 6) et non un contour ambre à 2,1:1.
+
+**Reste à arbitrer avec Saïd** : le handoff met de l'ambre sur tous les oeils-de-boeuf de bande
+claire (`01 / TIME`, `THE ARGUMENT`, `EVERYTHING, LISTED`, les cinq index de l'argument), ce qui
+sort de la « One Amber Rule » de `DESIGN.md` et reste sous AA (1,98:1 sur `paper`, 1,83:1 sur warm).
+C'est déjà la pratique livrée sur l'accueil — d'où le choix de suivre le handoff plutôt que de faire
+de `/product` la page dissidente. Soit `DESIGN.md` accueille cette valeur, soit les quatre pages
+changent ensemble. Deux tailles hors gamme viennent aussi du handoff : 17 px (corps de pilier) et
+13,5 px (ligne de capacité).
+
 ## À faire
 
 - [ ] **Remplacer les chiffres de la bande de preuve** (`src/data/site.ts`, `PROOF_STATS`) par
       les valeurs réelles de la base. Bloquant avant toute mise en ligne.
+- [ ] **Faire signer la copy neuve de `/product`** par Masdouk : le H2 de Knowledge, le libellé
+      « THE ARGUMENT » et les cinq phrases de `PRODUCT_ARGUMENT` (signalées dans `product.ts`).
+- [ ] Arbitrer l'ambre des oeils-de-boeuf sur bande claire (voir « La page `/product` ») — décision
+      de site, pas de page.
 - [ ] Arbitrer le domaine et mettre à jour `site` dans `astro.config.mjs` (actuellement `docuflow.ca`)
 - [ ] Décider EN seul ou bilingue FR/EN — structure tout le routing, à trancher avant d'ajouter des pages
-- [ ] Gabarits restants : page produit, secteur, comparative, méga-menu (voir `docs/site-architecture.md`)
+- [ ] Gabarits restants : secteur, comparative, méga-menu (voir `docs/site-architecture.md`). Les
+      dix pages par fonction réutilisent `ProductPillar` et lisent `src/data/product.ts`.
 - [ ] Vérifier le rendu mobile réel (points de rupture posés, pas testés visuellement) — fait
-      pour `/pricing` (620 / 560 / 360 px), reste l'accueil
+      pour `/pricing` (620 / 560 / 360 px) et `/product` (900 / 561 / 360 px), reste l'accueil
 
 ## Documents de référence
 
@@ -280,6 +354,7 @@ expliquent leur forme :
 | `docs/site-architecture.md` | Arborescence complète, matrice SEO, fondations techniques |
 | `docs/design-handoff/` | Maquettes HTML de référence — ouvrir dans un navigateur |
 | `docs/design_handoff_pricing_cards/` | Cartes cornées de `/pricing` — **remplace `Pricing.dc.html`** |
+| `docs/design_handoff_product/` | Fiche technique de `/product` + `docs/prompts/product-page-design-brief.md` |
 
 ---
 

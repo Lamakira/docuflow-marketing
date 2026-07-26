@@ -1,0 +1,32 @@
+---
+import { ANSWER_CARD } from "../../../data/site";
+
+/** Maquette du pilier Knowledge. Deux sources citées, dont une capture d'appel :
+ *  c'est là toute la différence avec une recherche plein texte, et c'est ce que
+ *  le H2 annonce. La puce verte cerclée est le « source chip » du système — le
+ *  filet vert est ce qui fait qu'une réponse a l'air redevable.
+ *  Question, réponse et sources viennent de `data/site.ts` (`ANSWER_CARD`),
+ *  partagé avec l'accueil (`sections/AiAnswer.astro`). */
+---
+
+<div class="rounded-[8px] border border-rule bg-white p-5">
+  {/* La question est en mono : elle a été tapée dans le produit, pas rédigée
+      pour cette page (« The Recorded/Written Rule »). */}
+  <p class="rounded-[6px] bg-paper px-[14px] py-3 font-mono text-[13px]">
+    {ANSWER_CARD.question}
+  </p>
+
+  <p class="mt-4 text-[15px] leading-[1.6]">
+    {ANSWER_CARD.answer}
+  </p>
+
+  <div class="mt-4 flex flex-wrap gap-2">
+    {
+      ANSWER_CARD.sources.map((source) => (
+        <span class="rounded-[3px] border border-live-on-light px-[9px] py-[4px] font-mono text-[11px] text-live-on-light">
+          {source}
+        </span>
+      ))
+    }
+  </div>
+</div>

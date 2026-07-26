@@ -1,0 +1,141 @@
+---
+import { CAPABILITY_GROUPS } from "../../data/product";
+---
+
+{/* La liste exhaustive : à la fois l'artefact de due diligence et la charge SEO
+    de la page. Pas de reveal ici — quarante-deux rangées qui basculent au
+    défilement transformeraient une pièce à conviction en animation.
+
+    Des listes et non un `<table>` : il n'y a pas de croisement rangée/colonne à
+    annoncer, seulement des paires « capacité / précision ». Un tableau
+    obligerait un lecteur d'écran à annoncer un en-tête de colonne à chaque
+    cellule pour ne rien ajouter. */}
+<section class="capabilities">
+  <div class="container-wide">
+    <p class="mb-4 font-mono text-[13px] text-hour">EVERYTHING, LISTED</p>
+
+    <h2 class="mb-10 text-[clamp(28px,3.6vw,42px)]">The full capability list.</h2>
+
+    <div class="cap-body">
+      {
+        CAPABILITY_GROUPS.map((group) => (
+          <section class="cap-group">
+            <h3 class="cap-group-title">{group.title}</h3>
+
+            <ul>
+              {group.rows.map((row) => (
+                <li class="cap-row">
+                  <span class="cap-name">{row.capability}</span>
+                  {row.qualifier && <span class="cap-qualifier">{row.qualifier}</span>}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
+      }
+    </div>
+
+    {/* Bouton secondaire du système — fond blanc, filet `rule`, texte `ink` —
+        et non l'ambre du handoff : de l'ambre sur blanc ne fait que 2,1:1, ce
+        qui est sous AA pour le libellé d'un vrai contrôle. L'action principale
+        est de toute façon juste en dessous, sur la bande ambre. */}
+    <a href="/pricing" class="cap-link">Compare plans →</a>
+  </div>
+</section>
+
+<style>
+  /* Bande blanche entre deux bandes claires : les filets haut et bas sont la
+     seule frontière, comme partout ailleurs sur le site. */
+  .capabilities {
+    border-top: 1px solid var(--color-rule);
+    border-bottom: 1px solid var(--color-rule);
+    background: #fff;
+    padding-block: 88px;
+  }
+
+  /* La liste ne suit pas le bord droit de la page : au-delà de ~940px une paire
+     capacité/précision se disloque en deux blocs sans rapport visible. */
+  .cap-body {
+    max-width: 940px;
+  }
+
+  .cap-group + .cap-group {
+    margin-top: 12px;
+  }
+
+  .cap-group-title {
+    margin: 0;
+    padding: 22px 0 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    /* Contraste : ce sont de vraies têtes de groupe (Time/Activity/Clients/
+       Knowledge), pas de la décoration — l'ambre à 2,1:1 reste réservé à
+       l'oeil-de-boeuf en attente d'arbitrage. */
+    color: var(--color-slate);
+  }
+
+  .cap-group ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cap-row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 24px;
+    align-items: baseline;
+    border-top: 1px solid var(--color-rule);
+    padding: 12px 0;
+  }
+
+  .cap-name {
+    font-size: 14.5px;
+    color: var(--color-ink);
+  }
+
+  .cap-qualifier {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-slate);
+  }
+
+  .cap-link {
+    display: inline-block;
+    margin-top: 32px;
+    border: 1px solid var(--color-rule);
+    border-radius: 6px;
+    background: #fff;
+    padding: 12px 18px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--color-ink);
+    text-decoration: none;
+    transition: border-color 0.15s ease;
+  }
+
+  .cap-link:hover {
+    border-color: var(--color-ink);
+  }
+
+  /* Sous 561px, deux colonnes donnent ~120px à la précision : « strong /
+     moderate / weak / insufficient » y tiendrait sur cinq lignes. Elle passe
+     sous sa capacité, décalée pour qu'on voie qu'elle s'y rattache. */
+  @media (max-width: 560px) {
+    .capabilities {
+      padding-block: 64px;
+    }
+
+    .cap-row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 4px;
+    }
+
+    .cap-qualifier {
+      padding-left: 14px;
+    }
+  }
+</style>

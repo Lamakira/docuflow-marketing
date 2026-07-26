@@ -1,0 +1,76 @@
+---
+/** Maquette du pilier Activity. Le score de qualité de la preuve porte tout le
+ *  poids visuel : c'est ce qu'aucun concurrent ne publie, donc c'est là que doit
+ *  s'arrêter un lecteur qui survole.
+ *
+ *  ⚠️ Le score note la QUALITÉ DU RELEVÉ, jamais la personne, et il ne modifie
+ *  jamais le temps compté. Rien dans le dessin ne doit suggérer le contraire :
+ *  pas d'avatar, pas de nom, pas de classement. Le libellé le dit — « evidence
+ *  quality », pas « performance ». */
+const SCORE = 84;
+
+/** Vingt-quatre fenêtres d'activité d'une minute. Valeurs figées, pas tirées au
+ *  hasard : un `Math.random()` au build donnerait un dessin différent à chaque
+ *  déploiement, donc une capture d'écran de recette jamais reproductible. */
+const ACTIVITY = [
+  52, 78, 84, 61, 47, 73, 91, 22, 58, 66, 44, 55, 81, 88, 39, 72, 95, 63, 49, 77, 85, 31, 68, 74,
+];
+
+/** Trois seuils, trois tons : le vert confirme, l'ambre est l'état présent, le
+ *  gris est le reste. Remplissages purs — aucune barre ne porte de signe. */
+const tone = (value: number) =>
+  value > 70 ? "var(--color-live)" : value > 40 ? "var(--color-hour)" : "var(--color-rule)";
+
+const THUMBS = 8;
+---
+
+<div class="rounded-[8px] border border-rule bg-white p-[18px]">
+  <div
+    class="flex items-start justify-between gap-4 rounded-[6px] border border-live-on-light bg-band-mint px-4 py-[14px]"
+  >
+    <div>
+      <p class="label-mono text-[10px] text-live-on-light">Evidence quality</p>
+      {/* Le score est un relevé du système, donc mono — la règle Recorded/Written. */}
+      <p class="mt-[6px] font-mono text-[36px] font-bold tracking-[-0.02em] leading-none">
+        {SCORE}<span class="font-mono text-[14px] font-medium text-slate">/100</span>
+      </p>
+    </div>
+
+    <span
+      class="shrink-0 rounded-[3px] bg-live-on-light px-[10px] py-[5px] font-mono text-[11px] font-bold text-white"
+    >
+      STRONG
+    </span>
+  </div>
+
+  {/* Vignettes de capture. La rayure à 45° est la texture « image retenue » du
+      système — la même dans la carte des heures et le bloc de code de la
+      documentation. Elle dit « une capture existe » sans inventer un écran. */}
+  <div class="mt-4 grid grid-cols-4 gap-2" aria-hidden="true">
+    {
+      Array.from({ length: THUMBS }).map(() => (
+        <span
+          class="block aspect-[4/3] rounded-[3px] border border-rule"
+          style="background:repeating-linear-gradient(45deg,#F3F5F7 0 4px,#fff 4px 8px)"
+        />
+      ))
+    }
+  </div>
+
+  {/* L'histogramme est décoratif au sens strict : la légende sous lui énonce ce
+      qu'il montre, et aucune valeur individuelle n'est une information produit. */}
+  <div class="mt-[14px] flex h-[38px] items-end gap-[3px]" aria-hidden="true">
+    {
+      ACTIVITY.map((value) => (
+        <span
+          class="flex-1 rounded-[1px]"
+          style={`height:${value}%;background:${tone(value)}`}
+        />
+      ))
+    }
+  </div>
+
+  <p class="mt-2 font-mono text-[10px] text-slate">
+    Screenshots · activity level, last 24 windows
+  </p>
+</div>

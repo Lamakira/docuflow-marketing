@@ -18,7 +18,7 @@ const isCurrent = (href: string) =>
 {/* L'en-tête garde ses 64px et son `sticky top-0` dans les deux états : c'est
     l'enveloppe intérieure qui se transforme. Rien ne touche au flux du
     document, donc CLS = 0. */}
-<header class="nav-header sticky top-0 z-30 flex h-16 items-center" data-nav>
+<header class="nav-header sticky top-0 z-30 flex h-(--nav-h) items-center" data-nav>
   <nav class="nav-shell" data-nav-shell aria-label="Main">
     <a href="/" class="nav-word font-display font-extrabold tracking-[-0.02em]">DocuFlow</a>
 
@@ -58,7 +58,9 @@ const isCurrent = (href: string) =>
     top: 0;
     left: 0;
     width: 1px;
-    height: 64px;
+    /* Même source que le `h-(--nav-h)` de l'en-tête : la sentinelle doit
+       sortir du viewport exactement quand l'en-tête plein a défilé. */
+    height: var(--nav-h);
     pointer-events: none;
   }
 

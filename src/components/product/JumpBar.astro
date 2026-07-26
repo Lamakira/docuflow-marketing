@@ -1,0 +1,202 @@
+---
+import { PRODUCT_PILLARS } from "../../data/product";
+---
+
+{/* Fonctionnel, pas décoratif : la page est longue et un lecteur qui compare des
+    produits a besoin de sauter. Sans JS, ce sont quatre ancres qui marchent —
+    seul le marquage de l'étape courante demande le script. */}
+<div class="jump">
+  <div class="container-page">
+    <nav class="jump-scroll" aria-label="Jump to a pillar">
+      <ul>
+        {
+          PRODUCT_PILLARS.map((pillar) => (
+            <li>
+              <a href={`#${pillar.id}`} class="jump-link" data-jump={pillar.id}>
+                <span class="jump-num" aria-hidden="true">
+                  {pillar.index}
+                </span>
+                {pillar.name}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<style>
+  .jump {
+    /* Hauteur de la barre de nav, lue depuis `--nav-h` (source unique posée
+       dans `global.css`). `--stick` sert deux fois ici — le point d'accroche
+       et la hauteur du cache — et les deux ne peuvent pas se désynchroniser
+       entre eux, ni avec la nav elle-même. Même dispositif que l'en-tête
+       collant du comparatif de `/pricing`. */
+    --stick: var(--nav-h);
+    position: sticky;
+    top: var(--stick);
+    /* Sous la nav (z-30) : la pastille flottante doit passer PAR-DESSUS le
+       cache, sinon elle disparaît dès que la barre décolle. */
+    z-index: 20;
+    border-top: 1px solid var(--color-rule);
+    border-bottom: 1px solid var(--color-rule);
+    background: rgb(243 245 247 / 0.92);
+    backdrop-filter: blur(8px);
+  }
+
+  /* Cache de la bande de nav. Repliée en pastille, la barre rend son fond
+     transparent — c'est voulu, elle flotte — et laisse 64px à découvert
+     au-dessus de la barre de saut, dans lesquels le contenu de la page
+     continuerait de défiler entre la pastille et le filet, à la vue de tous.
+     Le cache est un enfant de l'élément collant : il voyage avec lui.
+     Il existe AUSSI au repos, où il recouvre les 64px du bas du héros — d'où le
+     `pb-16` de celui-ci, qui lui réserve exactement cette place. */
+  .jump::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: 100%;
+    height: var(--stick);
+    background: rgb(243 245 247 / 0.92);
+    backdrop-filter: blur(8px);
+  }
+
+  .jump ul {
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .jump-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Le filet de 2px existe dès le repos, transparent : sans lui, marquer
+       l'étape courante décalerait la rangée de 2px à chaque défilement. */
+    border-bottom: 2px solid transparent;
+    padding: 15px 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--color-slate);
+    text-decoration: none;
+    transition:
+      color 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .jump-num {
+    font-size: 10px;
+    /* `--color-slate-on-ink` est prévu pour une carte sombre : sur cette barre
+       claire le contraste tombe à ~2,2:1 et le chiffre devient illisible. */
+    color: var(--color-slate);
+  }
+
+  .jump-link:hover {
+    color: var(--color-ink);
+  }
+
+  /* Posé par le script. L'état courant ne repose pas sur la seule couleur : le
+     filet le double, et `aria-current` le dit. */
+  .jump-link.is-current {
+    border-bottom-color: var(--color-ink);
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+
+  .jump-link.is-current .jump-num {
+    color: var(--color-ink);
+  }
+
+  /* Défilement horizontal sous 901px plutôt qu'un retour à la ligne : une barre
+     de saut sur deux lignes n'est plus une barre. Le conteneur de défilement
+     n'existe QUE là — au-dessus, il rognerait l'anneau de focus des ancres,
+     qui déborde de 4px en haut et en bas. */
+  @media (max-width: 900px) {
+    .jump-scroll {
+      overflow-x: auto;
+      /* Une barre de défilement de 15px sous une barre de 48px se lit comme un
+         défaut. Le contenu reste atteignable au doigt et au clavier. */
+      scrollbar-width: none;
+    }
+
+    .jump-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .jump-link {
+      padding-inline: 12px;
+    }
+  }
+</style>
+
+<script>
+  /** Spy de la barre de saut. Écrit directement dans le DOM — une classe et un
+   *  attribut, jamais d'état framework : ce marqueur change à chaque section
+   *  traversée, et le router par du rendu re-peindrait la page pour deux
+   *  propriétés CSS.
+   *
+   *  Sans ce script la barre reste quatre ancres fonctionnelles : rien n'est
+   *  masqué, seule l'indication « vous êtes ici » manque. */
+  const links = new Map<string, HTMLElement>();
+
+  for (const link of document.querySelectorAll<HTMLElement>("[data-jump]")) {
+    if (link.dataset.jump) links.set(link.dataset.jump, link);
+  }
+
+  if (links.size) {
+    const setCurrent = (id: string) => {
+      for (const [key, link] of links) {
+        const on = key === id;
+        link.classList.toggle("is-current", on);
+        // `location` et non `page` : on désigne un endroit dans la page
+        // courante, pas la page courante dans le menu — c'est le rôle du `Nav`.
+        if (on) link.setAttribute("aria-current", "location");
+        else link.removeAttribute("aria-current");
+      }
+    };
+
+    // Bande d'observation de 5% de hauteur, au tiers supérieur de la fenêtre :
+    // une seule section peut la croiser à la fois, donc pas d'arbitrage à
+    // écrire. Entre le dernier pilier et la section Platform plus aucune ne la
+    // croise — le dernier marquage tient, ce qui est le comportement voulu.
+    const spy = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setCurrent(entry.target.id);
+        }
+      },
+      { rootMargin: "-45% 0px -50% 0px" }
+    );
+
+    for (const id of links.keys()) {
+      const section = document.getElementById(id);
+      if (section) spy.observe(section);
+    }
+
+    // Marquage de départ : ne pas supposer qu'on arrive en haut de page — une
+    // restauration de défilement (retour arrière) peut charger la page déjà
+    // scrollée sous les quatre piliers, et le premier callback de
+    // l'observateur (tout isIntersecting=false) ne corrigerait jamais rien.
+    // On calcule donc une fois la section la plus proche, avec la même bande
+    // que l'observateur (45% de la fenêtre) : la dernière section dont le haut
+    // est encore au-dessus de cette ligne est la bonne. Aucune ne qualifie en
+    // haut de page, d'où le repli sur le premier lien.
+    const spyLine = window.innerHeight * 0.45;
+    let initial: string | undefined;
+    for (const id of links.keys()) {
+      const section = document.getElementById(id);
+      if (section && section.getBoundingClientRect().top <= spyLine) {
+        initial = id;
+      }
+    }
+    setCurrent(initial ?? links.keys().next().value!);
+  }
+</script>

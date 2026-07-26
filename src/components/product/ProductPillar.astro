@@ -1,0 +1,119 @@
+---
+import SpecStrip from "./SpecStrip.astro";
+import type { ProductPillar } from "../../data/product";
+
+interface Props {
+  pillar: ProductPillar;
+  /** Place le visuel à gauche. Dérivé du rang du pilier dans `product.astro` —
+   *  la section ne décide pas de son propre côté, sinon l'alternance se perd au
+   *  premier réordonnancement. Purement visuel : voir l'ordre du DOM plus bas. */
+  reverse?: boolean;
+}
+
+const { pillar, reverse = false } = Astro.props;
+---
+
+{/* Le gabarit que réutiliseront les dix pages par fonction. Tout ce qui change
+    d'un pilier à l'autre vient de `PRODUCT_PILLARS` ; seul le visuel arrive par
+    le slot, parce qu'il n'y a rien de commun entre un chronomètre et une fiche
+    client.
+
+    `data-reveal-group` / `data-reveal` : les crochets du reveal partagé
+    (`src/scripts/reveal.ts`). L'ordre des `data-reveal` dans le balisage EST
+    l'ordre de la cascade — le texte mène, le visuel suit. */}
+<section id={pillar.id} class:list={["pillar", pillar.band]} data-reveal-group>
+  <div class="container-wide">
+    {/* Titre puis visuel dans le DOM, dans les quatre sections sans exception :
+        le côté se joue à l'affichage (`order-*`), pas dans le balisage, pour que
+        la narration et le parcours au clavier restent identiques d'une section à
+        l'autre. Ordres scopés à `min-[901px]:` — en colonne unique, le titre
+        arrive toujours avant son visuel. */}
+    {/* `grid-cols-1` explicite en base, et pas seulement la colonne implicite :
+        une piste implicite vaut `auto`, donc elle se dimensionne sur le
+        min-content de la PLUS LARGE des deux colonnes — mesuré à 410px, soit
+        bien au-delà des 312px d'un écran de 360. `grid-cols-1` vaut
+        `minmax(0, 1fr)` : la piste peut alors descendre sous son min-content,
+        ce qui est la seule façon d'empêcher la barre horizontale. */}
+    <div class="pillar-grid grid grid-cols-1 items-center gap-14 min-[901px]:grid-cols-2">
+      <div class={reverse ? "min-[901px]:order-2" : ""} data-reveal>
+        {/* L'oeil-de-boeuf passe au vert lisible sur la bande mint : l'ambre y
+            tombe à 1,83:1, et ce libellé reprend le repère de la barre de saut —
+            ce n'est pas de la décoration. */}
+        <p
+          class:list={[
+            "mb-5 font-mono text-[13px]",
+            pillar.eyebrowTone === "live" ? "text-live-on-light" : "text-hour",
+          ]}
+        >
+          {pillar.index} / {pillar.name.toUpperCase()}
+        </p>
+
+        <h2 class="max-w-[18ch] text-[clamp(28px,3.6vw,42px)]">{pillar.heading}</h2>
+
+        <p class="mt-4 max-w-[48ch] text-[17px] leading-[1.55] text-slate">{pillar.body}</p>
+
+        {/* Deux colonnes de puces : c'est la densité qui fait l'argument. Le
+            point vert est un remplissage pur, donc `live` et non
+            `live-on-light` — il ne porte aucun signe, le libellé est à côté. */}
+        <ul class="mt-7 grid grid-cols-1 gap-x-6 gap-y-[9px] min-[561px]:grid-cols-2">
+          {
+            pillar.caps.map((cap) => (
+              <li class="flex items-start gap-[9px] text-[13.5px] leading-[1.4]">
+                <span
+                  class="mt-[7px] h-[5px] w-[5px] shrink-0 rounded-full bg-live"
+                  aria-hidden="true"
+                />
+                <span class={cap.key ? "font-semibold text-ink" : "text-slate"}>{cap.text}</span>
+              </li>
+            ))
+          }
+        </ul>
+
+        <SpecStrip items={pillar.spec} class="mt-[26px]" />
+      </div>
+
+      <div class={reverse ? "min-[901px]:order-1" : ""} data-reveal>
+        <slot />
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .pillar {
+    padding-block: 88px;
+    /* Le bord bas bascule VERS le spectateur pendant le reveal : la perspective
+       l'agrandit et le projette hors du conteneur. `clip` et non `hidden` —
+       `hidden` créerait un conteneur de défilement et casserait le collant de la
+       nav et de la barre de saut. */
+    overflow-x: clip;
+  }
+
+  /* Point de fuite commun aux deux colonnes : c'est lui qui les fait lire comme
+     une seule étoffe et non deux objets pivotant chacun pour soi. Posé sur le
+     conteneur, jamais sur les éléments.
+
+     `perspective` ne s'applique qu'aux ENFANTS directs ; les deux colonnes sont
+     des petits-enfants, d'où `preserve-3d` sur la grille — sans lui elles
+     seraient aplaties et le pivot n'aurait aucune profondeur.
+
+     Aucune de ces deux règles ne masque quoi que ce soit : sans JS, elles ne
+     font rien du tout. L'état initial vient de `gsap.set()`, jamais d'ici. */
+  .pillar .container-wide {
+    perspective: 1200px;
+  }
+
+  .pillar-grid {
+    transform-style: preserve-3d;
+  }
+
+  @media (max-width: 900px) {
+    .pillar {
+      padding-block: 64px;
+    }
+  }
+</style>
+
+<script>
+  import "../../scripts/reveal";
+</script>

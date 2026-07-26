@@ -6,11 +6,38 @@
 export const STAGES = ["LEAD", "WON", "IN PROGRESS", "IN REVIEW", "COMPLETED"] as const;
 
 export const NAV_LINKS = [
-  { label: "Product", href: "#product" },
-  { label: "Solutions", href: "#solutions" },
+  { label: "Product", href: "/product" },
+  // "/#solutions" et non "#solutions" : l'ancre vit sur l'accueil
+  // (`sections/Sectors.astro`), un lien relatif à la seule page ne résout que là.
+  // Avec le "/", le lien fonctionne depuis /pricing et /product ; sur l'accueil
+  // le navigateur défile quand même jusqu'à la section.
+  { label: "Solutions", href: "/#solutions" },
   { label: "Pricing", href: "/pricing" },
-  { label: "Resources", href: "#resources" },
+  // Resources reviendra quand la page existera — l'ancre #resources ne pointait
+  // nulle part (aucune section, aucune route `/resources`). Prévue dans
+  // `docs/site-architecture.md`, pas encore construite.
 ];
+
+/** Le même trio de contacts apparaît sur trois cartes : la fiche du héros
+ *  (`sections/Hero.astro`), la fiche client du pilier CRM (`sections/ClientRecord.astro`)
+ *  et sa maquette sur `/product` (`product/mockups/ClientMock.astro`). Centralisé ici pour
+ *  que les trois restent identiques sans compter sur un commentaire répété dans
+ *  chaque fichier. Tons neutres : un avatar vert ferait dire « confirmé » à un contact. */
+export const CONTACTS = [
+  { initials: "EP", name: "Elena Park", role: "VP Finance", tone: "#0F1524" },
+  { initials: "RA", name: "Rob Adeyemi", role: "Controller", tone: "#2A3348" },
+  { initials: "SD", name: "Sofia Duarte", role: "Project sponsor", tone: "#59657A" },
+];
+
+/** La carte « réponse IA » du pilier Knowledge, dupliquée entre l'accueil
+ *  (`sections/AiAnswer.astro`) et sa maquette sur `/product`
+ *  (`product/mockups/AnswerMock.astro`) — copie validée, à ne pas faire dériver. */
+export const ANSWER_CARD = {
+  question: "what did we agree on the Ledger rebuild?",
+  answer:
+    "Fixed scope: migration only, no new reporting. Northwind signed off on a two-sprint window at the April 3 call.",
+  sources: ["doc · Ledger SOW", "call · Apr 3"],
+};
 
 /** Les quatre abonnements que DocuFlow remplace. L'ordre est repris à l'identique
  *  dans le reçu de la section COMPLETED — les deux doivent rester synchronisés. */

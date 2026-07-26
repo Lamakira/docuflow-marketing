@@ -77,8 +77,11 @@
   html {
     scroll-behavior: smooth;
     /* Sans ça, une ancre interne gare son titre sous l'en-tête collant
-       (64px) ou sous la pastille flottante. */
-    scroll-padding-top: 80px;
+       (--nav-h) ou sous la pastille flottante. Le +16px est une marge de
+       confort, pas une valeur mesurée. Une page qui empile une seconde barre
+       collante sous la nav redéclare la somme via `scrollPad` sur
+       `Layout.astro` — voir `/product` et sa barre de saut. */
+    scroll-padding-top: var(--scroll-pad, calc(var(--nav-h) + 16px));
   }
 
   body {
@@ -133,6 +136,11 @@
 :root {
   --edge-extra: min(180px, max(0px, calc((100% - 1200px) / 2 - 24px)));
   --edge-side: max(0px, calc((100% - 1200px) / 2));
+
+  /* La hauteur de la barre de nav, UNE seule source — consommée par la
+     sentinelle, les caches collants (comparatif de `/pricing`, barre de saut
+     de `/product`) et le dégagement des ancres ci-dessous. */
+  --nav-h: 64px;
 }
 
 @utility container-page {

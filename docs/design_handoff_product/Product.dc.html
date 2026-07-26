@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face { font-family: 'Cabinet Grotesk'; src: url('fonts/cabinet-grotesk-800.woff2') format('woff2'); font-weight: 800; font-display: swap; }
+@font-face { font-family: 'Cabinet Grotesk'; src: url('fonts/cabinet-grotesk-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Switzer'; src: url('fonts/switzer-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Switzer'; src: url('fonts/switzer-500.woff2') format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Switzer'; src: url('fonts/switzer-600.woff2') format('woff2'); font-weight: 600; font-display: swap; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 116px; }
+body { margin: 0; background: #F3F5F7; color: #0F1524; font-family: 'Switzer', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+a { color: #0F1524; text-decoration: none; }
+a:hover { color: #E9A23B; }
+::selection { background: #E9A23B; color: #0F1524; }
+:focus-visible { outline: 2px solid #E9A23B; outline-offset: 2px; box-shadow: 0 0 0 2px #0F1524; }
+:root { --edge-extra: min(180px, max(0px, calc((100% - 1200px)/2 - 24px))); --edge-side: max(0px, calc((100% - 1200px)/2)); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+@media (max-width: 900px) {
+  .pd-navlinks { display: none !important; }
+  .pd-grid { grid-template-columns: 1fr !important; }
+  .pd-grid > .pd-text { order: 1 !important; }
+  .pd-grid > .pd-visual { order: 2 !important; }
+  .pd-hero-spec { grid-template-columns: 1fr 1fr !important; }
+  .pd-jump-inner { overflow-x: auto; }
+  .pd-tablehead, .pd-tablerow { grid-template-columns: 1.4fr 1fr !important; }
+}
+@media (max-width: 620px) {
+  .pd-hero-spec { grid-template-columns: 1fr !important; }
+  .pd-caps { grid-template-columns: 1fr !important; }
+  .pd-plat { grid-template-columns: 1fr !important; }
+  .pd-spec { grid-template-columns: 1fr 1fr !important; }
+  .pd-wf { grid-template-columns: 1fr !important; }
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+</helmet>
+
+<div style="position: relative; width: 100%; overflow-x: clip;">
+
+  <nav style="position: sticky; top: 0; z-index: 60; background: rgba(243,245,247,.9); backdrop-filter: blur(8px); border-bottom: 1px solid #D8DEE6;">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 64px; display: flex; align-items: center; gap: 32px;">
+      <a href="#" style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 20px; letter-spacing: -.02em;">DocuFlow</a>
+      <div class="pd-navlinks" style="display: flex; gap: 26px; margin-left: 8px; font-size: 15px; font-weight: 500;">
+        <a href="#" style="color: #E9A23B;">Product</a>
+        <a href="#">Solutions</a>
+        <a href="Pricing v2.dc.html">Pricing</a>
+        <a href="#">Resources</a>
+      </div>
+      <div style="margin-left: auto; display: flex; align-items: center; gap: 18px; font-size: 15px; font-weight: 500;">
+        <a href="#">Sign in</a>
+        <a href="#" style="background: #0F1524; color: #F3F5F7; padding: 9px 16px; border-radius: 6px; font-weight: 600;" style-hover="background: #1c2740; color: #F3F5F7;">Start free trial</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section style="margin-left: var(--edge-side); margin-right: 0; max-width: none; padding: 64px 0 56px; padding-left: 24px; padding-right: calc(24px + var(--edge-side) - var(--edge-extra));">
+    <div style="display: grid; grid-template-columns: minmax(0,1.05fr) minmax(0,1fr); gap: 56px; align-items: end;" class="pd-grid">
+      <div class="pd-text">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: #E9A23B; margin-bottom: 16px;">Product</div>
+        <h1 style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: clamp(34px,5vw,58px); letter-spacing: -.03em; line-height: 1.02; margin: 0 0 20px; text-wrap: balance;">Four products, not four checkboxes.</h1>
+        <p style="font-size: 18px; line-height: 1.55; color: #59657A; max-width: 52ch; margin: 0 0 28px;">Time tracking, activity monitoring, client projects and documentation — each one built to stand on its own, all of them filed against the same client record. Here is everything DocuFlow does.</p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <a href="#" style="background: #E9A23B; color: #0F1524; padding: 13px 24px; border-radius: 6px; font-weight: 600; font-size: 16px;" style-hover="background: #D8912F; color: #0F1524;">Start free trial</a>
+          <a href="#" style="background: #fff; color: #0F1524; padding: 13px 24px; border-radius: 6px; font-weight: 600; font-size: 16px; border: 1px solid #D8DEE6;" style-hover="border-color: #0F1524; color: #0F1524;">Book a 15-minute demo</a>
+        </div>
+      </div>
+      <div class="pd-visual">
+        <div style="border: 1px solid #D8DEE6; border-radius: 8px; background: #fff; overflow: hidden;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: #59657A; padding: 14px 20px; border-bottom: 1px solid #D8DEE6;">In this datasheet</div>
+          <sc-for list="{{ heroIndex }}" as="h" hint-placeholder-count="4">
+            <a href="{{ h.href }}" style="{{ h.row }}">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9AA6B8;">{{ h.num }}</span>
+              <span style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 700; font-size: 20px; letter-spacing: -.02em; flex: 1;">{{ h.label }}</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #59657A;">{{ h.count }}</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #E9A23B;">→</span>
+            </a>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- JUMP BAR -->
+  <div style="position: sticky; top: 64px; z-index: 55; background: rgba(243,245,247,.92); backdrop-filter: blur(8px); border-top: 1px solid #D8DEE6; border-bottom: 1px solid #D8DEE6;">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px;">
+      <div class="pd-jump-inner" style="display: flex; gap: 4px; align-items: stretch;">
+        <sc-for list="{{ jumpItems }}" as="j" hint-placeholder-count="4">
+          <a id="{{ j.linkId }}" href="{{ j.href }}" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: #59657A; padding: 15px 16px; border-bottom: 2px solid transparent; white-space: nowrap; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 10px; color: #9AA6B8;">{{ j.num }}</span>{{ j.label }}
+          </a>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <!-- 01 TIME -->
+  <section id="time" data-reveal-group style="background: #F3F5F7; padding: 88px 0;">
+    <div style="margin-left: var(--edge-side); margin-right: 0; max-width: none; padding-left: 24px; padding-right: calc(24px + var(--edge-side) - var(--edge-extra)); perspective: 1200px;">
+      <div class="pd-grid" style="display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 56px; align-items: center; transform-style: preserve-3d;">
+        <div class="pd-text" data-reveal>
+          <p style="font-family: 'JetBrains Mono', monospace; font-size: 13px; margin: 0 0 20px;"><span style="color: #E9A23B;">01 / TIME</span></p>
+          <h2 style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: clamp(28px,3.6vw,42px); letter-spacing: -.03em; line-height: 1.05; margin: 0 0 16px; max-width: 18ch;">Hours that already know what they were for.</h2>
+          <p style="font-size: 17px; line-height: 1.55; color: #59657A; max-width: 46ch; margin: 0 0 28px;">The timer runs against a task inside a client project, so a timesheet is a by-product rather than a chore. It survives multiple browser tabs, pauses itself when the screen goes idle, and exports clean enough for payroll.</p>
+          <div class="pd-caps" style="display: grid; grid-template-columns: 1fr 1fr; gap: 9px 24px; margin-bottom: 26px;">
+            <sc-for list="{{ timeCaps }}" as="c" hint-placeholder-count="8">
+              <div style="display: flex; gap: 9px; align-items: flex-start; font-size: 13.5px; line-height: 1.4;"><span style="flex: 0 0 auto; width: 5px; height: 5px; border-radius: 999px; background: #1F9D6B; margin-top: 7px;"></span><span style="{{ c.style }}">{{ c.t }}</span></div>
+            </sc-for>
+          </div>
+          <div class="pd-spec" style="display: grid; grid-template-columns: repeat(4,1fr); border: 1px solid #D8DEE6; border-radius: 6px; background: #fff; overflow: hidden;">
+            <sc-for list="{{ timeSpec }}" as="s" hint-placeholder-count="4">
+              <div style="{{ s.cell }}"><div style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; color: #0F1524;">{{ s.v }}</div><div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .05em; text-transform: uppercase; color: #59657A; margin-top: 4px;">{{ s.k }}</div></div>
+            </sc-for>
+          </div>
+        </div>
+        <div class="pd-visual" data-reveal>
+          <div style="border: 1px solid #D8DEE6; border-radius: 8px; background: #fff; padding: 18px;">
+            <div style="display: flex; align-items: center; gap: 14px; border: 1px solid #D8DEE6; border-radius: 6px; padding: 14px 16px; background: #F3F5F7;">
+              <span style="flex: 0 0 auto; width: 10px; height: 10px; border-radius: 999px; background: #1F9D6B;"></span>
+              <div style="min-width: 0;">
+                <div style="font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Northwind · Ledger rebuild</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">Migration scripts</div>
+              </div>
+              <div style="margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; letter-spacing: -.02em;">1:47:12</div>
+              <button aria-label="Pause timer" style="flex: 0 0 auto; width: 34px; height: 34px; border-radius: 6px; border: 1px solid #D8DEE6; background: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 3px;"><span style="width: 3px; height: 12px; background: #0F1524; display: block;"></span><span style="width: 3px; height: 12px; background: #0F1524; display: block;"></span></button>
+            </div>
+            <div style="margin-top: 14px; display: flex; flex-direction: column;">
+              <sc-for list="{{ timesheet }}" as="r" hint-placeholder-count="3">
+                <div style="display: flex; align-items: center; gap: 12px; padding: 10px 2px; border-top: 1px solid #D8DEE6; font-size: 12.5px;">
+                  <span style="color: #59657A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.task }}</span>
+                  <span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; color: #0F1524;">{{ r.dur }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <p style="margin: 12px 0 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #59657A;">Timesheet · today · editable</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 ACTIVITY -->
+  <section id="activity" data-reveal-group style="background: #EAF2ED; padding: 88px 0;">
+    <div style="margin-left: var(--edge-side); margin-right: 0; max-width: none; padding-left: 24px; padding-right: calc(24px + var(--edge-side) - var(--edge-extra)); perspective: 1200px;">
+      <div class="pd-grid" style="display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 56px; align-items: center; transform-style: preserve-3d;">
+        <div class="pd-text" style="order: 2;" data-reveal>
+          <p style="font-family: 'JetBrains Mono', monospace; font-size: 13px; margin: 0 0 20px;"><span style="color: #187751;">02 / ACTIVITY</span></p>
+          <h2 style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: clamp(28px,3.6vw,42px); letter-spacing: -.03em; line-height: 1.05; margin: 0 0 16px; max-width: 18ch;">Evidence, and a score telling you how good it is.</h2>
+          <p style="font-size: 17px; line-height: 1.55; color: #59657A; max-width: 48ch; margin: 0 0 28px;">A desktop agent on Windows, macOS and Linux records screenshots, keyboard and mouse activity and idle time in the background. It keeps working offline. And it grades its own coverage, so you know when the record is thin instead of assuming it is complete.</p>
+          <div class="pd-caps" style="display: grid; grid-template-columns: 1fr 1fr; gap: 9px 24px; margin-bottom: 26px;">
+            <sc-for list="{{ actCaps }}" as="c" hint-placeholder-count="12">
+              <div style="display: flex; gap: 9px; align-items: flex-start; font-size: 13.5px; line-height: 1.4;"><span style="flex: 0 0 auto; width: 5px; height: 5px; border-radius: 999px; background: #1F9D6B; margin-top: 7px;"></span><span style="{{ c.style }}">{{ c.t }}</span></div>
+            </sc-for>
+          </div>
+          <div class="pd-spec" style="display: grid; grid-template-columns: repeat(4,1fr); border: 1px solid #D8DEE6; border-radius: 6px; background: #fff; overflow: hidden;">
+            <sc-for list="{{ actSpec }}" as="s" hint-placeholder-count="4">
+              <div style="{{ s.cell }}"><div style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; color: #0F1524;">{{ s.v }}</div><div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .05em; text-transform: uppercase; color: #59657A; margin-top: 4px;">{{ s.k }}</div></div>
+            </sc-for>
+          </div>
+        </div>
+        <div class="pd-visual" style="order: 1;" data-reveal>
+          <div style="border: 1px solid #D8DEE6; border-radius: 8px; background: #fff; padding: 18px;">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; border: 1px solid #187751; border-radius: 6px; padding: 14px 16px; background: #EAF2ED;">
+              <div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #187751;">Evidence quality</div>
+                <div style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 40px; letter-spacing: -.03em; color: #0F1524; line-height: 1; margin-top: 6px;">84<span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; color: #59657A;">/100</span></div>
+              </div>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; background: #187751; color: #fff; padding: 5px 10px; border-radius: 3px; white-space: nowrap;">STRONG</span>
+            </div>
+            <div style="margin-top: 16px; display: grid; grid-template-columns: repeat(4,1fr); gap: 8px;">
+              <sc-for list="{{ thumbs }}" as="t" hint-placeholder-count="8">
+                <span style="display: block; aspect-ratio: 4/3; border-radius: 3px; border: 1px solid #D8DEE6; background: repeating-linear-gradient(45deg,#F3F5F7 0 4px,#fff 4px 8px);"></span>
+              </sc-for>
+            </div>
+            <div style="margin-top: 14px; display: flex; height: 38px; align-items: flex-end; gap: 3px;" aria-hidden="true">
+              <sc-for list="{{ bars }}" as="b" hint-placeholder-count="24">
+                <span style="{{ b.style }}"></span>
+              </sc-for>
+            </div>
+            <p style="margin: 8px 0 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #59657A;">Screenshots · activity level, last 24 windows</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 CLIENTS -->
+  <section id="clients" data-reveal-group style="background: #F3F5F7; padding: 88px 0;">
+    <div style="margin-left: var(--edge-side); margin-right: 0; max-width: none; padding-left: 24px; padding-right: calc(24px + var(--edge-side) - var(--edge-extra)); perspective: 1200px;">
+      <div class="pd-grid" style="display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 56px; align-items: center; transform-style: preserve-3d;">
+        <div class="pd-text" data-reveal>
+          <p style="font-family: 'JetBrains Mono', monospace; font-size: 13px; margin: 0 0 20px;"><span style="color: #E9A23B;">03 / CLIENTS</span></p>
+          <h2 style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: clamp(28px,3.6vw,42px); letter-spacing: -.03em; line-height: 1.05; margin: 0 0 16px; max-width: 18ch;">A CRM that knows what the work cost.</h2>
+          <p style="font-size: 17px; line-height: 1.55; color: #59657A; max-width: 48ch; margin: 0 0 28px;">Clients, contacts, projects, stages, budgets, tasks and daily updates. Because the hours live in the same place, budget consumed is a live number rather than a month-end reconstruction.</p>
+          <div class="pd-caps" style="display: grid; grid-template-columns: 1fr 1fr; gap: 9px 24px; margin-bottom: 26px;">
+            <sc-for list="{{ cliCaps }}" as="c" hint-placeholder-count="13">
+              <div style="display: flex; gap: 9px; align-items: flex-start; font-size: 13.5px; line-height: 1.4;"><span style="flex: 0 0 auto; width: 5px; height: 5px; border-radius: 999px; background: #1F9D6B; margin-top: 7px;"></span><span style="{{ c.style }}">{{ c.t }}</span></div>
+            </sc-for>
+          </div>
+          <div class="pd-spec" style="display: grid; grid-template-columns: repeat(4,1fr); border: 1px solid #D8DEE6; border-radius: 6px; background: #fff; overflow: hidden;">
+            <sc-for list="{{ cliSpec }}" as="s" hint-placeholder-count="4">
+              <div style="{{ s.cell }}"><div style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; color: #0F1524;">{{ s.v }}</div><div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .05em; text-transform: uppercase; color: #59657A; margin-top: 4px;">{{ s.k }}</div></div>
+            </sc-for>
+          </div>
+        </div>
+        <div class="pd-visual" data-reveal>
+          <div style="border: 1px solid #D8DEE6; border-radius: 8px; background: #fff; padding: 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+              <p style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 700; font-size: 17px; margin: 0;">Northwind Systems</p>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; background: #E9A23B; color: #0F1524; padding: 4px 8px; border-radius: 3px; white-space: nowrap;">In progress</span>
+            </div>
+            <ul style="list-style: none; margin: 16px 0 0; padding: 16px 0 0; border-top: 1px solid #D8DEE6; display: flex; flex-direction: column; gap: 9px;">
+              <sc-for list="{{ contacts }}" as="p" hint-placeholder-count="3">
+                <li style="display: flex; align-items: center; gap: 11px;">
+                  <span style="{{ p.avatar }}">{{ p.initials }}</span>
+                  <span style="font-size: 13.5px; font-weight: 500;">{{ p.name }}</span>
+                  <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">{{ p.role }}</span>
+                </li>
+              </sc-for>
+            </ul>
+            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #D8DEE6;">
+              <div style="display: flex; align-items: baseline; justify-content: space-between;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #59657A;">Budget</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700;">$48,000</span></div>
+              <span style="display: block; height: 6px; border-radius: 999px; background: #F3F5F7; overflow: hidden; margin-top: 8px;"><span style="display: block; height: 100%; width: 62%; background: #187751;"></span></span>
+              <p style="margin: 6px 0 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #187751;">62% used</p>
+            </div>
+            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #D8DEE6; display: flex; gap: 8px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #59657A; border: 1px solid #D8DEE6; border-radius: 3px; padding: 3px 8px;">retainer</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #59657A; border: 1px solid #D8DEE6; border-radius: 3px; padding: 3px 8px;">Q2</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 KNOWLEDGE -->
+  <section id="knowledge" data-reveal-group style="background: #FBF3E6; padding: 88px 0;">
+    <div style="margin-left: var(--edge-side); margin-right: 0; max-width: none; padding-left: 24px; padding-right: calc(24px + var(--edge-side) - var(--edge-extra)); perspective: 1200px;">
+      <div class="pd-grid" style="display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 56px; align-items: center; transform-style: preserve-3d;">
+        <div class="pd-text" style="order: 2;" data-reveal>
+          <p style="font-family: 'JetBrains Mono', monospace; font-size: 13px; margin: 0 0 20px;"><span style="color: #E9A23B;">04 / KNOWLEDGE</span></p>
+          <h2 style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: clamp(28px,3.6vw,42px); letter-spacing: -.03em; line-height: 1.05; margin: 0 0 16px; max-width: 18ch;">Search covers what was said, not just what was written.</h2>
+          <p style="font-size: 17px; line-height: 1.55; color: #59657A; max-width: 48ch; margin: 0 0 28px;">A block editor inside the client project, company files in folders, and meeting videos transcribed automatically. All of it indexed as it is written, so the assistant answers with a source instead of a list of files.</p>
+          <div class="pd-caps" style="display: grid; grid-template-columns: 1fr 1fr; gap: 9px 24px; margin-bottom: 26px;">
+            <sc-for list="{{ knoCaps }}" as="c" hint-placeholder-count="9">
+              <div style="display: flex; gap: 9px; align-items: flex-start; font-size: 13.5px; line-height: 1.4;"><span style="flex: 0 0 auto; width: 5px; height: 5px; border-radius: 999px; background: #1F9D6B; margin-top: 7px;"></span><span style="{{ c.style }}">{{ c.t }}</span></div>
+            </sc-for>
+          </div>
+          <div class="pd-spec" style="display: grid; grid-template-columns: repeat(4,1fr); border: 1px solid #D8DEE6; border-radius: 6px; background: #fff; overflow: hidden;">
+            <sc-for list="{{ knoSpec }}" as="s" hint-placeholder-count="4">
+              <div style="{{ s.cell }}"><div style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; color: #0F1524;">{{ s.v }}</div><div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .05em; text-transform: uppercase; color: #59657A; margin-top: 4px;">{{ s.k }}</div></div>
+            </sc-for>
+          </div>
+        </div>
+        <div class="pd-visual" style="order: 1;" data-reveal>
+          <div style="border: 1px solid #D8DEE6; border-radius: 8px; background: #fff; padding: 20px;">
+            <p style="margin: 0; border-radius: 6px; background: #F3F5F7; padding: 12px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px;">what did we agree on the Ledger rebuild?</p>
+            <p style="margin: 16px 0 0; font-size: 15px; line-height: 1.6;">Fixed scope: migration only, no new reporting. Northwind signed off on a two-sprint window at the April 3 call.</p>
+            <div style="margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px;">
+              <span style="border: 1px solid #187751; border-radius: 3px; padding: 4px 9px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #187751;">doc · Ledger SOW</span>
+              <span style="border: 1px solid #187751; border-radius: 3px; padding: 4px 9px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #187751;">call · Apr 3</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLATFORM -->
+  <section data-reveal-group style="background: #0F1524; color: #F3F5F7; padding: 88px 0;">
+    <div style="margin-left: var(--edge-side); margin-right: 0; max-width: none; padding-left: 24px; padding-right: calc(24px + var(--edge-side) - var(--edge-extra));">
+      <p style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #E9A23B; margin: 0 0 16px;" data-reveal>PLATFORM</p>
+      <h2 style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: clamp(28px,3.6vw,42px); letter-spacing: -.03em; margin: 0 0 40px; color: #F3F5F7;" data-reveal>Underneath all four.</h2>
+      <div class="pd-plat" style="display: grid; grid-template-columns: repeat(3,1fr); gap: 16px;" data-reveal>
+        <sc-for list="{{ platform }}" as="p" hint-placeholder-count="6">
+          <div style="{{ p.card }}">
+            <div style="display: flex; align-items: center; gap: 13px; margin-bottom: 13px;">
+              <span style="{{ p.iconBox }}">{{ p.icon }}</span>
+              <h3 style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 700; font-size: 17px; margin: 0; color: #F3F5F7; letter-spacing: -.01em;">{{ p.title }}</h3>
+              <sc-if value="{{ p.mcp }}" hint-placeholder-val="{{ false }}"><span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: .08em; background: #E9A23B; color: #0F1524; padding: 4px 8px; border-radius: 3px;">MCP</span></sc-if>
+            </div>
+            <p style="margin: 0; font-size: 14px; line-height: 1.55; color: #9AA6B8; max-width: 62ch;">{{ p.body }}</p>
+            <sc-if value="{{ p.mcp }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top: 16px; display: flex; flex-wrap: wrap; gap: 7px;">
+                <sc-for list="{{ mcpTools }}" as="m" hint-placeholder-count="6">
+                  <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #9AA6B8; border: 1px solid #2A3348; border-radius: 3px; padding: 4px 9px;">{{ m }}</span>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT YOU WON'T FIND -->
+  <section data-reveal-group style="background: #F3F5F7; padding: 96px 0;">
+    <div style="margin-left: var(--edge-side); margin-right: 0; max-width: none; padding-left: 24px; padding-right: calc(24px + var(--edge-side) - var(--edge-extra));">
+      <p style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #E9A23B; margin: 0 0 16px;" data-reveal>THE ARGUMENT</p>
+      <h2 style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: clamp(30px,4.4vw,52px); letter-spacing: -.03em; margin: 0 0 48px; max-width: 16ch;" data-reveal>The parts nobody else built.</h2>
+      <div class="pd-wf" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0 64px;" data-reveal>
+        <sc-for list="{{ wontFind }}" as="w" hint-placeholder-count="5">
+          <div style="display: grid; grid-template-columns: auto 1fr; gap: 20px; padding: 26px 0; border-top: 1px solid #D8DEE6;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: #E9A23B; padding-top: 5px;">{{ w.n }}</span>
+            <div>
+              <h3 style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 700; font-size: 20px; letter-spacing: -.02em; margin: 0 0 8px;">{{ w.t }}</h3>
+              <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #59657A;">{{ w.d }}</p>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- FULL CAPABILITY TABLE -->
+  <section style="background: #fff; border-top: 1px solid #D8DEE6; border-bottom: 1px solid #D8DEE6;">
+    <div style="margin-left: var(--edge-side); margin-right: 0; max-width: none; padding: 88px 0; padding-left: 24px; padding-right: calc(24px + var(--edge-side) - var(--edge-extra));">
+      <p style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #E9A23B; margin: 0 0 16px;">EVERYTHING, LISTED</p>
+      <h2 style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: clamp(28px,3.6vw,42px); letter-spacing: -.03em; margin: 0 0 40px;">The full capability list.</h2>
+      <div style="max-width: 940px;">
+        <sc-for list="{{ tableGroups }}" as="g" hint-placeholder-count="4">
+          <div style="margin-bottom: 12px;">
+            <div class="pd-tablehead" style="display: grid; grid-template-columns: 1.4fr 1fr; padding: 22px 0 10px;">
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: #E9A23B;">{{ g.title }}</div>
+              <div></div>
+            </div>
+            <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="8">
+              <div class="pd-tablerow" style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; border-top: 1px solid #D8DEE6; padding: 12px 0; align-items: baseline;">
+                <div style="font-size: 14.5px; color: #0F1524;">{{ r.c }}</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #59657A;">{{ r.q }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+      <a href="Pricing v2.dc.html" style="display: inline-block; margin-top: 32px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #E9A23B; border: 1px solid #E9A23B; border-radius: 4px; padding: 10px 16px;" style-hover="background: #E9A23B; color: #0F1524;">Compare plans →</a>
+    </div>
+  </section>
+
+  <!-- CLOSING CTA -->
+  <section style="background: #E9A23B;">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 88px 24px; text-align: center;">
+      <h2 style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: clamp(30px,4.5vw,50px); letter-spacing: -.03em; line-height: 1.04; margin: 0 0 28px; color: #0F1524; text-wrap: balance;">See it against your own client list.</h2>
+      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
+        <a href="#" style="background: #0F1524; color: #F3F5F7; padding: 14px 26px; border-radius: 6px; font-weight: 600; font-size: 16px;" style-hover="background: #1c2740; color: #F3F5F7;">Start free trial</a>
+        <a href="#" style="background: #fff; color: #0F1524; padding: 14px 26px; border-radius: 6px; font-weight: 600; font-size: 16px; border: 1px solid rgba(15,21,36,.15);" style-hover="border-color: #0F1524; color: #0F1524;">Book a 15-minute demo</a>
+      </div>
+      <p style="font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #0F1524; margin: 20px 0 0; opacity: .75;">No credit card. Desktop app for Windows, macOS and Linux.</p>
+    </div>
+  </section>
+
+  <footer style="background: #0F1524; color: #9AA6B8;">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 40px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+      <a href="#" style="font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 18px; color: #F3F5F7;">DocuFlow</a>
+      <span>© 2026 TECHMA · Terms · Privacy · Law 25</span>
+    </div>
+  </footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() {
+    requestAnimationFrame(() => this._setup());
+  }
+
+  _setup() {
+    const root = this._el || document;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (!reduce) {
+      document.querySelectorAll('[data-reveal]').forEach((el) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(14px) rotateX(15deg)';
+        el.style.transformOrigin = 'top center';
+        el.style.transition = 'opacity .8s cubic-bezier(.2,.75,.25,1), transform .8s cubic-bezier(.2,.75,.25,1)';
+        el.style.willChange = 'opacity, transform';
+      });
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          const group = Array.from(e.target.querySelectorAll('[data-reveal]'));
+          group.forEach((el, i) => {
+            el.style.transitionDelay = (i * 130) + 'ms';
+            el.style.opacity = '1';
+            el.style.transform = 'none';
+          });
+          io.unobserve(e.target);
+        });
+      }, { rootMargin: '0px 0px -120px 0px' });
+      document.querySelectorAll('[data-reveal-group]').forEach((g) => io.observe(g));
+    }
+
+    // Sticky jump-bar spy — imperative, no setState (keeps reveal styles intact).
+    const map = { time: 'jump-time', activity: 'jump-activity', clients: 'jump-clients', knowledge: 'jump-knowledge' };
+    const links = {};
+    Object.entries(map).forEach(([id, lid]) => { links[id] = document.getElementById(lid); });
+    const setActive = (id) => {
+      Object.entries(links).forEach(([k, a]) => {
+        if (!a) return;
+        const on = k === id;
+        a.style.color = on ? '#0F1524' : '#59657A';
+        a.style.borderBottomColor = on ? '#0F1524' : 'transparent';
+        a.style.fontWeight = on ? '700' : '400';
+      });
+    };
+    const spy = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) setActive(e.target.id); });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    ['time', 'activity', 'clients', 'knowledge'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) spy.observe(el);
+    });
+    setActive('time');
+  }
+
+  renderVals() {
+    const mono = "'JetBrains Mono', monospace";
+    const cap = (t, b) => ({ t, style: { color: b ? '#0F1524' : '#59657A', fontWeight: b ? 600 : 400 } });
+    const specCell = (i, v, k) => ({ v, k, cell: { padding: '12px 10px', textAlign: 'center', borderLeft: i === 0 ? 'none' : '1px solid #D8DEE6' } });
+
+    const heroIndex = [
+      { num: '01', label: 'Time', count: '8 capabilities', href: '#time' },
+      { num: '02', label: 'Activity', count: '12 capabilities', href: '#activity' },
+      { num: '03', label: 'Clients', count: '13 capabilities', href: '#clients' },
+      { num: '04', label: 'Knowledge', count: '9 capabilities', href: '#knowledge' }
+    ].map((h, i) => ({ ...h, row: { display: 'flex', alignItems: 'center', gap: '16px', padding: '18px 20px', borderTop: i === 0 ? 'none' : '1px solid #D8DEE6' } }));
+
+    const jumpItems = [
+      { id: 'time', label: 'Time' }, { id: 'activity', label: 'Activity' },
+      { id: 'clients', label: 'Clients' }, { id: 'knowledge', label: 'Knowledge' }
+    ].map((j, i) => ({ label: j.label, href: '#' + j.id, linkId: 'jump-' + j.id, num: '0' + (i + 1) }));
+
+    const timeCaps = [
+      cap('Web timer — start, pause, resume, stop'),
+      cap('Time logged against a task in a client project'),
+      cap('Multi-tab safe — one tab leads, no double counting'),
+      cap('Automatic pause past the idle threshold'),
+      cap('Timesheets and entry history, editable'),
+      cap('Attendance and presence'),
+      cap('Configurable expected hours per person'),
+      cap('Payroll-ready CSV export')
+    ];
+    const timeSpec = [specCell(0, '60s', 'heartbeat'), specCell(1, '3 min', 'idle threshold'), specCell(2, '8h', 'default day'), specCell(3, 'CSV', 'export')];
+    const timesheet = [
+      { task: 'Northwind · Migration scripts', dur: '1:47:12' },
+      { task: 'Acme · Sprint planning', dur: '0:52:40' },
+      { task: 'Internal · Standup', dur: '0:15:03' }
+    ];
+
+    const actCaps = [
+      cap('Desktop agent for Windows, macOS and Linux'),
+      cap('Screenshots at randomised, configurable intervals'),
+      cap('Keyboard and mouse activity in 60-second windows'),
+      cap('Idle detection with prompt and countdown'),
+      cap('Capture restricted to an active-hours window'),
+      cap('Offline-first — events queue and sync on reconnect'),
+      cap('Device registry with remote revocation'),
+      cap('Screenshots soft-deleted with a recorded reason'),
+      cap('Evidence quality score, 0–100 per person', true),
+      cap('Admin analytics — coverage, quality, devices, alerts'),
+      cap('Screenshot review with a timezone selector'),
+      cap('CSV export')
+    ];
+    const actSpec = [specCell(0, '3–15m', 'capture'), specCell(1, '60s', 'activity window'), specCell(2, '0–100', 'evidence score'), specCell(3, '3', 'platforms')];
+    const thumbs = Array.from({ length: 8 });
+    const barVals = [52, 78, 84, 61, 47, 73, 91, 22, 58, 66, 44, 55, 81, 88, 39, 72, 95, 63, 49, 77, 85, 31, 68, 74];
+    const bars = barVals.map((v) => ({
+      style: { flex: '1', borderRadius: '1px', height: v + '%', background: v > 70 ? '#1F9D6B' : v > 40 ? '#E9A23B' : '#D8DEE6' }
+    }));
+
+    const cliCaps = [
+      cap('Clients and contacts, with status and source'),
+      cap('Client projects with full stage-change history'),
+      cap('Kanban board across all projects'),
+      cap('Budgeted vs actual hours, live'),
+      cap('Tasks — open / in progress / done / archived'),
+      cap('Team assignment per project'),
+      cap('Coloured tags'),
+      cap('Notes with @mentions that notify'),
+      cap('Audio notes, transcribed automatically'),
+      cap('Reminders with due dates, in-app and email'),
+      cap('Custom modules and fields — 12 field types', true),
+      cap('Daily updates with status, blockers and KPIs'),
+      cap('Project cloning')
+    ];
+    const cliSpec = [specCell(0, '12', 'field types'), specCell(1, '5', 'project stages'), specCell(2, '1/day', 'per person'), specCell(3, 'full', 'stage history')];
+    const contacts = [
+      { initials: 'EP', name: 'Elena Park', role: 'VP Finance', tone: '#0F1524' },
+      { initials: 'RA', name: 'Rob Adeyemi', role: 'Controller', tone: '#2A3348' },
+      { initials: 'SD', name: 'Sofia Duarte', role: 'Sponsor', tone: '#59657A' }
+    ].map((c) => ({
+      initials: c.initials, name: c.name, role: c.role,
+      avatar: { flex: '0 0 auto', width: '26px', height: '26px', borderRadius: '999px', background: c.tone, color: '#fff', fontFamily: mono, fontSize: '9px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }
+    }));
+
+    const knoCaps = [
+      cap('Block editor with slash commands and nested pages'),
+      cap('Page reordering, templates and duplication'),
+      cap('Images, file attachments and audio recordings'),
+      cap('Video embeds — YouTube, Loom, Fathom'),
+      cap('Automatic video transcription, indexed', true),
+      cap('Company files in folders — PDF, Word, text'),
+      cap('Full-text search across everything'),
+      cap('AI assistant over semantic search, cited', true),
+      cap('Re-indexing skips unchanged content')
+    ];
+    const knoSpec = [specCell(0, '~800', 'char chunks'), specCell(1, '1536', 'dim embeddings'), specCell(2, '3', 'video providers'), specCell(3, 'PDF·W·txt', 'extracted')];
+
+    const platCard = { background: '#161D30', border: '1px solid #2A3348', borderRadius: '8px', padding: '22px' };
+    const platCardMcp = { background: '#161D30', border: '1px solid #E9A23B', borderRadius: '8px', padding: '24px', gridColumn: 'span 3' };
+    const h = (t, a, ...k) => React.createElement(t, a, ...k);
+    const P = (d) => h('path', { d, key: d });
+    const C = (cx, cy, r) => h('circle', { cx, cy, r, key: cx + '-' + cy });
+    const svg = (...kids) => h('svg', { viewBox: '0 0 24 24', width: 20, height: 20, fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' }, ...kids);
+    const icons = {
+      roles: svg(P('M12 3l7 3v5c0 4-3 7-7 8-4-1-7-4-7-8V6z'), P('M9 12l2 2 4-4')),
+      teams: svg(C(9, 8, 2.6), C(15.5, 9, 2.2), P('M4 18c0-3 2.4-4.6 5-4.6'), P('M15.5 13.4c2.5 0 4.5 1.6 4.5 4.6')),
+      bell: svg(P('M6 9a6 6 0 0112 0c0 5 2 6 2 6H4s2-1 2-6z'), P('M10 20a2 2 0 004 0')),
+      sync: svg(P('M5 8a7 7 0 0112-2'), P('M15 4l2 2-2 2'), P('M19 16a7 7 0 01-12 2'), P('M9 20l-2-2 2-2')),
+      lock: svg(h('rect', { x: 5, y: 10, width: 14, height: 9, rx: 1.5, key: 'r' }), P('M8 10V7a4 4 0 018 0v3')),
+      mcp: svg(C(6, 7, 2), C(6, 17, 2), C(18, 12, 2), P('M8 8l8 3'), P('M8 16l8-3'))
+    };
+    const iconBox = (mcp) => ({ flex: '0 0 auto', width: '40px', height: '40px', border: '1px solid ' + (mcp ? '#E9A23B' : '#2A3348'), borderRadius: '6px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: mcp ? '#E9A23B' : '#9AA6B8' });
+    const platform = [
+      { key: 'roles', title: 'Roles and permissions', body: 'Admin and member roles, with per-capability visibility.' },
+      { key: 'teams', title: 'Teams', body: 'Grouping with owner / admin / member roles and expiring invite codes.' },
+      { key: 'bell', title: 'Notifications', body: 'Mentions and system alerts, in-app and by email.' },
+      { key: 'sync', title: 'Offline-first agent', body: 'Local queue and idempotent sync — no double-counted work.' },
+      { key: 'lock', title: 'Device security', body: 'Device tokens stored only as hashes, revocable at any time.' },
+      { key: 'mcp', title: 'Claude Desktop integration', body: 'An MCP server exposing 22 tools, so an AI assistant can query projects, documents, clients and time entries directly.', mcp: true }
+    ].map((p) => ({ title: p.title, body: p.body, mcp: !!p.mcp, icon: icons[p.key], iconBox: iconBox(!!p.mcp), card: p.mcp ? platCardMcp : platCard }));
+    const mcpTools = ['list_projects', 'get_client', 'search_documents', 'query_time_entries', 'create_task', 'get_budget', '+16 more'];
+
+    const wontFind = [
+      { n: '01', t: 'An evidence quality score', d: 'The monitoring data grades its own completeness — no competitor publishes an equivalent.' },
+      { n: '02', t: 'Meetings that answer questions', d: 'Recorded calls are transcribed and indexed, so the assistant can answer from what was said.' },
+      { n: '03', t: 'A CRM you can reshape', d: '12 custom field types across custom modules, not a fixed schema.' },
+      { n: '04', t: 'An agent that survives the network', d: 'Work queues locally and reconciles without duplicates when the connection returns.' },
+      { n: '05', t: 'An MCP server', d: 'Query your operations from Claude Desktop through 22 exposed tools.' }
+    ];
+
+    const tRow = (c, q) => ({ c, q: q || '' });
+    const tableGroups = [
+      { title: 'Time', rows: [
+        tRow('Web timer — start, pause, resume, stop'),
+        tRow('Time logged against a task', 'never a free-text label'),
+        tRow('Multi-tab safe', 'leader election, no double counting'),
+        tRow('Automatic idle pause', 'past the idle threshold'),
+        tRow('Timesheets and entry history', 'editable'),
+        tRow('Attendance and presence'),
+        tRow('Expected hours per person', 'configurable'),
+        tRow('Payroll-ready CSV export')
+      ] },
+      { title: 'Activity', rows: [
+        tRow('Desktop agent', 'Windows, macOS, Linux'),
+        tRow('Screenshots at randomised intervals', 'org-configurable'),
+        tRow('Keyboard and mouse activity', '60-second windows'),
+        tRow('Idle detection', 'prompt and countdown'),
+        tRow('Active-hours capture window'),
+        tRow('Offline-first sync', 'events queue locally'),
+        tRow('Device registry', 'remote revocation'),
+        tRow('Screenshots soft-deleted with reason', 'never silently erased'),
+        tRow('Evidence quality score, 0–100', 'strong / moderate / weak / insufficient'),
+        tRow('Admin analytics', 'coverage, quality, devices, alerts'),
+        tRow('Screenshot review', 'timezone selector'),
+        tRow('CSV export')
+      ] },
+      { title: 'Clients', rows: [
+        tRow('Clients and contacts', 'status and source'),
+        tRow('Client projects with stages', 'full stage-change history'),
+        tRow('Kanban board', 'across all projects'),
+        tRow('Budgeted vs actual hours', 'consumption live'),
+        tRow('Tasks', 'open / in progress / done / archived'),
+        tRow('Team assignment per project'),
+        tRow('Coloured tags'),
+        tRow('Notes with @mentions', 'notifies the person named'),
+        tRow('Audio notes', 'transcribed automatically'),
+        tRow('Reminders with due dates', 'in-app and email'),
+        tRow('Custom modules and fields', '12 field types'),
+        tRow('Daily updates', 'one per person / project / day + KPIs'),
+        tRow('Project cloning')
+      ] },
+      { title: 'Knowledge', rows: [
+        tRow('Block editor', 'slash commands, nested pages'),
+        tRow('Page reordering, templates, duplication'),
+        tRow('Images, attachments, audio recordings'),
+        tRow('Video embeds', 'YouTube, Loom, Fathom'),
+        tRow('Automatic video transcription', 'indexed and searchable'),
+        tRow('Company documents in folders', 'PDF, Word, text extracted'),
+        tRow('Full-text search across everything'),
+        tRow('AI assistant over semantic search', 'cited sources'),
+        tRow('Incremental re-indexing', 'skips unchanged content')
+      ] }
+    ];
+
+    return { heroIndex, jumpItems, timeCaps, timeSpec, timesheet, actCaps, actSpec, thumbs, bars, cliCaps, cliSpec, contacts, knoCaps, knoSpec, platform, mcpTools, wontFind, tableGroups };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+---
+import { PRODUCT_ARGUMENT } from "../../data/product";
+---
+
+{/* Le seul moment de la page qui argumente. Tout le reste spécifie — c'est
+    précisément ce qui donne son poids à ces cinq phrases. Aucune boîte : cinq
+    entrées séparées par un filet, comme l'index des secteurs de l'accueil. */}
+<section class="argument bg-paper" data-reveal-group>
+  <div class="container-wide">
+    <p class="mb-4 font-mono text-[13px] text-hour" data-reveal>THE ARGUMENT</p>
+
+    <h2 class="mb-12 max-w-[16ch] text-[clamp(30px,4.4vw,52px)]" data-reveal>
+      The parts we could not buy off the shelf.
+    </h2>
+
+    {/* `<ol>` : le brief numérote, et l'ordre est celui de la force de
+        l'argument. Le numéro visible est donc une vraie information de rang —
+        mais il est déjà porté par la liste ordonnée, donc le glyphe est
+        `aria-hidden` : sans ça un lecteur d'écran annonce « 1. 01 An evidence
+        quality score ». Il vit dans les données comme `index` chez les piliers,
+        et doit suivre l'ordre du tableau. */}
+    <ol class="arg-list" data-reveal>
+      {
+        PRODUCT_ARGUMENT.map((item) => (
+          <li class="arg-item">
+            <span class="arg-num" aria-hidden="true">
+              {item.n}
+            </span>
+            <div>
+              <h3 class="arg-title">{item.title}</h3>
+              <p class="arg-body">{item.body}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .argument {
+    padding-block: 96px;
+    overflow-x: clip;
+  }
+
+  .argument .container-wide {
+    perspective: 1200px;
+  }
+
+  /* Deux colonnes, remplissage par rangées : trois entrées à gauche, deux à
+     droite. Zéro écart vertical — c'est le filet supérieur de chaque entrée qui
+     les sépare, pas du vide. */
+  .arg-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 64px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    transform-style: preserve-3d;
+  }
+
+  .arg-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 20px;
+    border-top: 1px solid var(--color-rule);
+    padding: 26px 0;
+  }
+
+  .arg-num {
+    padding-top: 5px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-hour);
+  }
+
+  .arg-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .arg-body {
+    margin: 8px 0 0;
+    max-width: 46ch;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--color-slate);
+  }
+
+  @media (max-width: 560px) {
+    .argument {
+      padding-block: 64px;
+    }
+
+    .arg-list {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .arg-item {
+      gap: 16px;
+      padding: 22px 0;
+    }
+  }
+</style>
+
+<script>
+  import "../../scripts/reveal";
+</script>

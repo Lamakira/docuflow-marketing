@@ -373,11 +373,15 @@ const EAR = 30;
     gap: 8px;
   }
 
+  /* `slate-on-ink` est prévu pour fond sombre : sur les trois cartes blanches il
+     tombe à 2,46:1, sous le plancher AA du grand texte. C'est un vrai prix,
+     donc `slate` par défaut (5,9:1) et la teinte sombre réservée à la carte
+     `--featured`, même découpage que `.per` / `.billed` ci-dessous. */
   .was {
     font-family: var(--font-mono);
     font-size: 22px;
     font-weight: 700;
-    color: var(--color-slate-on-ink);
+    color: var(--color-slate);
   }
 
   .amount {
@@ -400,6 +404,10 @@ const EAR = 30;
 
   .card--featured .per,
   .card--featured .billed {
+    color: var(--color-slate-on-ink);
+  }
+
+  .card--featured .was {
     color: var(--color-slate-on-ink);
   }
 

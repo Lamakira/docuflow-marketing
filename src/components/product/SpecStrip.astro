@@ -1,0 +1,105 @@
+---
+import type { Spec } from "../../data/product";
+
+interface Props {
+  items: Spec[];
+  class?: string;
+}
+
+const { items, class: className = "" } = Astro.props;
+---
+
+{/* La preuve de la section : quatre chiffres durs, en mono, sur blanc. C'est le
+    seul élément qui se répète à l'identique dans les quatre piliers — et il se
+    répétera dans les dix pages par fonction.
+
+    Une `<dl>` et non une grille de `<div>` : chaque cellule est une paire
+    terme/valeur (« heartbeat : 60s »), et c'est ce que doit entendre un lecteur
+    d'écran. Le `<dt>` précède donc le `<dd>` dans le DOM ; l'affichage les
+    inverse (`column-reverse`) parce qu'à l'oeil c'est le chiffre qui mène. */}
+<dl class:list={["spec", className]}>
+  {
+    items.map((item) => (
+      <div class="spec-cell">
+        <dt class="spec-label">{item.label}</dt>
+        <dd class="spec-value">{item.value}</dd>
+      </div>
+    ))
+  }
+</dl>
+
+<style>
+  .spec {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    overflow: hidden;
+    margin: 0;
+    border: 1px solid var(--color-rule);
+    border-radius: 6px;
+    background: #fff;
+  }
+
+  .spec-cell {
+    display: flex;
+    /* Étiquette avant valeur dans le DOM, valeur au-dessus à l'écran. */
+    flex-direction: column-reverse;
+    justify-content: center;
+    padding: 12px 10px;
+    text-align: center;
+  }
+
+  /* Filet entre cellules, jamais autour : le cadre est déjà porté par la bande.
+     `:nth-child(4n + 1)` repère la première colonne de chaque rangée plutôt
+     qu'un seul index fixe — la bande accepte ainsi trois, quatre ou cinq
+     cellules sans qu'on y revienne. `:nth-child(n + 5)` sépare d'un filet
+     haut les rangées suivantes, pour les comptes qui débordent de quatre. */
+  .spec-cell:not(:nth-child(4n + 1)) {
+    border-left: 1px solid var(--color-rule);
+  }
+
+  .spec-cell:nth-child(n + 5) {
+    border-top: 1px solid var(--color-rule);
+  }
+
+  .spec-value {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+
+  .spec-label {
+    margin-top: 4px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  /* Quatre cellules mono dans une demi-colonne : sous 561px chacune tomberait
+     sous 70px et « idle threshold » se couperait en trois lignes. Deux par deux,
+     le filet vertical reste, et un filet horizontal sépare les rangées.
+
+     Même principe qu'en pleine largeur, décliné à deux colonnes :
+     `nth-child(4n + 3)` annule le filet gauche hérité de la règle du dessus
+     pour les cellules qui retombent en première colonne (3, 7, 11…) — combinée
+     à cette règle, seule la deuxième colonne (les cellules paires) garde un
+     filet gauche, quel que soit le nombre total de cellules. `nth-child(n + 3)`
+     sépare chaque rangée dès la deuxième, qu'elle soit déjà couverte par la
+     règle plein écran (à partir de la 5e cellule) ou nouvelle ici (3e et 4e). */
+  @media (max-width: 560px) {
+    .spec {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .spec-cell:nth-child(4n + 3) {
+      border-left: none;
+    }
+
+    .spec-cell:nth-child(n + 3) {
+      border-top: 1px solid var(--color-rule);
+    }
+  }
+</style>

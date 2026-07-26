@@ -1,0 +1,169 @@
+---
+import { PRODUCT_PILLARS } from "../../data/product";
+
+/** Le compte de capacités est DÉRIVÉ de la liste, jamais recopié : la carte
+ *  d'index promet la complétude de la page, elle ne peut pas mentir d'un cran
+ *  parce qu'on a ajouté une ligne trois cents lignes plus bas. */
+const index = PRODUCT_PILLARS.map((pillar) => ({
+  href: `#${pillar.id}`,
+  num: pillar.index,
+  label: pillar.name,
+  count: `${pillar.caps.length} capabilities`,
+}));
+---
+
+{/* `pb-16` et non les 56px du handoff : le cache de la barre de saut occupe les
+    64px situés juste au-dessus d'elle, en permanence (voir `JumpBar.astro`).
+    Avec 56px de fond de section, il mordrait de 8px sur le bas des boutons et de
+    la carte d'index. Le padding EST la réserve du cache — ne pas le réduire. */}
+<section class="pb-16 pt-16">
+  <div
+    class="container-wide grid grid-cols-1 items-end gap-14 min-[901px]:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]"
+  >
+    <div>
+      {/* Oeil-de-boeuf en `ink`, pas en ambre : le CTA ambre est dans le même
+          écran, et l'ambre ne marque qu'une chose à la fois (« The One Amber
+          Rule »). C'est exactement l'arbitrage déjà rendu sur le héros de
+          l'accueil — #E9A23B sur `paper` ne fait de toute façon que 1,98:1. */}
+      <p class="label-mono mb-4 text-ink">Product</p>
+
+      <h1 class="max-w-[15ch] text-balance text-[clamp(34px,5vw,58px)] leading-[1.02]">
+        Four products, not four checkboxes.
+      </h1>
+
+      <p class="mt-5 max-w-[52ch] text-[18px] leading-[1.55] text-slate">
+        Time tracking, activity monitoring, client projects and documentation - each one built to
+        stand on its own, all of them filed against the same client record. Here is everything
+        DocuFlow does.
+      </p>
+
+      <div class="mt-7 flex flex-wrap items-center gap-3">
+        <a
+          href="/signup"
+          class="rounded-[6px] bg-hour px-[22px] py-[13px] font-medium text-ink transition-colors hover:bg-hour-hover"
+        >
+          Start free trial
+        </a>
+        <a
+          href="/demo"
+          class="rounded-[6px] border border-rule bg-white px-[22px] py-[13px] font-medium transition-colors hover:border-ink"
+        >
+          Book a 15-minute demo
+        </a>
+      </div>
+    </div>
+
+    {/* La carte d'index — le sommaire de la fiche technique. Un vrai `<nav>` :
+        ce sont quatre ancres vers les quatre sections, c'est-à-dire un plan de
+        page, pas une illustration. */}
+    <nav class="datasheet" aria-labelledby="datasheet-title">
+      <p id="datasheet-title" class="datasheet-head label-mono text-[10.5px] text-slate">
+        In this datasheet
+      </p>
+
+      <ul>
+        {
+          index.map((entry) => (
+            <li>
+              <a href={entry.href} class="datasheet-row">
+                {/* `text-slate-on-ink` était la teinte pour fond sombre, posée ici par erreur :
+                    sur la carte blanche elle ne fait que 2,46:1, et le span n'est pas
+                    `aria-hidden`. `text-slate` (5,9:1 sur blanc) corrige le contraste. */}
+                <span class="font-mono text-[12px] text-slate">{entry.num}</span>
+                <span class="flex-1 font-display text-[20px] font-bold tracking-[-0.02em]">
+                  {entry.label}
+                </span>
+                <span class="font-mono text-[13px] text-slate">{entry.count}</span>
+                <span class="datasheet-arrow font-mono text-[14px]" aria-hidden="true">
+                  →
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+</section>
+
+<style>
+  /* Pas d'`overflow: hidden` ici : le focus ring de `global.css` déborde de 4px
+     (outline + box-shadow), et les rangées pleine largeur le rognaient net sur
+     leurs bords gauche/droit et sur le bas de la dernière rangée. Le seul rayon
+     à préserver visuellement est celui du bas, arrondi ci-dessous sur la
+     dernière rangée. */
+  .datasheet {
+    border: 1px solid var(--color-rule);
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .datasheet-head {
+    border-bottom: 1px solid var(--color-rule);
+    padding: 14px 20px;
+  }
+
+  .datasheet ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .datasheet li + li .datasheet-row {
+    border-top: 1px solid var(--color-rule);
+  }
+
+  .datasheet-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    color: var(--color-ink);
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+  }
+
+  /* 8px de la carte moins le 1px de bordure : sans ça, le fond `paper` du
+     survol/focus de la dernière rangée dessinerait un coin carré par-dessus
+     le coin arrondi de la carte. */
+  .datasheet li:last-child .datasheet-row {
+    border-radius: 0 0 7px 7px;
+  }
+
+  /* La flèche est au repos en `slate` : quatre flèches ambre en même temps que
+     le CTA ambre feraient de l'ambre une décoration. Elle ne passe à l'ambre que
+     sous le pointeur ou au clavier — là, elle désigne bien l'action suivante.
+     Rien ne se déplace au survol : seule la couleur change. */
+  .datasheet-arrow {
+    color: var(--color-slate);
+    transition: color 0.15s ease;
+  }
+
+  .datasheet-row:hover,
+  .datasheet-row:focus-visible {
+    background-color: var(--color-paper);
+  }
+
+  .datasheet-row:hover .datasheet-arrow,
+  .datasheet-row:focus-visible .datasheet-arrow {
+    color: var(--color-hour);
+  }
+
+  /* Le fond `paper` disparaît en contraste forcé : garder un repère de forme. */
+  @media (forced-colors: active) {
+    .datasheet-row:hover,
+    .datasheet-row:focus-visible {
+      outline: 1px solid CanvasText;
+    }
+  }
+
+  /* À 360px la rangée la plus longue (« Knowledge · 9 capabilities ») mesure
+     ~274px pour 312px disponibles : elle tient, mais de justesse. On resserre
+     plutôt que de laisser le compte se coller au nom du pilier. */
+  @media (max-width: 560px) {
+    .datasheet-row {
+      gap: 12px;
+      padding-inline: 16px;
+    }
+  }
+</style>

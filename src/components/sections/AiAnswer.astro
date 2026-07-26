@@ -1,4 +1,5 @@
 ---
+import { ANSWER_CARD } from "../../data/site";
 import PillarSection from "../PillarSection.astro";
 
 interface Props {
@@ -16,23 +17,25 @@ const { reverse = false } = Astro.props;
   body="Documentation, company files and meeting recordings are indexed as they're written. Ask “what did we agree on the Ledger rebuild?” and get the answer with its source, not a list of files."
   reverse={reverse}
 >
+  {/* Question, réponse et sources : source unique dans `data/site.ts`
+      (`ANSWER_CARD`), partagée avec la maquette `/product` (`AnswerMock.astro`). */}
   <div class="rounded-[8px] border border-rule bg-white p-5">
     <p class="rounded-[6px] bg-paper px-3 py-2 font-mono text-[13px]">
-      what did we agree on the Ledger rebuild?
+      {ANSWER_CARD.question}
     </p>
 
     <p class="mt-4 text-[15px] leading-[1.6]">
-      Fixed scope: migration only, no new reporting. Northwind signed off on a two-sprint window at
-      the April 3 call.
+      {ANSWER_CARD.answer}
     </p>
 
     <div class="mt-4 flex flex-wrap gap-2">
-      <span class="rounded-[3px] border border-live-on-light px-2 py-[3px] font-mono text-[11px] text-live-on-light">
-        doc · Ledger SOW
-      </span>
-      <span class="rounded-[3px] border border-live-on-light px-2 py-[3px] font-mono text-[11px] text-live-on-light">
-        call · Apr 3
-      </span>
+      {
+        ANSWER_CARD.sources.map((source) => (
+          <span class="rounded-[3px] border border-live-on-light px-2 py-[3px] font-mono text-[11px] text-live-on-light">
+            {source}
+          </span>
+        ))
+      }
     </div>
   </div>
 </PillarSection>

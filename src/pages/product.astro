@@ -1,0 +1,80 @@
+---
+import Layout from "../layouts/Layout.astro";
+import ProductHero from "../components/product/ProductHero.astro";
+import JumpBar from "../components/product/JumpBar.astro";
+import ProductPillar from "../components/product/ProductPillar.astro";
+import PlatformBand from "../components/product/PlatformBand.astro";
+import ArgumentSection from "../components/product/ArgumentSection.astro";
+import CapabilityList from "../components/product/CapabilityList.astro";
+import FinalCta from "../components/sections/FinalCta.astro";
+import TimerMock from "../components/product/mockups/TimerMock.astro";
+import EvidenceMock from "../components/product/mockups/EvidenceMock.astro";
+import ClientMock from "../components/product/mockups/ClientMock.astro";
+import AnswerMock from "../components/product/mockups/AnswerMock.astro";
+import { PRODUCT_PILLARS, type PillarId } from "../data/product";
+
+const title = "DocuFlow product - time, activity, clients and knowledge";
+const description =
+  "Everything DocuFlow does, with the real intervals, counts and limits: the timer, the desktop monitoring agent, client projects and budgets, and documentation with cited answers.";
+
+/** Le visuel de chaque pilier. Clé = `id` du pilier, pour qu'un réordonnancement
+ *  de `PRODUCT_PILLARS` emmène le bon dessin avec la bonne section.
+ *  `Record<PillarId, …>` et non `Record<string, …>` : un pilier ajouté ou
+ *  renommé dans `product.ts` sans son entrée ici échoue à la vérification des
+ *  types (`astro check` / build) au lieu de planter au rendu sur un mockup
+ *  `undefined`. */
+const MOCKUPS: Record<PillarId, typeof TimerMock> = {
+  time: TimerMock,
+  activity: EvidenceMock,
+  clients: ClientMock,
+  knowledge: AnswerMock,
+};
+
+/** Rythme des bandes, même règle que l'accueil et `/pricing` : deux sections
+ *  voisines ne partagent jamais le même fond.
+ *
+ *    paper → | paper → mint → paper → warm → ink → paper → white → hour
+ *    Hero  Jump  Time   Activity Clients Knowl. Platf. Argum. Table  Cta
+ *
+ *  Le héros et Time sont tous deux `paper` : la barre de saut, avec ses deux
+ *  filets, EST leur frontière. La progression froid → chaud → ink du brief est
+ *  préservée, et la bande warm reste tardive.
+ *
+ *  L'alternance des visuels vient du RANG dans `PRODUCT_PILLARS` — visuel à
+ *  droite, gauche, droite, gauche. Aucune section ne pose ce drapeau elle-même :
+ *  réordonner ou insérer un pilier ici garde le rythme juste.
+ *
+ *  Le rail d'étapes est retiré : `LEAD → COMPLETED` raconte le cycle de vie d'un
+ *  mandat client, pas un catalogue de fonctions.
+ *
+ *  `scrollPad` : la page empile une barre de saut (~48px) sous la nav
+ *  (`--nav-h`), plus 4px de marge. Sans ça, une ancre gare son titre derrière
+ *  la barre au lieu de sous elle. `--nav-h` est posée dans `global.css` et se
+ *  résout ici via `calc()` dans le style inline de `<html>` : une variable
+ *  inline se résout contre `:root` sans dépendre du regroupement des feuilles. */
+---
+
+<Layout title={title} description={description} rail={false} scrollPad="calc(var(--nav-h) + 52px)">
+  <ProductHero />
+  <JumpBar />
+
+  {
+    PRODUCT_PILLARS.map((pillar, i) => {
+      const Mockup = MOCKUPS[pillar.id];
+      return (
+        <ProductPillar pillar={pillar} reverse={i % 2 === 1}>
+          <Mockup />
+        </ProductPillar>
+      );
+    })
+  }
+
+  <PlatformBand />
+  <ArgumentSection />
+  <CapabilityList />
+
+  <FinalCta
+    title="See it against your own client list."
+    note="No credit card. Desktop app for Windows, macOS and Linux."
+  />
+</Layout>

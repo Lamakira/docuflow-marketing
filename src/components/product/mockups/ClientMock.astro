@@ -1,0 +1,57 @@
+---
+import { CONTACTS } from "../../../data/site";
+---
+
+{/* Structure de dossier : identité → filet → personnes → filet → chiffres →
+    filet → étiquettes. C'est la grammaire de toutes les cartes du site. */}
+<div class="rounded-[8px] border border-rule bg-white p-5">
+  <div class="flex items-center justify-between gap-3">
+    <p class="font-display text-[17px] font-bold">Northwind Systems</p>
+    <span
+      class="shrink-0 rounded-[3px] bg-hour px-2 py-[4px] font-mono text-[10px] font-bold text-ink"
+    >
+      In progress
+    </span>
+  </div>
+
+  <ul class="mt-4 space-y-[9px] border-t border-rule pt-4">
+    {
+      CONTACTS.map((contact) => (
+        <li class="flex items-center gap-[11px]">
+          <span
+            class="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full font-mono text-[9px] text-white"
+            style={`background:${contact.tone}`}
+          >
+            {contact.initials}
+          </span>
+          <span class="text-[13.5px] font-medium">{contact.name}</span>
+          <span class="font-mono text-[11px] text-slate">{contact.role}</span>
+        </li>
+      ))
+    }
+  </ul>
+
+  <div class="mt-4 border-t border-rule pt-4">
+    <div class="flex items-baseline justify-between">
+      <span class="font-mono text-[11px] text-slate">Budget</span>
+      <span class="font-mono text-[15px] font-bold">$48,000</span>
+    </div>
+
+    {/* La jauge et son relevé énoncent la même chose : même vert. Le relevé
+        étant du texte, c'est la variante lisible qui gagne, et la barre la suit
+        — deux verts à 8px l'un de l'autre se liraient comme une erreur. */}
+    <span class="mt-2 block h-[6px] overflow-hidden rounded-full bg-paper">
+      <span class="block h-full w-[62%] bg-live-on-light"></span>
+    </span>
+    <p class="mt-[6px] text-right font-mono text-[11px] text-live-on-light">62% used</p>
+  </div>
+
+  <div class="mt-4 flex gap-2 border-t border-rule pt-4">
+    <span class="rounded-[3px] border border-rule px-2 py-[3px] font-mono text-[10px] text-slate">
+      retainer
+    </span>
+    <span class="rounded-[3px] border border-rule px-2 py-[3px] font-mono text-[10px] text-slate">
+      Q2
+    </span>
+  </div>
+</div>

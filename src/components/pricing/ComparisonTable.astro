@@ -77,10 +77,11 @@ import { PLANS, COMPARISON_GROUPS } from "../../data/site";
     border-bottom: 1px solid var(--color-rule);
     background: #fff;
     padding: 72px 0;
-    /* Hauteur de la barre de nav. Elle sert deux fois : le point d'accroche de
-       l'en-tête collant, et la hauteur du cache au-dessus de lui. Une seule
-       valeur — les deux ne peuvent pas se désynchroniser. */
-    --stick: 64px;
+    /* Hauteur de la barre de nav, lue depuis `--nav-h` (source unique posée
+       dans `global.css`). `--stick` sert deux fois ici : le point d'accroche
+       de l'en-tête collant, et la hauteur du cache au-dessus de lui — les deux
+       ne peuvent pas se désynchroniser entre eux, ni avec la nav elle-même. */
+    --stick: var(--nav-h);
   }
 
   /* Le titre passe AU-DESSUS du cache (`z-index` supérieur à celui de l'en-tête).
