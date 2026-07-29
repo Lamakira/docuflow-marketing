@@ -1,0 +1,95 @@
+---
+import InvoiceArt from "./InvoiceArt.astro";
+import DisclosureArt from "./DisclosureArt.astro";
+import ThinWeekArt from "./ThinWeekArt.astro";
+import OwnRecordArt from "./OwnRecordArt.astro";
+import TwoPlacesArt from "./TwoPlacesArt.astro";
+import HoursWindowArt from "./HoursWindowArt.astro";
+import IdlePromptArt from "./IdlePromptArt.astro";
+import OpenMeasureArt from "./OpenMeasureArt.astro";
+import MarginDriftArt from "./MarginDriftArt.astro";
+import ProjectNotPersonArt from "./ProjectNotPersonArt.astro";
+import PageTreeArt from "./PageTreeArt.astro";
+import CitedAnswerArt from "./CitedAnswerArt.astro";
+
+/**
+ * Les dessins d'une page cas d'usage, choisis par slug ET par emplacement.
+ *
+ * ⚠️ UN DESSIN PAR CAS D'USAGE ET PAR SECTION, ET C'EST UNE RÈGLE.
+ * Les huit pages secteur partagent `FaultsArt` et `RedactedArt` parce qu'elles
+ * partagent un sujet — « le dossier a des trous », « la preuve peut exister sans
+ * être lisible ». Les six cas d'usage n'en partagent aucun.
+ *
+ * Deux fautes sont déjà arrivées et ce registre existe pour les rendre
+ * impossibles :
+ *  1. arriver sur `/solutions/client-billing` et voir le même relevé troué que
+ *     sur les huit pages secteur — la page ne s'annonce plus ;
+ *  2. garder `RedactedArt` (une capture floutée) en face d'une objection qui ne
+ *     parle pas de capture mais de la quantité de détail qu'on envoie — le
+ *     dessin illustre alors un autre argument que le sien.
+ *
+ * Le registre lève sur toute case manquante : ajouter un cas d'usage sans ses
+ * deux dessins casse le build, au lieu de livrer une page qui ressemble aux
+ * treize autres.
+ */
+type Spot = "situation" | "objection";
+
+interface Props {
+  slug: string;
+  spot: Spot;
+}
+
+const { slug, spot } = Astro.props;
+
+const ART: Record<string, Record<Spot, typeof InvoiceArt>> = {
+  "client-billing": {
+    // La ligne contestée, et les tâches qu'elle recouvre.
+    situation: InvoiceArt,
+    // Ce qu'on garde contre ce qu'on envoie.
+    objection: DisclosureArt,
+  },
+  "remote-teams": {
+    // Deux semaines qui se ressemblent, et le score qui les sépare.
+    situation: ThinWeekArt,
+    // Le relevé vu par la personne qu'il décrit.
+    objection: OwnRecordArt,
+  },
+  "hybrid-teams": {
+    // Une feuille de temps, deux lieux, une coupure qui se recolle.
+    situation: TwoPlacesArt,
+    // La fenêtre d'heures actives, et 21:00 en dehors.
+    objection: HoursWindowArt,
+  },
+  "employee-productivity": {
+    // Les fenêtres d'activité, et le prompt au lieu d'une déduction.
+    situation: IdlePromptArt,
+    // Ce qui est enregistré, et ce qui ne l'est pas, ligne à ligne.
+    objection: OpenMeasureArt,
+  },
+  "project-profitability": {
+    // Prévu contre réel, et l'écart qui s'ouvre en semaine 2.
+    situation: MarginDriftArt,
+    // Le chiffre sur le projet, les personnes sans chiffre en face.
+    objection: ProjectNotPersonArt,
+  },
+  "onboarding-documentation": {
+    // L'arborescence, et la page que la personne neuve ne trouvait pas.
+    situation: PageTreeArt,
+    // Une réponse, ses sources, et leurs dates.
+    objection: CitedAnswerArt,
+  },
+};
+
+const Art = ART[slug]?.[spot];
+
+if (!Art) {
+  throw new Error(
+    `[solutions] aucun dessin « ${spot} » pour le cas d'usage "${slug}". ` +
+      `Chaque page cas d'usage doit avoir les siens (src/components/art/) : c'est ce qui la rend ` +
+      `reconnaissable avant lecture, et ce qui empêche un dessin d'illustrer l'argument d'à côté. ` +
+      `Ajouter le composant puis l'inscrire dans UseCaseArt.astro.`
+  );
+}
+---
+
+<Art />

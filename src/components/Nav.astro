@@ -1,5 +1,9 @@
 ---
+import { Icon } from "astro-icon/components";
+import SolutionsPanel from "./nav/SolutionsPanel.astro";
+import DrawerContent from "./nav/DrawerContent.astro";
 import { NAV_LINKS } from "../data/site";
+import { SOLUTIONS_MENU } from "../data/solutions";
 
 /** Page courante. Marquée en `ink` et non en ambre : l'ambre désigne l'action à
  *  faire, pas l'endroit où l'on est, et une page comme `/pricing` en dépense déjà
@@ -7,6 +11,11 @@ import { NAV_LINKS } from "../data/site";
 const path = Astro.url.pathname.replace(/\/$/, "") || "/";
 const isCurrent = (href: string) =>
   href.startsWith("/") && (path === href || path.startsWith(`${href}/`));
+
+/** Un seul jeu de données de menu aujourd'hui. La clé vient de `NAV_LINKS.menu`
+ *  et non d'un test sur le `href` : c'est ce qui permettra d'ajouter le menu
+ *  Produit sans toucher au balisage. */
+const MENUS = { solutions: SOLUTIONS_MENU };
 ---
 
 {/* Sentinelle : 64px au sommet du document, hors flux. Tant qu'elle est
@@ -24,17 +33,51 @@ const isCurrent = (href: string) =>
 
     <ul class="nav-links">
       {
-        NAV_LINKS.map((link) => (
-          <li>
-            <a
-              href={link.href}
-              class="nav-link"
-              aria-current={isCurrent(link.href) ? "page" : undefined}
-            >
-              {link.label}
-            </a>
-          </li>
-        ))
+        NAV_LINKS.map((link) =>
+          link.menu ? (
+            <li class="nav-item">
+              {/* Un `<details>` natif, pas un lien ni un couple lien+bouton.
+                  Ce seul choix donne gratuitement : `aria-expanded`, l'ouverture
+                  et la fermeture au clavier, le bon comportement tactile (le
+                  premier appui ouvre le menu au lieu de naviguer), et un panneau
+                  QUI FONCTIONNE SANS JAVASCRIPT.
+
+                  Contrepartie assumée : l'en-tête perd son `<a href="/solutions">`.
+                  La destination devient la première rangée du panneau, qui est
+                  donc load-bearing. L'alternative — un lien plus un bouton
+                  adjacent — garde le lien mais réintroduit le problème tactile
+                  (sur téléphone, l'appui navigue avant qu'on ait vu le menu) et
+                  demande une dérogation à la règle « aucun état masqué en CSS
+                  statique ». Arbitré le 27 juillet 2026. */}
+              <details class="nav-menu" data-nav-menu>
+                <summary
+                  class="nav-link nav-trigger"
+                  data-current={isCurrent(link.href) ? "" : undefined}
+                >
+                  {link.label}
+                  <Icon name="lucide:chevron-down" class="nav-chevron" aria-hidden="true" />
+                </summary>
+
+                {/* La BOÎTE du panneau et toute sa géométrie vivent ici, dans le
+                    fichier qui possède la géométrie de l'en-tête. Le composant
+                    ne fournit que l'intérieur — aucun `:global()` entre les deux. */}
+                <div class="nav-panel" data-panel-box>
+                  <SolutionsPanel menu={MENUS[link.menu]} path={path} />
+                </div>
+              </details>
+            </li>
+          ) : (
+            <li>
+              <a
+                href={link.href}
+                class="nav-link"
+                aria-current={isCurrent(link.href) ? "page" : undefined}
+              >
+                {link.label}
+              </a>
+            </li>
+          )
+        )
       }
     </ul>
 
@@ -43,12 +86,33 @@ const isCurrent = (href: string) =>
     {/* Élément sortant : masqué visuellement puis retiré de l'ordre de
         tabulation avec `inert`. Jamais retiré du DOM — si le focus est dans
         l'en-tête au moment du basculement, il serait renvoyé au début du
-        document. */}
+        document. Sous 561px il disparaît pour de bon : `Sign in` vit alors
+        dans le tiroir, et c'est cette largeur-là qui fait tenir la barre à 360px. */}
     <div class="nav-departing" data-nav-departing>
       <a href="/signin" class="nav-link">Sign in</a>
     </div>
 
-    <a href="/signup" class="nav-cta">Start free trial</a>
+    {/* Le libellé se raccourcit à « Start free » sous 400px. C'est le CTA qui
+        cède, jamais le retour à la ligne : une barre de nav sur deux lignes
+        n'est plus une barre. */}
+    {/* `&nbsp;` et non une espace ordinaire : le compilateur Astro rogne
+        l'espace en tête du contenu d'un élément, et le CTA se lisait
+        « Start freetrial ». L'insécable n'est pas rognée. */}
+    <a href="/signup" class="nav-cta">Start free<span class="cta-tail">&nbsp;trial</span></a>
+
+    {/* Le tiroir mobile — n'existe que sous 561px, où le site n'avait
+        strictement aucune navigation. Même technique que le méga-menu, autre
+        boîte. Il est APRÈS le CTA : l'ordre du DOM est déclencheur puis panneau. */}
+    <details class="nav-drawer" data-nav-drawer>
+      <summary class="nav-burger" aria-label="Menu">
+        <Icon name="lucide:menu" class="burger-icon burger-open" aria-hidden="true" />
+        <Icon name="lucide:x" class="burger-icon burger-close" aria-hidden="true" />
+      </summary>
+
+      <div class="drawer-panel" data-panel-box>
+        <DrawerContent menu={SOLUTIONS_MENU} path={path} />
+      </div>
+    </details>
   </nav>
 </header>
 
@@ -132,6 +196,171 @@ const isCurrent = (href: string) =>
     color: var(--color-ink);
   }
 
+  /* ─────────────────────── Le déclencheur du méga-menu ───────────────────── */
+
+  .nav-menu {
+    /* Surtout PAS `position: relative` : le panneau doit se caler sur
+       `.nav-header`, pas sur ce `<details>` de la largeur d'un mot. */
+    display: flex;
+  }
+
+  /* ⚠️ INVARIANT — les métriques du déclencheur sont IDENTIQUES ouvert et
+     fermé. La largeur de la pastille est MESURÉE au runtime à partir du contenu
+     de la barre : tout ce qui change la largeur du déclencheur à l'ouverture
+     corrompt `--pill-w` sans rien casser de visible ailleurs.
+     Changements autorisés à l'ouverture : la COULEUR du libellé et la ROTATION
+     du chevron. Interdits : un changement de graisse, un glyphe ajouté, un
+     soulignement qui ajoute de la hauteur, un padding. */
+  .nav-trigger {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    /* Le triangle natif ferait doublon avec le chevron. */
+    list-style: none;
+  }
+
+  .nav-trigger::-webkit-details-marker {
+    display: none;
+  }
+
+  .nav-trigger[data-current],
+  .nav-menu[open] .nav-trigger {
+    color: var(--color-ink);
+  }
+
+  .nav-chevron {
+    width: 14px;
+    height: 14px;
+    flex: none;
+    transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .nav-menu[open] .nav-chevron {
+    transform: rotate(180deg);
+  }
+
+  /* ────────────────────────── La boîte du panneau ────────────────────────── */
+
+  /* ⚠️ AUCUN `z-index` ici, et c'est délibéré. `.nav-header` est déjà un
+     contexte d'empilement (`z-30`), donc un descendant en `z-index: auto` peint
+     AU-DESSUS de `.nav-shell`, au-dessus de la barre de saut de `/product` et du
+     rail d'étapes (20 tous les deux), et EN DESSOUS du lien d'évitement (50).
+     La prochaine personne qui touche à ce fichier voudra ajouter
+     `z-index: 40` : c'est le bug, pas le correctif.
+
+     ⚠️ `position: absolute`, JAMAIS `fixed`. `--edge-side` est bâti sur `100%`
+     et une custom property se résout à son SITE D'USAGE : une boîte `fixed`
+     résout `100%` contre le viewport, barre de défilement COMPRISE. Le bord
+     gauche du panneau se désynchroniserait alors de toutes les sections de la
+     page de la largeur de la barre — sur Windows et Linux seulement. C'est
+     exactement le défaut de ~8px que le système de bord partagé existe pour
+     empêcher, et il survit à une relecture parce qu'il est invisible sur macOS. */
+  /* ⚠️ LE BLOC CONTENEUR CHANGE ENTRE LES DEUX ÉTATS, et ce n'est pas un choix :
+     `.is-pill .nav-shell` porte `backdrop-filter: blur(10px)`, et une valeur
+     autre que `none` sur `filter`/`backdrop-filter` crée un bloc conteneur pour
+     les descendants `absolute`. Vérifié au navigateur — `panel.offsetParent`
+     vaut `.nav-header` en état A et `.nav-shell` en état B.
+     D'où trois valeurs déclinées en `.is-pill` plus bas, et surtout `--page-w` :
+     dans la pastille, `100%` ne vaut plus que la largeur de la pastille (496px
+     mesurés), et le panneau se réduirait à ~420px sans lui.
+     Retirer le flou de la pastille supprimerait le problème — mais c'est le
+     dessin signé de l'en-tête, et le brief interdit de le redessiner. */
+  .nav-panel {
+    position: absolute;
+    /* +1px : le padding-box de l'en-tête s'arrête AVANT son filet bas. */
+    top: calc(100% + 1px);
+    left: calc(var(--edge-side) + 24px);
+    /* `--page-w` est posé par le script (largeur du document, barre exclue —
+       exactement ce que vaut `100%` sur le `<body>`). Sans lui, donc sans JS,
+       `100%` fait le même travail : en état A le bloc conteneur EST l'en-tête,
+       et l'état B n'existe pas sans script. */
+    width: min(1040px, calc(var(--page-w, 100%) - 48px));
+    border: 1px solid var(--color-rule);
+    border-radius: 8px;
+    background: #fff;
+    /* La seule ombre flottante du système, celle de la pastille : le panneau
+       est le même genre d'objet — une feuille posée au-dessus de la page. Pas
+       de seconde ombre plus lourde, ce n'est pas une boîte de dialogue. */
+    box-shadow: var(--shadow-float);
+  }
+
+  /* En état B le panneau est sa propre feuille, centrée sur la page — il ne
+     s'accroche pas à la pastille et n'épouse pas sa largeur. `translateX` pour
+     le centrage, `translate` (propriété indépendante) pour l'animation
+     d'arrivée : les deux se composent sans se marcher dessus.
+     Centrer sur la pastille REVIENT à centrer sur la page : la pastille est
+     elle-même centrée, et quand elle ne l'est plus (viewport < `--pill-w`) elle
+     occupe toute la largeur. Mesuré : centre du panneau 952,5 = centre de page.
+
+     +11px et non +1 : ici `100%` s'arrête au bas du padding-box de la PASTILLE
+     (53,5px), pas de l'en-tête. Sans ce rattrapage le panneau est collé sous la
+     pastille — mesuré à 0px d'écart — alors qu'il doit flotter comme une feuille
+     indépendante. */
+  .is-pill .nav-panel {
+    top: calc(100% + 11px);
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+
+  /* ─────────────────────────── Le tiroir mobile ──────────────────────────── */
+
+  .nav-drawer {
+    display: flex;
+    margin-left: 4px;
+  }
+
+  .nav-burger {
+    display: grid;
+    height: 36px;
+    width: 36px;
+    place-items: center;
+    border-radius: 6px;
+    color: var(--color-ink);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .nav-burger::-webkit-details-marker {
+    display: none;
+  }
+
+  .burger-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .burger-close,
+  .nav-drawer[open] .burger-open {
+    display: none;
+  }
+
+  .nav-drawer[open] .burger-close {
+    display: block;
+  }
+
+  /* Panneau opaque, pleine hauteur sous la barre. `position: absolute` et non
+     `fixed` — même raison que le panneau de bureau.
+     AUCUN verrou de défilement : `overflow: hidden` sur `<body>` est interdit
+     dans ce projet (il crée un conteneur de défilement et casse le `sticky` de
+     l'en-tête). Le panneau étant opaque et pleine hauteur, un défilement de
+     l'arrière-plan est invisible ; `overscroll-behavior: contain` empêche le
+     chaînage quand on atteint le bout du tiroir. Décision assumée. */
+  .drawer-panel {
+    position: absolute;
+    top: calc(100% + 1px);
+    left: 0;
+    right: 0;
+    height: calc(100dvh - var(--nav-h));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-top: 1px solid var(--color-rule);
+    background-color: var(--color-paper);
+  }
+
+  /* ───────────────────────────── Le reste ────────────────────────────────── */
+
   .nav-gap {
     flex: 1 1 auto;
     transition: flex-grow 0.28s cubic-bezier(0.4, 0, 0.2, 1);
@@ -167,9 +396,53 @@ const isCurrent = (href: string) =>
     background-color: #1c2740;
   }
 
+  /* Budget de largeur à 360px : marque + CTA + burger + padding + gouttières.
+     Ça ne tient qu'une fois `Sign in` parti dans le tiroir et la gouttière
+     resserrée. Sous 400px c'est le CTA qui cède un mot — jamais un retour à la
+     ligne, jamais la marque. */
+  @media (max-width: 560px) {
+    .nav-header {
+      --nav-gap: 12px;
+    }
+
+    .nav-departing {
+      display: none;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .cta-tail {
+      display: none;
+    }
+
+    .nav-cta {
+      padding-inline: 13px;
+    }
+  }
+
+  /* À 561px la barre complète tenait à 561px pile — sans un pixel de marge.
+     Le chevron du déclencheur Solutions (14px + 4px de gouttière) l'a fait
+     déborder de 12px, donc une barre de défilement horizontale au point de
+     bascule exact entre le tiroir et la barre. Mesuré : 573px de contenu pour
+     561px de place, 561px si on retire le chevron.
+     La gouttière cède, jamais un libellé : 10px de moins sur six gouttières
+     rendent 60px, et la barre repasse largement. Au-delà de 700px la place ne
+     manque plus. */
+  @media (min-width: 561px) and (max-width: 700px) {
+    .nav-header {
+      --nav-gap: 16px;
+    }
+  }
+
   @media (min-width: 561px) {
     .nav-links {
       display: flex;
+    }
+
+    /* Le tiroir n'existe que sous 561px : au-dessus, ce sont les liens et le
+       méga-menu. `display: none` le retire aussi de l'ordre de tabulation. */
+    .nav-drawer {
+      display: none;
     }
 
     /* ---- État B : la pastille ---- */
@@ -182,10 +455,16 @@ const isCurrent = (href: string) =>
       backdrop-filter: none;
     }
 
+    /* Le repli de secours de `--pill-w` n'est jamais atteint en pratique : la
+       propriété est posée par `measure()` avant que `.is-pill` ne soit appliquée
+       une seule fois, et sans JS l'état B n'existe pas. Il est tenu près de la
+       vraie valeur (496px mesurés avec le chevron, sur la barre EN) pour ne pas
+       raconter d'histoire au prochain lecteur — l'ancien 760px décrivait une
+       pastille qui n'a jamais existé. */
     .is-pill .nav-shell {
       --nav-gap: 20px;
-      max-width: var(--pill-w, 760px);
-      margin-left: max(0px, calc((100% - var(--pill-w, 760px)) / 2));
+      max-width: var(--pill-w, 520px);
+      margin-left: max(0px, calc((100% - var(--pill-w, 520px)) / 2));
       /* Marge uniforme de 3px autour du CTA, qui vient alors se loger dans
          l'embout arrondi de façon concentrique (rayon extérieur 22, intérieur
          19). À gauche il faut plus d'air : c'est du texte, pas un bouton
@@ -252,13 +531,130 @@ const isCurrent = (href: string) =>
     // Sous 561px les liens sont déjà masqués : la pastille n'aurait rien à
     // porter. On désactive le repli plutôt que de livrer une pastille vide.
     const wide = window.matchMedia("(min-width: 561px)");
+    // Intention de survol sur pointeur fin UNIQUEMENT. Sans cette garde, un
+    // appui tactile déclenche `pointerenter` (ouvre) PUIS `click` (referme) :
+    // le menu clignote et ne s'ouvre jamais.
+    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+    // ⚠️ Le bloc global de `global.css` n'écrase QUE `animation-duration` et
+    // `transition-duration`. Un appel `.animate()` (Web Animations API) s'exécute
+    // à pleine durée quoi qu'il arrive : le script doit brancher lui-même.
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    const DURATION = 180;
+    const EASING = "cubic-bezier(0.4, 0, 0.2, 1)";
+    const HOVER_OPEN = 120;
+    const HOVER_CLOSE = 220;
 
     let scrolled = false;
 
+    /** Un `<details>` piloté : le méga-menu ou le tiroir.
+     *
+     *  Le script n'est qu'un ENRICHISSEMENT. Sans lui, `<details>` fonctionne
+     *  nativement — le panneau s'ouvre et se ferme, instantanément, et tous les
+     *  liens restent atteignables. Rien n'est masqué par une règle CSS statique. */
+    class Panel {
+      el: HTMLDetailsElement;
+      summary: HTMLElement;
+      box: HTMLElement;
+      animation: Animation | null = null;
+
+      constructor(el: HTMLDetailsElement) {
+        this.el = el;
+        this.summary = el.querySelector("summary")!;
+        this.box = el.querySelector<HTMLElement>("[data-panel-box]")!;
+
+        this.summary.addEventListener("click", (event) => {
+          // Le navigateur bascule `open` sur le clic : on reprend la main,
+          // sinon le panneau disparaît avant que la fermeture ait pu se jouer.
+          event.preventDefault();
+          if (this.el.open) this.close();
+          else this.open();
+        });
+      }
+
+      open() {
+        if (this.el.open) return;
+        this.animation?.cancel();
+        this.el.open = true;
+        closeOthers(this);
+        onOpenChange();
+        if (reduced.matches) return;
+        // Seuls `opacity` et `translate` s'animent — rien ne déplace de
+        // contenu, donc CLS intact. `translate` et non `transform` : en état B
+        // c'est `transform: translateX(-50%)` qui centre le panneau, et animer
+        // `transform` l'écraserait.
+        this.animation = this.box.animate(
+          { opacity: [0, 1], translate: ["0 -6px", "0 0"] },
+          { duration: DURATION, easing: EASING }
+        );
+        this.animation.onfinish = () => (this.animation = null);
+      }
+
+      /** `instant` : fermer sans jouer la sortie — pour les changements d'état
+       *  de la barre, où le panneau doit avoir disparu AVANT que la morphologie
+       *  ne bouge. */
+      close(instant = false) {
+        if (!this.el.open) return;
+        this.animation?.cancel();
+
+        if (instant || reduced.matches) {
+          this.el.open = false;
+          onOpenChange();
+          return;
+        }
+
+        this.animation = this.box.animate(
+          { opacity: [1, 0], translate: ["0 0", "0 -6px"] },
+          { duration: DURATION, easing: EASING }
+        );
+        this.animation.onfinish = () => {
+          this.el.open = false;
+          this.animation = null;
+          onOpenChange();
+        };
+        this.animation.oncancel = () => (this.animation = null);
+      }
+    }
+
+    const panels = [...document.querySelectorAll<HTMLDetailsElement>("[data-nav-menu]")].map(
+      (el) => new Panel(el)
+    );
+
+    const drawerEl = document.querySelector<HTMLDetailsElement>("[data-nav-drawer]");
+    const drawer = drawerEl ? new Panel(drawerEl) : null;
+    const all = drawer ? [...panels, drawer] : panels;
+
+    function closeOthers(current: Panel) {
+      for (const other of all) if (other !== current) other.close(true);
+    }
+
+    const closeAll = (instant = true) => {
+      for (const panel of all) panel.close(instant);
+    };
+
+    /** Confinement du focus du tiroir : `inert` sur le reste du document.
+     *  Le panneau de bureau, lui, n'en met JAMAIS — c'est un menu, pas une
+     *  boîte de dialogue : on doit pouvoir en sortir en tabulant. */
+    const outside = [document.querySelector("main"), document.querySelector("footer")];
+
+    function onOpenChange() {
+      const drawerOpen = drawer?.el.open ?? false;
+      for (const region of outside) if (region instanceof HTMLElement) region.inert = drawerOpen;
+    }
+
     /** Largeur naturelle de la pastille, mesurée plutôt que codée en dur :
      *  la version française élargira les libellés. Tout est synchrone, donc
-     *  aucun état intermédiaire n'est peint. */
+     *  aucun état intermédiaire n'est peint.
+     *
+     *  ⚠️ INVARIANT — rien de ce que déroulent les panneaux ne doit atteindre
+     *  cette mesure. Trois protections, dans cet ordre :
+     *   1. un `<details>` FERMÉ ne rend pas son contenu du tout ;
+     *   2. les deux panneaux sont `position: absolute`, donc hors flux ;
+     *   3. `closeAll()` ci-dessous, qui rend les deux premières inutiles.
+     *  La troisième existe parce que les deux autres sont des propriétés qu'une
+     *  modification future peut retirer sans s'en apercevoir. */
     const measure = () => {
+      closeAll();
       const previous = shell.style.cssText;
       header.classList.add("is-measuring", "is-pill");
       shell.style.maxWidth = "none";
@@ -272,10 +668,19 @@ const isCurrent = (href: string) =>
       void shell.offsetWidth; // force le recalcul pendant que les transitions sont coupées
       header.classList.remove("is-measuring");
       header.style.setProperty("--pill-w", `${width}px`);
+      // Largeur du document, barre de défilement EXCLUE — exactement ce que
+      // vaut `100%` sur le `<body>`. Sert au panneau en état B, où la pastille
+      // devient son bloc conteneur (`backdrop-filter`) et où `100%` ne vaudrait
+      // plus que la largeur de la pastille.
+      header.style.setProperty("--page-w", `${document.documentElement.clientWidth}px`);
     };
 
     const sync = () => {
       const pill = scrolled && wide.matches;
+      // Le morph A ↔ B anime `max-width`, `margin-left` et `padding` sur 280ms.
+      // Un panneau ouvert pendant cette fenêtre dérive, et son bloc conteneur
+      // change en cours de route. On ferme AVANT de basculer.
+      if (pill !== header.classList.contains("is-pill")) closeAll();
       header.classList.toggle("is-pill", pill);
       // `inert` retire du focus et de l'arbre d'accessibilité en une fois —
       // plus propre que tabindex="-1" + aria-hidden.
@@ -292,6 +697,7 @@ const isCurrent = (href: string) =>
     observer.observe(sentinel);
 
     wide.addEventListener("change", () => {
+      closeAll();
       measure();
       sync();
     });
@@ -309,6 +715,51 @@ const isCurrent = (href: string) =>
       },
       { passive: true }
     );
+
+    /* ── Comportement du menu ──────────────────────────────────────────────── */
+
+    // Échap ferme ET rend le focus au déclencheur. `<details>` natif ne le fait
+    // pas : sans ça le focus reste dans un panneau qui n'est plus là.
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      const open = all.find((panel) => panel.el.open);
+      if (!open) return;
+      open.close();
+      open.summary.focus();
+    });
+
+    // Clic à l'extérieur : on ferme, sans rendre le focus — il suit le clic.
+    document.addEventListener("pointerdown", (event) => {
+      const target = event.target as Node;
+      for (const panel of all) {
+        if (panel.el.open && !panel.el.contains(target)) panel.close();
+      }
+    });
+
+    // Sortie au clavier : quitter le panneau en tabulant le ferme. Pas de piège
+    // à focus — c'est un menu, pas une boîte de dialogue.
+    for (const panel of panels) {
+      panel.el.addEventListener("focusout", (event) => {
+        const next = event.relatedTarget;
+        if (next instanceof Node && panel.el.contains(next)) return;
+        panel.close();
+      });
+
+      let openTimer: number | undefined;
+      let closeTimer: number | undefined;
+
+      panel.el.addEventListener("pointerenter", () => {
+        if (!finePointer.matches) return;
+        window.clearTimeout(closeTimer);
+        openTimer = window.setTimeout(() => panel.open(), HOVER_OPEN);
+      });
+
+      panel.el.addEventListener("pointerleave", () => {
+        if (!finePointer.matches) return;
+        window.clearTimeout(openTimer);
+        closeTimer = window.setTimeout(() => panel.close(), HOVER_CLOSE);
+      });
+    }
 
     measure();
     // Les polices auto-hébergées changent la largeur des libellés : on

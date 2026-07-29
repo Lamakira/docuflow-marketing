@@ -1,0 +1,88 @@
+---
+/**
+ * Illustration de l'en-tête « Also for » — les huit pages secteur.
+ *
+ * Trois feuilles de même facture, reliées par un filet pointillé qui ne se voit
+ * que dans les intervalles : des pages soeurs, pas une hiérarchie. Celle du
+ * milieu porte la pastille ambre — il y a toujours une page suivante, jamais
+ * une page principale.
+ *
+ * Bande `paper` : feuilles blanches.
+ */
+const SHEETS = [10, 158, 306];
+const SIZE = 124;
+const TOP = 28;
+---
+
+<svg
+  class="art"
+  viewBox="0 0 440 180"
+  fill="none"
+  role="presentation"
+  aria-hidden="true"
+  focusable="false"
+  data-art
+>
+  {/* Le filet passe DERRIÈRE les feuilles, qui sont opaques : il n'apparaît
+      donc que dans les deux intervalles. Un lien, pas une flèche. */}
+  <line class="link" x1="22" y1={TOP + SIZE / 2} x2="418" y2={TOP + SIZE / 2} data-art-draw />
+
+  {
+    SHEETS.map((x, i) => (
+      <g data-art-in>
+        <rect class="sheet" x={x} y={TOP} width={SIZE} height={SIZE} rx="8" />
+        <rect class="bar" x={x + 16} y={TOP + 20} width="76" height="8" rx="4" />
+        <rect class="bar" x={x + 16} y={TOP + 40} width="54" height="8" rx="4" />
+        <rect class="tag" x={x + 16} y={TOP + 64} width="48" height="14" rx="3" />
+        <circle
+          class={i === 1 ? "dot-on" : "dot"}
+          cx={x + SIZE - 22}
+          cy={TOP + SIZE - 22}
+          r={i === 1 ? 5 : 3.5}
+          data-art-pop={i === 1 ? "" : undefined}
+        />
+      </g>
+    ))
+  }
+</svg>
+
+<style>
+  .art {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .link {
+    stroke: var(--color-rule);
+    stroke-width: 1;
+    stroke-dasharray: 3 4;
+  }
+
+  .sheet {
+    fill: #fff;
+    stroke: var(--color-rule);
+    stroke-width: 1;
+  }
+
+  .bar {
+    fill: var(--color-rule);
+  }
+
+  .tag {
+    stroke: var(--color-rule);
+    stroke-width: 1;
+  }
+
+  .dot {
+    fill: var(--color-rule);
+  }
+
+  .dot-on {
+    fill: var(--color-hour);
+  }
+</style>
+
+<script>
+  import "../../scripts/art";
+</script>

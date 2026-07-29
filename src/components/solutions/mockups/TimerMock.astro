@@ -1,0 +1,99 @@
+---
+/** Le chronomètre en cours et la feuille de temps du jour, paramétrés.
+ *
+ *  Frère de `product/mockups/TimerMock.astro`, figé lui sur l'exemple de la fiche
+ *  technique. Ici les libellés sont ceux du secteur — un dossier T2, un ticket de
+ *  sprint, une matière — parce que c'est la ligne qu'un lecteur regarde en
+ *  premier pour savoir si la page lui parle. */
+interface Props {
+  running: { project: string; task: string; elapsed: string };
+  entries: { task: string; duration: string }[];
+  foot: string;
+  warm?: boolean;
+}
+
+const { running, entries, foot, warm = false } = Astro.props;
+---
+
+<div
+  class:list={[
+    "timer-mock rounded-[8px] border border-rule bg-white p-[18px]",
+    { "timer-mock--warm": warm },
+  ]}
+>
+  {/* La ligne en cours : surface `paper` en creux dans la carte blanche — le
+      système empile des tons, il n'empile pas des ombres. */}
+  <div
+    class="timer-current flex items-center gap-[14px] rounded-[6px] border border-rule bg-paper px-4 py-[14px]"
+    data-use-case-motion-row
+  >
+    <span class="h-[10px] w-[10px] shrink-0 rounded-full bg-live" aria-hidden="true"></span>
+
+    <div class="min-w-0">
+      <p class="truncate text-[13px] font-semibold">{running.project}</p>
+      <p class="truncate font-mono text-[11px] text-slate">{running.task}</p>
+    </div>
+
+    <p class="ml-auto font-mono text-[22px] font-bold tracking-[-0.02em]">{running.elapsed}</p>
+
+    {/* Élément d'interface inerte : la maquette ne prétend pas être cliquable.
+        `<span>` et non `<button>` — un bouton qui ne fait rien est un mensonge
+        pour un lecteur d'écran comme pour le clavier. */}
+    <span
+      class="timer-control grid h-[34px] w-[34px] shrink-0 grid-flow-col place-items-center gap-[3px] rounded-[6px] border border-rule bg-white"
+      aria-hidden="true"
+    >
+      <span class="block h-3 w-[3px] bg-ink"></span>
+      <span class="block h-3 w-[3px] bg-ink"></span>
+    </span>
+  </div>
+
+  <ul class="mt-[14px]">
+    {
+      entries.map((entry) => (
+        <li
+          class="timer-entry flex items-center gap-3 border-t border-rule px-[2px] py-[10px] text-[12.5px]"
+          data-use-case-motion-row
+        >
+          <span class="truncate text-slate">{entry.task}</span>
+          <span class="ml-auto font-mono text-ink">{entry.duration}</span>
+        </li>
+      ))
+    }
+  </ul>
+
+  <p class="timer-foot mt-3 font-mono text-[10px] text-slate">{foot}</p>
+</div>
+
+<style>
+  .timer-mock--warm {
+    border: 0;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+  }
+
+  .timer-mock--warm .timer-current {
+    border: 0;
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper-accent);
+    box-shadow: var(--shadow-paper-inset);
+  }
+
+  .timer-mock--warm .timer-control {
+    border: 0;
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-control);
+  }
+
+  .timer-mock--warm .timer-entry {
+    border-color: var(--color-paper-rule);
+  }
+
+  .timer-mock--warm .timer-foot {
+    border-radius: 999px;
+    background: var(--color-paper-chip);
+    padding: 6px 10px;
+  }
+</style>

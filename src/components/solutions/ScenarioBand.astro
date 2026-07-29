@@ -1,0 +1,62 @@
+---
+import SectorMockup from "./mockups/SectorMockup.astro";
+import type { Line, Mockup } from "../../data/solutions";
+
+/** « A real day » — la section qu'un lecteur transfère à un associé.
+ *
+ *  Bande `ink`, une narration courte dans le vocabulaire du secteur. Les
+ *  chiffres sont en mono et en blanc au milieu d'une prose `slate-on-ink` : la
+ *  règle Recorded/Written du site, et c'est ce qui rend le paragraphe lisible en
+ *  diagonale.
+ *
+ *  Une phrase est un TABLEAU de fragments (`Line`) et non une chaîne : le
+ *  balisage ne se devine pas depuis du texte, et personne n'a à écrire de HTML
+ *  dans `solutions.ts`. Un fragment `{ fig }` devient un `<b>` mono. */
+interface Props {
+  eyebrow: string;
+  heading: string;
+  lines: Line[];
+  mock: Mockup;
+  warmMockup?: boolean;
+}
+
+const { eyebrow, heading, lines, mock, warmMockup = false } = Astro.props;
+---
+
+<section class="bg-ink py-[88px]" data-reveal-group>
+  <div class="container-wide">
+    <div class="grid grid-cols-1 gap-14 min-[901px]:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+      <div data-reveal>
+        {/* L'ambre tient 8,4:1 sur `ink` : c'est la seule bande où il porte du
+            texte sans discussion. */}
+        <p class="label-mono text-[11px] text-hour">{eyebrow}</p>
+
+        <h2 class="mt-4 max-w-[16ch] text-[clamp(28px,4vw,42px)] text-white">{heading}</h2>
+
+        <div class="mt-7 max-w-[52ch] space-y-5">
+          {
+            lines.map((line) => (
+              <p class="text-[16.5px] leading-[1.7] text-slate-on-ink">
+                {line.map((part) =>
+                  typeof part === "string" ? (
+                    part
+                  ) : (
+                    <b class="font-mono font-bold text-white">{part.fig}</b>
+                  )
+                )}
+              </p>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="min-[901px]:self-center" data-reveal>
+        <SectorMockup mock={mock} warm={warmMockup} />
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import "../../scripts/reveal";
+</script>

@@ -1,0 +1,97 @@
+---
+/** La résolution d'une ligne de facture contestée.
+ *
+ * Le chronomètre appartient au pilier « The hours ». Cette maquette vient plus
+ * tard dans « The query » et montre ce que ces heures permettent de produire :
+ * une ligne facturée rapprochée de ses tâches, sans rejouer le même écran.
+ */
+interface Props {
+  client: string;
+  invoice: string;
+  amount: string;
+  tasks: { name: string; hours: string }[];
+  foot: string;
+  warm?: boolean;
+}
+
+const { client, invoice, amount, tasks, foot, warm = false } = Astro.props;
+---
+
+<div
+  class:list={[
+    "query-mock rounded-[8px] border border-ink-border bg-white p-[18px]",
+    { "query-mock--warm": warm },
+  ]}
+>
+  <div class="flex items-baseline justify-between gap-4">
+    <p class="font-display text-[17px] font-bold text-ink">{client}</p>
+    <span class="font-mono text-[10px] text-slate">THE QUERY</span>
+  </div>
+
+  {/* La ligne contestée est la seule marque ambre du dessin : c'est l'état qui
+      demande une action, pas une couleur décorative. */}
+  <div
+    class="query-line mt-4 grid grid-cols-[10px_minmax(0,1fr)_auto] items-center gap-3 rounded-[6px] bg-paper px-4 py-[14px]"
+    data-use-case-motion-row
+  >
+    <span class="h-[10px] w-[10px] rounded-[2px] bg-hour" aria-hidden="true"></span>
+    <span class="truncate text-[13.5px] font-semibold text-ink">{invoice}</span>
+    <span class="font-mono text-[15px] font-bold text-ink">{amount}</span>
+  </div>
+
+  <div class="mt-4 flex items-baseline justify-between gap-4">
+    <p class="font-mono text-[10px] tracking-[0.06em] text-slate">PROJECT RECORD</p>
+    <p class="font-mono text-[10px] text-live-on-light">{tasks.length} TASKS</p>
+  </div>
+
+  <ul class="mt-2">
+    {
+      tasks.map((task) => (
+        <li
+          class="query-task grid grid-cols-[8px_minmax(0,1fr)_auto] items-center gap-3 border-t border-rule py-[11px]"
+          data-use-case-motion-row
+        >
+          <span class="h-[6px] w-[6px] rounded-[1px] bg-live-on-light" aria-hidden="true"></span>
+          <span class="text-[12.5px] text-slate">{task.name}</span>
+          <span class="font-mono text-[12px] font-medium text-ink">{task.hours}</span>
+        </li>
+      ))
+    }
+  </ul>
+
+  <p class="query-foot mt-2 border-t border-rule pt-3 font-mono text-[10px] text-slate">{foot}</p>
+</div>
+
+<style>
+  .query-mock--warm {
+    border: 0;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card-dark);
+  }
+
+  .query-mock--warm .query-line {
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper-accent);
+    box-shadow: var(--shadow-paper-inset);
+  }
+
+  .query-mock--warm .query-task,
+  .query-mock--warm .query-foot {
+    border-color: var(--color-paper-rule);
+  }
+
+  .query-mock--warm .query-task {
+    margin-inline: 2px;
+    padding-inline: 8px;
+  }
+
+  .query-mock--warm .query-task:nth-child(odd) {
+    border-radius: 10px;
+    background: var(--color-paper-sage);
+  }
+
+  .query-mock--warm .query-foot {
+    color: var(--color-paper-label);
+  }
+</style>

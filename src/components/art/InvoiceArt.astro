@@ -1,0 +1,411 @@
+---
+/**
+ * Illustration de la section « the situation » de `/solutions/client-billing`.
+ *
+ * ─── Pourquoi une par page ─────────────────────────────────────────────────
+ *
+ * Les huit pages secteur partagent `FaultsArt` — un relevé troué — parce que
+ * leur sujet commun EST « le dossier a des trous ». Les pages cas d'usage, non :
+ * chacune porte un sujet nommé, et le lecteur doit le reconnaître AVANT d'avoir
+ * lu une ligne. Un même dessin sur quatorze pages ne dit rien d'aucune.
+ *
+ * ─── Ce que celui-ci montre ────────────────────────────────────────────────
+ *
+ * Une ligne de facture contestée, et les trois tâches qui la composent. C'est
+ * la thèse de la page dessinée : **une ligne se remonte jusqu'à un relevé.** La
+ * marque ambre est sur la ligne qu'on conteste — l'ambre désigne ce sur quoi il
+ * faut agir, jamais une décoration.
+ *
+ * ⚠️ Les chiffres sont ceux du scénario de la page (`solutions.ts`,
+ * `client-billing`) : 14 h + 6,5 h + 3 h sous une ligne à 4 200 $. Ils sont
+ * DÉRIVÉS ici plutôt que retapés — un total qui ne tombe pas juste se voit au
+ * premier lecteur qui additionne.
+ */
+const LINE_TOTAL = 4200;
+
+/** Les trois tâches sous la ligne. Mêmes libellés et mêmes durées que le
+ *  scénario — si l'un bouge, l'autre ment. */
+const TASKS = [
+  { name: "Landing page build", hours: 14 },
+  { name: "Copy review", hours: 6.5 },
+  { name: "Client calls", hours: 3 },
+];
+
+const TOTAL_HOURS = TASKS.reduce((sum, task) => sum + task.hours, 0);
+
+/** Séparateur de milliers posé à la main : `toLocaleString()` suit la locale de
+ *  la MACHINE DE BUILD et livrerait « 4 200 » ou « 4.200 » selon l'endroit où le
+ *  site est compilé. */
+const money = (value: number) => `$${value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+
+/** `6.5` → `6.5 h`, `3` → `3 h`. Pas de zéro décimal inutile. */
+const hours = (value: number) => `${value} h`;
+---
+
+{/* THESIS: three work records visibly become one defensible invoice line, never
+    another flat dashboard. OWN-WORLD: a warm billing desk, layered paper,
+    softened corners and lifted slips. STORY: inspect the tasks, follow their
+    paths, understand the invoice. FIRST VIEWPORT: source records sit behind and
+    to the left; the invoice rises in front on the right. FORM: overlapping
+    documents, chosen directly from the approved client-billing direction. */}
+<div class="billing-desk" data-art>
+  <header class="desk-head" data-art-in>
+    <span class="desk-label">March billing desk</span>
+    <span class="desk-ref">Halcyon Retail · HAL-0312</span>
+  </header>
+
+  <div class="desk-stage">
+    <span class="record-backing backing-one" aria-hidden="true"></span>
+    <span class="record-backing backing-two" aria-hidden="true"></span>
+
+    <section class="record-card" aria-label="Three project tasks that support the invoice">
+      <div class="record-head" data-art-in>
+        <span class="section-label">Project record</span>
+        <span class="project-ref">{TASKS.length} tasks</span>
+      </div>
+
+      <ul class="tasks">
+        {
+          TASKS.map((task) => (
+            <li data-art-in data-use-case-motion-row>
+              <span class="task-index" aria-hidden="true"></span>
+              <span class="task-name">{task.name}</span>
+              <span class="task-hours">{hours(task.hours)}</span>
+            </li>
+          ))
+        }
+      </ul>
+
+      <footer class="record-foot" data-art-in>
+        <span>Recorded time</span>
+        <span class="foot-hours">{hours(TOTAL_HOURS)}</span>
+      </footer>
+    </section>
+
+    <svg class="lineage" viewBox="0 0 600 250" preserveAspectRatio="none" aria-hidden="true">
+      <path data-art-draw d="M250 89 C332 89 327 126 404 126" />
+      <path data-art-draw d="M250 126 H404" />
+      <path data-art-draw d="M250 164 C332 164 327 126 404 126" />
+    </svg>
+
+    <span class="trace-label" data-art-pop>Traced to the work</span>
+
+    <section class="invoice-card" aria-label="Queried invoice line">
+      <div class="invoice-head" data-art-in>
+        <div>
+          <span class="section-label">Invoice</span>
+          <strong>March</strong>
+        </div>
+        <span class="invoice-ref">HAL-0312</span>
+      </div>
+
+      <div class="invoice-party" data-art-in>
+        <span>Bill to</span>
+        <strong>Halcyon Retail</strong>
+      </div>
+
+      <div class="invoice-line" data-art-pop data-use-case-motion-row>
+        <span class="mark"></span>
+        <span class="line-name">Campaign production</span>
+        <span class="line-total">{money(LINE_TOTAL)}</span>
+      </div>
+
+      <footer class="invoice-foot" data-art-in>
+        <span>1 line</span>
+        <span>Due Mar 31</span>
+      </footer>
+    </section>
+  </div>
+</div>
+
+<style>
+  .billing-desk {
+    position: relative;
+    min-height: 326px;
+    overflow: clip;
+    border-radius: var(--radius-paper-scene);
+    background: var(--color-paper-canvas);
+    box-shadow: var(--shadow-paper-scene);
+    padding: 16px 18px 18px;
+  }
+
+  .desk-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    position: relative;
+    z-index: 7;
+  }
+
+  .desk-label,
+  .desk-ref,
+  .section-label,
+  .project-ref,
+  .record-foot,
+  .invoice-ref,
+  .invoice-party span,
+  .invoice-foot {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--color-paper-label);
+  }
+
+  .desk-label,
+  .section-label {
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .desk-stage {
+    position: relative;
+    height: 266px;
+    margin-top: 8px;
+  }
+
+  .record-backing,
+  .record-card,
+  .invoice-card {
+    position: absolute;
+    transition:
+      transform 420ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 420ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .record-backing {
+    left: 2%;
+    top: 38px;
+    width: 55%;
+    height: 196px;
+    border-radius: var(--radius-paper-card);
+  }
+
+  .backing-one {
+    background: var(--color-paper-layer);
+    transform: translate(-7px, 7px) rotate(-5deg);
+  }
+
+  .backing-two {
+    background: var(--color-paper-layer-light);
+    transform: translate(2px, 3px) rotate(2deg);
+  }
+
+  .record-card {
+    z-index: 2;
+    left: 3%;
+    top: 30px;
+    width: 55%;
+    min-width: 0;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+    padding: 15px 16px 13px;
+    transform: rotate(-1.8deg);
+  }
+
+  .record-head,
+  .record-foot,
+  .invoice-head,
+  .invoice-foot {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .tasks {
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .tasks li {
+    display: grid;
+    grid-template-columns: 7px minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 9px;
+    border-top: 1px solid var(--color-paper-rule);
+    padding: 10px 0;
+  }
+
+  .task-index {
+    align-self: center;
+    height: 6px;
+    width: 6px;
+    border-radius: 50%;
+    background: var(--color-live);
+  }
+
+  .task-name {
+    overflow: hidden;
+    font-size: 11.5px;
+    color: var(--color-slate);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .task-hours,
+  .foot-hours {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .record-foot {
+    border-top: 1px solid var(--color-paper-rule);
+    padding-top: 10px;
+  }
+
+  .lineage {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    height: 100%;
+    width: 100%;
+    pointer-events: none;
+  }
+
+  .lineage path {
+    fill: none;
+    stroke: var(--color-paper-connector);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .trace-label {
+    position: absolute;
+    z-index: 5;
+    left: 49%;
+    top: 115px;
+    border-radius: 999px;
+    background: var(--color-paper-callout);
+    box-shadow: var(--shadow-paper-callout);
+    padding: 5px 9px;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 8px;
+    color: var(--color-paper-callout-text);
+    transform: translateX(-50%);
+  }
+
+  .invoice-card {
+    z-index: 4;
+    right: 1%;
+    top: 20px;
+    width: 43%;
+    min-width: 0;
+    border-radius: var(--radius-paper-card);
+    background: #fff;
+    box-shadow: var(--shadow-paper-card-raised);
+    padding: 16px;
+    transform: rotate(1.5deg);
+  }
+
+  .invoice-head strong {
+    display: block;
+    margin-top: 2px;
+    font-family: var(--font-display);
+    font-size: 20px;
+    line-height: 1;
+    color: var(--color-ink);
+  }
+
+  .invoice-party {
+    display: grid;
+    gap: 3px;
+    margin-top: 18px;
+  }
+
+  .invoice-party strong {
+    font-size: 12px;
+    color: var(--color-ink);
+  }
+
+  .invoice-line {
+    display: grid;
+    grid-template-columns: 10px minmax(0, 1fr);
+    align-items: center;
+    gap: 9px;
+    margin-top: 14px;
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper-accent);
+    padding: 11px 12px;
+  }
+
+  .mark {
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    background: var(--color-hour);
+  }
+
+  .line-name {
+    overflow: hidden;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--color-ink);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .line-total {
+    grid-column: 2;
+    margin-top: -3px;
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .invoice-foot {
+    margin-top: 18px;
+    border-top: 1px solid var(--color-paper-rule);
+    padding-top: 10px;
+  }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .billing-desk:hover .backing-one {
+      transform: translate(-14px, 10px) rotate(-7deg);
+    }
+
+    .billing-desk:hover .backing-two {
+      transform: translate(5px, 5px) rotate(3.5deg);
+    }
+
+    .billing-desk:hover .record-card {
+      box-shadow: var(--shadow-paper-card-hover);
+      transform: translate(-4px, 2px) rotate(-2.8deg);
+    }
+
+    .billing-desk:hover .invoice-card {
+      box-shadow: var(--shadow-paper-card-hover);
+      transform: translate(5px, -7px) rotate(2.2deg);
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .desk-ref {
+      display: none;
+    }
+
+    .record-card {
+      width: 58%;
+      padding-inline: 13px;
+    }
+
+    .invoice-card {
+      width: 46%;
+      padding-inline: 13px;
+    }
+
+    .trace-label {
+      left: 48%;
+    }
+  }
+</style>
+
+<script>
+  import "../../scripts/art";
+</script>

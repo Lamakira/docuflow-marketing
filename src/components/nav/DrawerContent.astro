@@ -1,0 +1,211 @@
+---
+import { Icon } from "astro-icon/components";
+import { NAV_LINKS, type MegaMenu } from "../../data/site";
+
+/** Le CONTENU du tiroir mobile — la boîte et son comportement restent dans
+ *  `Nav.astro`, comme pour le panneau de bureau.
+ *
+ *  Sous 561px le site n'avait AUCUNE navigation : `.nav-links` est en
+ *  `display: none` et le repli en pastille est désactivé. Product, Solutions et
+ *  Pricing n'étaient atteignables que par le pied de page. Ce n'est pas une
+ *  envie de refonte, c'est un trou.
+ *
+ *  Solutions y est un `<details>` imbriqué, EN FLUX — et c'est sans danger : le
+ *  tiroir entier vit dans un panneau `position: absolute`, donc hors flux, et il
+ *  est en `display: none` au-dessus de 561px. Rien de ce qu'il contient ne peut
+ *  atteindre la mesure de largeur de la pastille. Cette invariante est aussi
+ *  gardée par le `close()` en tête de `measure()`.
+ *
+ *  v1 : aucune animation sur l'accordéon imbriqué — le repli natif de
+ *  `<details>` est instantané, ce qui satisfait `prefers-reduced-motion`
+ *  trivialement et ne coûte pas une ligne de script. */
+interface Props {
+  menu: MegaMenu;
+  path: string;
+}
+
+const { menu, path } = Astro.props;
+const isCurrent = (href: string) => path === href || path.startsWith(`${href}/`);
+---
+
+<nav class="drawer" aria-label="Site">
+  <ul class="drawer-list">
+    {
+      NAV_LINKS.map((link) =>
+        link.menu ? (
+          <li>
+            {/* Le lien vers `/solutions` ne disparaît pas : il est la première
+                rangée du panneau déplié, comme sur le bureau. */}
+            <details class="group">
+              <summary class="row summary">
+                {link.label}
+                <Icon name="lucide:chevron-down" class="chev" aria-hidden="true" />
+              </summary>
+
+              <div class="sub">
+                <a
+                  href={menu.overview.href}
+                  class="sub-row overview"
+                  aria-current={isCurrent(menu.overview.href) ? "page" : undefined}
+                >
+                  {menu.overview.label}
+                  <span class="sub-arrow font-mono" aria-hidden="true">
+                    →
+                  </span>
+                </a>
+
+                {menu.columns.map((column) => (
+                  <>
+                    <p class="sub-head">{column.heading}</p>
+                    <ul class="sub-list">
+                      {column.items.map((item) => (
+                        <li>
+                          <a
+                            href={item.href}
+                            class="sub-row"
+                            aria-current={isCurrent(item.href) ? "page" : undefined}
+                          >
+                            {item.label}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ))}
+              </div>
+            </details>
+          </li>
+        ) : (
+          <li>
+            <a
+              href={link.href}
+              class="row"
+              aria-current={isCurrent(link.href) ? "page" : undefined}
+            >
+              {link.label}
+            </a>
+          </li>
+        )
+      )
+    }
+  </ul>
+
+  {/* `Sign in` vit ici et nulle part ailleurs sous 561px : c'est ce qui rachète
+      la largeur dont la barre a besoin à 360px. */}
+  <div class="foot">
+    <a href="/signin" class="row">Sign in</a>
+    <a href="/signup" class="cta">Start free trial</a>
+  </div>
+</nav>
+
+<style>
+  .drawer {
+    display: flex;
+    min-height: 100%;
+    flex-direction: column;
+    padding: 8px 24px 32px;
+  }
+
+  .drawer-list,
+  .sub-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* ~48px de cible tactile sur chaque rangée. */
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    border-bottom: 1px solid var(--color-rule);
+    padding: 15px 0;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+
+  .row[aria-current="page"] {
+    font-weight: 700;
+  }
+
+  .summary {
+    cursor: pointer;
+    /* Le triangle natif ferait doublon avec le chevron. */
+    list-style: none;
+  }
+
+  .summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .chev {
+    width: 18px;
+    height: 18px;
+    flex: none;
+    color: var(--color-slate);
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .group[open] .chev {
+    transform: rotate(180deg);
+  }
+
+  .sub {
+    padding: 4px 0 12px;
+  }
+
+  .sub-head {
+    padding: 14px 0 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  .sub-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 0;
+    font-size: 15.5px;
+    color: var(--color-slate);
+    text-decoration: none;
+  }
+
+  .sub-row[aria-current="page"] {
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .overview {
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .sub-arrow {
+    color: var(--color-hour);
+  }
+
+  .foot {
+    margin-top: auto;
+    padding-top: 20px;
+  }
+
+  .cta {
+    display: block;
+    margin-top: 20px;
+    border-radius: 6px;
+    background-color: var(--color-ink);
+    padding: 14px 20px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--color-paper);
+    text-decoration: none;
+  }
+</style>

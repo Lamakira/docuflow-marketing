@@ -1,0 +1,110 @@
+---
+/**
+ * Illustration de l'en-tête « By use case » de `/solutions` —
+ * « Or start from the problem, not the industry. »
+ *
+ * Six entrées à gauche, une seule feuille à droite, et des connecteurs
+ * pointillés qui convergent. C'est l'argument du produit tout entier ramené à un
+ * dessin : six problèmes différents, un seul dossier où ils se rangent. La
+ * convergence est le sujet, donc c'est elle qui se TRACE à l'écran pendant que
+ * le reste se contente d'arriver.
+ *
+ * Bande `paper` (aucune classe de fond sur la section) : la feuille est donc
+ * blanche, comme toutes les cartes du site.
+ */
+const CASES = [0, 1, 2, 3, 4, 5];
+const TOP = 14;
+const PITCH = 48;
+const CHIP_W = 104;
+
+/** Le point de convergence : le bord gauche de la feuille, à mi-hauteur. */
+const TARGET_X = 288;
+const TARGET_Y = 150;
+---
+
+<svg
+  class="art"
+  viewBox="0 0 440 300"
+  fill="none"
+  role="presentation"
+  aria-hidden="true"
+  focusable="false"
+  data-art
+>
+  {/* Les connecteurs d'abord : ils passent SOUS les puces et sous la feuille. */}
+  {
+    CASES.map((i) => {
+      const y = TOP + i * PITCH + 13;
+      return (
+        <path
+          class="link"
+          d={`M ${CHIP_W + 8} ${y} C 190 ${y} 220 ${TARGET_Y} ${TARGET_X} ${TARGET_Y}`}
+          data-art-draw
+        />
+      );
+    })
+  }
+
+  {
+    CASES.map((i) => (
+      <rect
+        class="chip"
+        x="8"
+        y={TOP + i * PITCH}
+        width={CHIP_W}
+        height="26"
+        rx="4"
+        data-art-in
+      />
+    ))
+  }
+
+  <g data-art-in>
+    <rect class="sheet" x={TARGET_X} y="96" width="144" height="108" rx="8" />
+    <rect class="bar" x="306" y="118" width="108" height="8" rx="4" data-art-pop />
+    <rect class="bar" x="306" y="142" width="84" height="8" rx="4" data-art-pop />
+    <rect class="bar-on" x="306" y="166" width="96" height="8" rx="4" data-art-pop />
+    <rect class="tag" x="306" y="182" width="52" height="14" rx="3" data-art-pop />
+  </g>
+</svg>
+
+<style>
+  .art {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* Pointillé 1px : le filet du site, juste interrompu. Le tracé au défilement
+     est posé par le script (`stroke-dasharray` en ligne), donc ce motif-ci ne
+     vaut qu'au repos et sans JS. */
+  .link {
+    stroke: var(--color-rule);
+    stroke-width: 1;
+    stroke-dasharray: 3 4;
+  }
+
+  .chip,
+  .sheet {
+    fill: #fff;
+    stroke: var(--color-rule);
+    stroke-width: 1;
+  }
+
+  .bar {
+    fill: var(--color-rule);
+  }
+
+  .bar-on {
+    fill: var(--color-ink);
+  }
+
+  .tag {
+    stroke: var(--color-rule);
+    stroke-width: 1;
+  }
+</style>
+
+<script>
+  import "../../scripts/art";
+</script>

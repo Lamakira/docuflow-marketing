@@ -44,6 +44,13 @@ export default defineConfig({
           'refresh-cw',
           'lock',
           'share-2',
+          // Navigation : le chevron du déclencheur Solutions, et le burger /
+          // la croix du tiroir mobile. `chevron-down` tourne de 180° à
+          // l'ouverture — c'est le SEUL changement de métrique autorisé sur le
+          // déclencheur, dont la largeur est mesurée au runtime.
+          'chevron-down',
+          'menu',
+          'x',
           // Un par secteur, dans l'ordre de SECTORS (src/data/site.ts).
           'palette',
           'code-xml',

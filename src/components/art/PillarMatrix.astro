@@ -1,0 +1,139 @@
+---
+/**
+ * Illustration de l'en-tête « By industry » —
+ * « Every trade loses money somewhere different. »
+ *
+ * Remplace une grille de carrés gris muette. Même idée, mais LISIBLE : les
+ * colonnes portent le nom des quatre piliers, les rangées la puce de domaine du
+ * secteur, et une seule case est pleine par rangée — jamais la même colonne.
+ * L'oeil suit l'escalier et comprend la phrase du H2 sans qu'on la lui répète.
+ *
+ * La légende sous la figure est là exprès : un schéma qui a besoin d'être
+ * expliqué a échoué, mais une figure qui se NOMME est simplement une figure.
+ *
+ * ⚠️ Les quatre couples viennent de `src/data/solutions.ts` et doivent y rester
+ * vrais — le dessin serait un mensonge sinon :
+ *   agency  → clients   (le dossier client mène chez les agences)
+ *   finance → time      (le chronomètre chez les comptables)
+ *   advisory→ activity  (la preuve d'activité en conseil)
+ *   field   → knowledge (le contrôle documentaire en construction)
+ * Ces quatre-là sont choisis parce que leurs pilotes sont TOUS DIFFÉRENTS : si
+ * deux rangées menaient sur la même colonne, la figure dirait le contraire de ce
+ * qu'elle illustre.
+ */
+const PILLARS = ["Time", "Activity", "Clients", "Knowledge"];
+
+const TRADES = [
+  { tag: "agency", lead: "Clients" },
+  { tag: "finance", lead: "Time" },
+  { tag: "advisory", lead: "Activity" },
+  { tag: "field", lead: "Knowledge" },
+];
+---
+
+<figure class="matrix" data-art>
+  <div class="grid">
+    <span aria-hidden="true"></span>
+    {PILLARS.map((pillar) => <span class="col" data-art-in>{pillar}</span>)}
+
+    {
+      TRADES.map((trade) => (
+        <>
+          <span class="trade" data-art-in>{trade.tag}</span>
+          {PILLARS.map((pillar) =>
+            pillar === trade.lead ? (
+              <span class="cell">
+                <span class="lead" data-art-pop />
+              </span>
+            ) : (
+              <span class="cell">
+                <span class="idle" />
+              </span>
+            )
+          )}
+        </>
+      ))
+    }
+  </div>
+
+  <figcaption class="caption">The pillar each trade leads with</figcaption>
+</figure>
+
+<style>
+  .matrix {
+    margin: 0;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: auto repeat(4, minmax(0, 1fr));
+    align-items: center;
+    gap: 10px 8px;
+  }
+
+  /* Intitulés de colonne : mono, comme tout libellé de relevé sur ce site. */
+  .col {
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--color-rule);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--color-slate);
+  }
+
+  /* La puce de domaine, exactement celle des entrées de l'index secteurs. */
+  .trade {
+    justify-self: end;
+    border: 1px solid var(--color-rule);
+    border-radius: 3px;
+    padding: 3px 7px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--color-slate);
+  }
+
+  .cell {
+    display: grid;
+    height: 34px;
+    place-items: center;
+  }
+
+  /* Case pleine : le pilier qui mène. Le seul élément dense de la figure, donc
+     celui que l'oeil relie de rangée en rangée. */
+  .lead {
+    display: block;
+    height: 26px;
+    width: 100%;
+    max-width: 62px;
+    border-radius: 6px;
+    background: var(--color-ink);
+  }
+
+  /* Case vide : un point, pas un carré vide — un carré vide se lirait comme une
+     case à cocher qu'on aurait oublié de remplir. */
+  .idle {
+    display: block;
+    height: 5px;
+    width: 5px;
+    border-radius: 999px;
+    background: var(--color-rule);
+  }
+
+  .caption {
+    margin-top: 16px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+</style>
+
+<script>
+  import "../../scripts/art";
+</script>

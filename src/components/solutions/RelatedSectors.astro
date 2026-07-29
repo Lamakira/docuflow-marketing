@@ -1,0 +1,167 @@
+---
+import { Icon } from "astro-icon/components";
+import SiblingsArt from "../art/SiblingsArt.astro";
+import { getSolution } from "../../data/solutions";
+
+/** Maillage interne : trois secteurs frères, plus `/product` et `/pricing`.
+ *  `site-architecture.md` §7 en fait une règle — chaque page renvoie vers trois
+ *  secteurs et deux pages transverses.
+ *
+ *  Les trois frères sont des SLUGS dans `solutions.ts` ; `getSolution()` lève si
+ *  l'un d'eux n'existe pas. Un lien mort ne peut donc pas être livré : il casse
+ *  le build. Nom, tag et blurb viennent de `SECTORS` — jamais recopiés. */
+interface Props {
+  related: string[];
+}
+
+const { related } = Astro.props;
+const siblings = related.map((slug) => getSolution(slug));
+---
+
+<section class="py-[88px]" data-reveal-group>
+  <div class="container-wide">
+    {/* En-tête sur deux colonnes, les trois frères restent pleine largeur. */}
+    <div
+      class="grid grid-cols-1 items-center gap-14 min-[901px]:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]"
+    >
+      <div>
+        <p class="label-mono text-[11px] text-hour" data-reveal>Also for</p>
+
+        <h2 class="mt-4 max-w-[18ch] text-[clamp(26px,3.4vw,36px)]" data-reveal>
+          Teams with the same problem, in another trade.
+        </h2>
+      </div>
+
+      <div class="hidden min-[901px]:block">
+        <SiblingsArt />
+      </div>
+    </div>
+
+    <ul class="mt-10 grid grid-cols-1 gap-x-14 gap-y-0 min-[901px]:grid-cols-3" data-reveal>
+      {
+        siblings.map((page) => (
+          <li>
+            <a href={page.sector.href} class="sibling group">
+              <span class="sibling-head">
+                <Icon
+                  name={page.sector.icon}
+                  class="sibling-icon group-hover:animate-icon-shake"
+                  aria-hidden="true"
+                />
+                <span class="sibling-name">{page.sector.name}</span>
+                <span class="sibling-tag">{page.sector.tag}</span>
+              </span>
+              <span class="sibling-blurb">{page.sector.blurb}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    {/* Deux liens texte à flèche ambre, pas des boutons : le CTA plein est la
+        bande suivante, et deux boutons ici lui feraient concurrence à 200px de
+        distance. Motif du site pour une route secondaire. */}
+    <p class="mt-10 flex flex-wrap gap-x-10 gap-y-3" data-reveal>
+      <a href="/product" class="route">
+        See everything the product does<span class="route-arrow font-mono" aria-hidden="true"
+          >→</span
+        >
+      </a>
+      <a href="/pricing" class="route">
+        Compare plans<span class="route-arrow font-mono" aria-hidden="true">→</span>
+      </a>
+    </p>
+  </div>
+</section>
+
+<style>
+  /* Registre réglé, comme l'index de l'accueil : filet en haut, lavis au survol,
+     ni encadré ni soulèvement. Le débord de 16px fait passer le lavis sous le
+     texte — il tient dans la gouttière de 56px. */
+  .sibling {
+    display: block;
+    margin-inline: -16px;
+    border-top: 1px solid var(--color-rule);
+    border-radius: 6px;
+    padding: 20px 16px;
+    color: var(--color-ink);
+    text-decoration: none;
+    transition: background-color 0.25s ease;
+  }
+
+  .sibling:hover {
+    background-color: rgb(255 255 255 / 0.55);
+  }
+
+  .sibling-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sibling-icon {
+    width: 18px;
+    height: 18px;
+    flex: none;
+    color: var(--color-ink);
+  }
+
+  .sibling-name {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 19px;
+    letter-spacing: -0.02em;
+  }
+
+  .sibling-tag {
+    border: 1px solid var(--color-rule);
+    border-radius: 3px;
+    padding: 3px 7px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--color-slate);
+  }
+
+  .sibling-blurb {
+    display: block;
+    margin-top: 8px;
+    max-width: 34ch;
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--color-slate);
+  }
+
+  .route {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+
+  .route-arrow {
+    margin-left: 8px;
+    color: var(--color-slate);
+    transition: color 0.15s ease;
+  }
+
+  .route:hover .route-arrow,
+  .route:focus-visible .route-arrow {
+    color: var(--color-hour);
+  }
+
+  /* Sous 561px le nom en 19px et la puce ne tiennent plus toujours sur une
+     ligne : la puce passe dessous plutôt que de comprimer le nom. */
+  @media (max-width: 560px) {
+    .sibling-head {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  }
+</style>
+
+<script>
+  import "../../scripts/reveal";
+</script>

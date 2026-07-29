@@ -330,20 +330,294 @@ de `/product` la page dissidente. Soit `DESIGN.md` accueille cette valeur, soit 
 changent ensemble. Deux tailles hors gamme viennent aussi du handoff : 17 px (corps de pilier) et
 13,5 px (ligne de capacité).
 
+## La section `/solutions` et la navigation
+
+Intégrée le 27 juillet 2026 d'après `docs/prompts/solutions-pages-implementation.md` et les deux
+briefs compagnons. Neuf pages — l'index plus huit secteurs — et **deux surfaces de navigation**.
+Elle répare un vrai trou : l'accueil annonçait huit pages secteur qui **renvoyaient toutes un 404**,
+et cinq d'entre elles étaient aussi liées depuis le pied de page.
+
+**La page secteur n'est pas un gabarit rempli huit fois.** Huit pages générées d'un modèle avec le
+nom de l'industrie permuté sont, à la lettre, la définition Google d'une **doorway page** — et
+`docs/site-architecture.md` §3.2 a déjà rejeté les pages par ville pour cette raison. Trois défenses
+structurelles, dans `src/data/solutions.ts` :
+
+- **L'ordre des piliers change d'une page à l'autre.** Le dossier client mène chez les agences, le
+  chronomètre chez les comptables, la preuve d'activité en conseil et en BPO. Ce n'est pas une
+  astuce : un cabinet d'avocats et un plateau d'appels se soucient de moitiés différentes du produit.
+  Les bandes (`BAND_CYCLE`), le ton de l'oeil-de-boeuf, le rang et le côté du visuel sont tous
+  **dérivés du rang** — une page ne choisit pas son rythme, donc trois ou quatre piliers tombent
+  juste sans qu'on y revienne.
+- **Les trois points de douleur sont écrits dans le vocabulaire du secteur** (retainer, sprint,
+  engagement, docket, SLA, mandat). Test d'acceptation : **permuter le nom du secteur doit rendre la
+  page fausse.** Si les trois phrases se lisent aussi bien ailleurs, la page a échoué.
+- **L'objection est propre au secteur** — le privilège en juridique, la confidentialité du matériel
+  client en conseil, la culture d'ingénierie chez les devs.
+
+**Aucune capacité ne s'écrit dans `solutions.ts`.** `capsOf()` SÉLECTIONNE dans `PRODUCT_PILLARS`
+et **lève au build** si un libellé n'y figure pas. Les pages choisissent et ordonnent, elles ne
+rédigent pas. C'est plus strict que le brief, qui autorisait une reformulation sectorielle : huit
+pages sont huit occasions d'inventer une fonction, et au Canada une indication trompeuse relève de
+la Loi sur la concurrence. De même, `SOLUTION_PAGES` est dérivé de `SECTORS` et **lève si un secteur
+n'a pas de contenu** — c'est ce qui garantit qu'un lien de l'accueil ne peut plus pointer dans le vide.
+
+**Construction et Staffing ont un périmètre resserré, et leurs pages le disent.** DocuFlow est un
+agent bureau plus une application web : les ouvriers de chantier n'ont pas de poste, et les
+contractuels placés travaillent sur le matériel du CLIENT, où installer un agent n'est souvent ni
+permis ni autorisable par l'agence. Les deux pages sont donc écrites sur ce que le produit sert
+vraiment — administration de projet et contrôle documentaire d'un côté, desk du recruteur de
+l'autre — et **leur section « objection » énonce la limite au lieu de l'esquiver**. `SECTORS` n'est
+pas touché ; seuls les deux `blurb` de l'accueil, brouillons non signés qui promettaient des heures
+de chantier et le monitoring de contractuels placés, sont corrigés. **À faire signer par Masdouk.**
+
+**L'index `/solutions` doit mériter son existence** face à l'index secteurs de l'accueil, qui liste
+les mêmes huit entrées avec les mêmes blurbs. Ce qui l'en distingue : son propre H1 (« lequel est le
+mien ? » plutôt que « à qui ça s'adresse ? »), la **sortie vers `/product`**, et surtout **l'axe par
+cas d'usage** — six blocs de contenu qui MÈNENT AUX SIX PAGES (voir plus bas). Ils gardent leur `id` :
+un fragment d'URL n'est JAMAIS envoyé au serveur, donc `/solutions#client-billing` ne peut être
+redirigé par personne — l'ancre est le seul chemin de migration d'un lien déjà partagé, et elle ne
+coûte rien.
+
+L'entrée de l'index réglé vit dans `components/SectorEntry.astro`, partagée avec l'accueil : le
+dessin tient dans ~90 lignes de CSS et deux exemplaires auraient divergé au premier réglage.
+
+### Les six pages cas d'usage — `/solutions/{use-case}`
+
+Ajoutées le 29 juillet 2026. **Le préfixe `/solutions/use-cases/…` arbitré le 27 juillet est
+remplacé** par le niveau plat, à la demande de la direction et pour le référencement : les cas
+d'usage visent les mêmes requêtes que les pages secteur et méritent la même profondeur d'URL.
+
+**⚠️ Les deux listes partagent désormais UN SEUL espace de noms**, et c'est le vrai coût de la
+décision. `src/data/solutions.ts` lève au build sur :
+
+- un slug de cas d'usage identique à un slug de secteur — Astro générerait deux fois la même route
+  et **ferait disparaître une page sans erreur** ;
+- un slug réservé (`index`) — une route STATIQUE gagne sur la dynamique, silencieusement ;
+- un slug vide ;
+- un cas d'usage sans contenu — le méga-menu pointe vers `/solutions/{id}` sur toutes les pages.
+
+Aucune vérification d'unicité n'existait avant, pas même sur les slugs de secteur.
+
+**Le squelette DIFFÈRE de celui des pages secteur, et ce n'est pas cosmétique.** Quatorze pages
+bâties sur un seul gabarit seraient exactement la doorway page que ce dépôt a déjà refusée pour les
+pages par ville — et le référencement étant le motif de ces pages, un décalque les rendrait
+contre-productives.
+
+```
+secteur      hero → problème  → 3-4 piliers → scénario → objection → frères → CTA
+cas d'usage  hero → situation → QUI         → 2 piliers → scénario → objection → CTA
+```
+
+« Qui en souffre le plus » monte en TROISIÈME position : sur une page secteur le métier est déjà
+dans l'oeil-de-boeuf du héros, alors que sur une page cas d'usage la première question du lecteur est
+« est-ce que ça parle de moi ? », et la réponse est un nom de métier. Cela règle au passage la flèche
+ambre au repos de `SectorEntry`, qui dans le viewport de la bande d'appel à l'action ferait quatre
+ambres pour une seule action.
+
+Rythme des bandes — `pillarsOf(blocks, 1)`, **offset 1 et non 0** :
+
+```
+paper → white     → paper → mint → warm → ink      → white     → hour
+Hero    Situation   Qui     P.01   P.02   Scenario   Objection   Cta
+```
+
+L'offset n'est pas un réglage esthétique. Les quatre bandes étant distinctes deux à deux, l'adjacence
+tiendrait à n'importe quel décalage — mais « The Band Rule » veut aussi la progression froid → chaud
+→ ink, et `bg-band-warm` est la bande du pilier Knowledge. À offset 0 avec deux piliers, une page cas
+d'usage n'atteint jamais le warm : **`/solutions/onboarding-documentation`, dont le sujet EST la
+documentation, serait la seule page du site à ne jamais montrer la bande documentaire.** D'où aussi
+la garde qui exige exactement DEUX piliers.
+
+**Chaque page a SES deux dessins, et le registre le fait respecter.** `UseCaseArt.astro` est indexé
+par slug ET par emplacement (`situation` / `objection`) et lève sur toute case manquante. Les huit
+pages secteur partagent `FaultsArt` et `RedactedArt` légitimement — elles partagent un sujet. Les six
+cas d'usage n'en partagent aucun : arrivé sur `/solutions/client-billing`, un lecteur doit voir qu'il
+s'agit de facturation AVANT d'avoir lu une ligne. Deux fautes déjà commises et désormais impossibles :
+le relevé troué générique en tête d'une page facturation, et une capture floutée en face d'une
+objection qui ne parle pas de capture.
+
+`PainPoints` et `ObjectionSection` ont donc un `<slot name="art">` dont le contenu par défaut est le
+dessin secteur : les huit pages existantes sont inchangées.
+
+**`getUseCase` est séparé de `getSolution`, délibérément.** Élargir `getSolution` pour avaler les cas
+d'usage paraît propre, mais `RelatedSectors` lit `page.sector.icon / .name / .tag` — une page cas
+d'usage n'a pas de `sector`. Un lookup permissif cesserait de lever et planterait au rendu.
+
+### Le méga-menu — quatre pièges, tous silencieux
+
+**Le déclencheur est un `<details>`/`<summary>` natif**, pas un lien ni un couple lien+bouton. Il
+donne gratuitement `aria-expanded`, le clavier, le bon comportement tactile (le premier appui ouvre
+au lieu de naviguer) et **un panneau qui fonctionne sans JavaScript**. Contrepartie assumée et
+arbitrée : l'en-tête perd son `<a href="/solutions">`, la destination devient la première rangée du
+panneau — qui est donc load-bearing. `aria-current` ne pouvant pas vivre sur un `<summary>`, le
+`<summary>` porte `data-current` et le lien correspondant DANS le panneau porte `aria-current="page"`.
+
+1. **`--pill-w` est MESURÉ, pas déclaré.** Rien de ce que déroulent les panneaux ne doit atteindre
+   `measure()`. Trois protections : un `<details>` fermé ne rend pas son contenu, les deux panneaux
+   sont `position: absolute` donc hors flux, et **`closeAll()` en tête de `measure()`** — la
+   troisième existe parce que les deux premières sont des propriétés qu'une modification future peut
+   retirer sans s'en apercevoir. Corollaire : **les métriques du déclencheur sont identiques ouvert
+   et fermé.** Seuls changements autorisés à l'ouverture : la couleur du libellé et la rotation du
+   chevron. Une graisse, un glyphe ou un padding en plus corromprait la largeur mesurée sans rien
+   casser de visible.
+2. **Fermer le menu à CHAQUE changement d'état de la barre.** Le morph A ↔ B anime `max-width`,
+   `margin-left` et `padding` sur 280 ms : un panneau ouvert pendant cette fenêtre dérive, et un
+   `measure()` déclenché en plein morph lit n'importe quoi. Accroché aux **trois gestionnaires qui
+   existaient déjà** — `sync()`, l'écouteur de la media query `wide`, le `resize` throttlé — jamais
+   à un écouteur de défilement supplémentaire.
+3. **`prefers-reduced-motion` n'atteint PAS la Web Animations API.** Le bloc global de `global.css`
+   n'écrase que `animation-duration` et `transition-duration` ; un `.animate()` s'exécute à pleine
+   durée quoi qu'il arrive. Le script branche donc explicitement avant chaque appel, exactement
+   comme `PricingFaq`.
+4. **`overflow: hidden` reste interdit**, y compris pour un verrou de défilement mobile : il crée un
+   conteneur de défilement et casse le `sticky` de la nav. Le tiroir est opaque et pleine hauteur,
+   donc un défilement d'arrière-plan est invisible, et `overscroll-behavior: contain` empêche le
+   chaînage. Décision assumée, pas un oubli.
+
+**Le panneau est `position: absolute`, jamais `fixed`.** `--edge-side` est bâti sur `100%` et une
+custom property se résout à son site d'usage : une boîte `fixed` résoudrait `100%` contre le
+viewport, barre de défilement comprise, et le bord gauche du panneau se désynchroniserait de toutes
+les sections **sur Windows et Linux seulement** — le défaut de ~8 px que le système de bord partagé
+existe pour empêcher, et qui survit à une relecture parce qu'il est invisible sur macOS.
+Vérifié au navigateur : bord gauche du panneau à 376,5 px, bord de contenu d'une section
+`container-wide` à 376,5 px, avec une barre de défilement classique de 15 px.
+
+**Et le panneau ne porte AUCUN `z-index`, délibérément.** `.nav-header` est déjà un contexte
+d'empilement (`z-30`), donc un descendant en `z-index: auto` peint au-dessus de `.nav-shell`,
+au-dessus de la barre de saut de `/product` et du rail (20), et sous le lien d'évitement (50). La
+prochaine personne voudra ajouter `z-index: 40` : **c'est le bug, pas le correctif.**
+
+**⚠️ Le bloc conteneur du panneau CHANGE entre les deux états, et ce n'est pas un choix.**
+`.is-pill .nav-shell` porte `backdrop-filter: blur(10px)`, et une valeur autre que `none` sur
+`filter`/`backdrop-filter` crée un bloc conteneur pour les descendants `absolute`. Vérifié :
+`panel.offsetParent` vaut `.nav-header` en état A et `.nav-shell` en état B. Trois conséquences,
+toutes déclinées en `.is-pill` :
+
+- `--page-w` (largeur du document, barre exclue) est posée par `measure()`. Dans la pastille, `100%`
+  ne vaut plus que la largeur de la pastille (496 px mesurés) et le panneau se réduirait à ~420 px
+  au lieu de 1040. Sans JS la variable est absente et `100%` fait le même travail — l'état B
+  n'existe pas sans script.
+- Le `top` de l'état B vaut `calc(100% + 11px)` et non `+1px` : ici `100%` s'arrête au bas de la
+  PASTILLE. Sans ce rattrapage le panneau est collé sous elle (mesuré à 0 px d'écart).
+- Le centrage se fait en `left: 50%` + `transform: translateX(-50%)`, et l'animation d'arrivée en
+  **`translate`** (propriété indépendante) : animer `transform` écraserait le centrage.
+
+**La barre ne tenait plus à 561 px.** La barre complète tenait à 561 px pile, sans un pixel de
+marge ; le chevron du déclencheur (14 px + 4 px de gouttière) l'a fait déborder de 12 px — donc une
+barre de défilement horizontale au point de bascule exact entre le tiroir et la barre. Corrigé par
+`--nav-gap: 16px` entre 561 et 700 px : **la gouttière cède, jamais un libellé.**
+
+### Le tiroir mobile — sous 561 px il n'y avait rien
+
+`.nav-links` est en `display: none` et le repli en pastille est désactivé sous 561 px : Product,
+Solutions et Pricing n'étaient atteignables **que par le pied de page**. Un second `<details>` après
+le CTA, même technique, autre boîte. `Sign in` y déménage — c'est cette largeur-là qui fait tenir la
+barre à 360 px (mesuré : 210 px de contenu pour 297 px de place, et le CTA raccourcit à « Start
+free » sous 400 px). Confinement du focus par `inert` sur `<main>` et `<footer>` ; le panneau de
+bureau n'en met jamais — **c'est un menu, pas une boîte de dialogue**, on doit pouvoir en sortir en
+tabulant. L'accordéon Solutions imbriqué est en flux et c'est sans danger : il vit dans un panneau
+hors flux, lui-même `display: none` au-dessus de 561 px.
+
+### Détail de compilation à connaître
+
+**Astro rogne l'espace en tête du contenu d'un élément.** `Start free<span> trial</span>` s'est
+livré en « Start freetrial ». Un `&nbsp;` n'est pas rogné.
+
+## Les illustrations de section (`src/components/art/`)
+
+Ajoutées le 27 juillet 2026. Six dessins qui remplissent la colonne droite des en-têtes de section,
+laissée vide jusque-là : `/solutions` était la seule page de la famille dont le héros n'avait pas de
+visuel, alors que ses huit enfants en ont tous un.
+
+**Ce sont des SVG inline, géométriques, aux tokens du site.** Le registre a été arbitré contre deux
+alternatives, le 27 juillet :
+
+- **Un jeu d'illustrations générées** (`~/Téléchargements/saas_illustrations_svg`) : quatre fichiers
+  `.svg` qui sont en réalité un seul PNG de 1254×1254 encapsulé — zéro `<path>`, 1,0 à 1,2 Mo pièce,
+  personnages, plantes, mugs, une palette bleue absente des tokens, des chiffres inventés à l'écran
+  (« 84% avg », « Deal won $48k ») et du texte cuit dans l'image, donc intraduisible en phase FR.
+  C'est l'inverse point par point de `docs/prompts/stack-card-illustrations-generation.md`, la
+  spécification que le dépôt contient DÉJÀ pour ce jeu d'assets et qui n'a jamais servi.
+- **Lottie** : `lottie-web` embarque un second moteur d'animation (~150–250 Ko livrés) pour un
+  travail que GSAP, déjà chargé sur ces pages par `reveal.ts`, fait à zéro octet.
+
+Résultat mesuré : **8,1 Ko de SVG pour les trois illustrations de `/solutions`**, 5 Ko pour les trois
+d'une page secteur — contre 1,0 Mo pour UNE image du jeu écarté.
+
+**Aucun texte dans les dessins, jamais.** C'est la règle qui fait tout tenir : rien à retraduire
+quand le FR arrivera, aucune statistique inventée à l'écran (une image ment aussi bien qu'une
+phrase, et la Loi sur la concurrence ne fait pas la différence), et rien d'illisible pour un lecteur
+d'écran — les six sont `aria-hidden` et `role="presentation"`.
+
+**Chaque dessin dit ce que sa section dit.** Ce ne sont pas des remplissages : le registre de huit
+rangées dont une est trouvée EST la question « Which of these is you? » ; la grille 4×4 dont la case
+pleine change de colonne à chaque rangée EST « every trade loses money somewhere different » ; le
+relevé troué de trois marques ambre EST les trois points de douleur numérotés juste en dessous.
+
+### Quatre pièges
+
+0. **⚠️ Une illustration qui empile ses enfants DOIT créer son propre contexte
+   d'empilement.** Le carrousel du héros donne `z-index: 30 / 20 / 10` à ses trois
+   cartes. Sans `z-index: 0` sur leur conteneur, ces valeurs vivent dans le
+   contexte RACINE et entrent en concurrence avec `.nav-header`, qui vaut aussi
+   `z-30` — et à égalité c'est l'ordre du DOM qui tranche, or `<main>` vient après
+   `<header>`. Résultat constaté : la pastille de nav passait DERRIÈRE les cartes
+   une fois repliée. `z-index: 0` sur le conteneur enferme tout et la pile ne
+   compte plus que pour un plan.
+   C'est le miroir exact de la règle du panneau du méga-menu, et les deux
+   coexistent sans se contredire : le panneau ne doit porter AUCUN `z-index`
+   parce qu'il n'est qu'un descendant d'un contexte existant ; le carrousel doit
+   en porter un parce qu'il CONTIENT des enfants empilés.
+
+1. **Des barres grises uniformes en rangées, c'est un squelette de chargement.** La première version
+   du dessin du héros se lisait « la page n'a pas fini de charger » — au-dessus de la ligne de
+   flottaison, le pire endroit possible. Corrigé en donnant à chaque rangée une MARQUE différente
+   (cercle, carré, anneau, losange…) et en retirant la puce de trois rangées : un squelette n'a
+   jamais de glyphes distincts ni d'irrégularité. Vaut pour tout futur dessin fait de barres.
+2. **Ne PAS mettre `data-reveal` sur l'enveloppe d'une illustration.** `reveal.ts` et `art.ts` se
+   composent techniquement, mais ça fait deux ScrollTrigger pour un seul travail : l'enveloppe reste
+   à `opacity: 0` pendant que ses enfants jouent leur cascade à vide. Constaté à l'écran sur
+   « By use case ». **La cascade interne EST l'arrivée du dessin.**
+3. **Les dessins d'en-tête disparaissent sous 901px** (`hidden min-[901px]:block`). Ils sont
+   décoratifs : les garder empilés repousserait le contenu d'un écran entier sur téléphone. Celui du
+   héros de `/solutions` reste, lui, à toutes les largeurs — comme les maquettes des héros secteur.
+   ⚠️ Une media query mesure le viewport **barre de défilement comprise**, alors que `100%` et
+   `clientWidth` l'excluent : tester ce point de rupture dans un iframe redimensionné donne un
+   résultat faux de la largeur de la barre.
+
+`src/scripts/art.ts` porte le contrat complet — `[data-art]` sur le `<svg>`, puis `data-art-in` /
+`-grow` / `-draw` / `-pop` sur les enfants. Mêmes propriétés de sûreté que `reveal.ts` : l'état
+masqué est posé par `gsap.set()` et jamais par une règle CSS (sans JS les six dessins sont entiers,
+vérifié), et `prefers-reduced-motion` coupe l'animation entièrement plutôt que de la raccourcir.
+
 ## À faire
 
+- [ ] **Faire signer la copy des neuf pages `/solutions`** par Masdouk : les huit H1, les vingt-quatre
+      points de douleur, les scénarios, les objections, **les six pages cas d'usage entières** (H1,
+      dix-huit symptômes, scénarios, objections) — et surtout les
+      **deux `blurb` corrigés** de Construction et Staffing dans `site.ts`.
 - [ ] **Remplacer les chiffres de la bande de preuve** (`src/data/site.ts`, `PROOF_STATS`) par
       les valeurs réelles de la base. Bloquant avant toute mise en ligne.
 - [ ] **Faire signer la copy neuve de `/product`** par Masdouk : le H2 de Knowledge, le libellé
       « THE ARGUMENT » et les cinq phrases de `PRODUCT_ARGUMENT` (signalées dans `product.ts`).
 - [ ] Arbitrer l'ambre des oeils-de-boeuf sur bande claire (voir « La page `/product` ») — décision
       de site, pas de page.
+- [ ] **Corriger le débordement horizontal de `/pricing` à 360 px** — 7 px, **préexistant** et
+      découvert en balayant les largeurs le 27 juillet 2026. Le `<table>` du comparatif demande
+      343 px dans un conteneur de 312 px (`ComparisonTable.astro`). Ni l'accueil, ni `/product`, ni
+      aucune des neuf pages `/solutions` ne débordent, à aucune des huit largeurs testées.
 - [ ] Arbitrer le domaine et mettre à jour `site` dans `astro.config.mjs` (actuellement `docuflow.ca`)
-- [ ] Décider EN seul ou bilingue FR/EN — structure tout le routing, à trancher avant d'ajouter des pages
-- [ ] Gabarits restants : secteur, comparative, méga-menu (voir `docs/site-architecture.md`). Les
-      dix pages par fonction réutilisent `ProductPillar` et lisent `src/data/product.ts`.
+- [x] ~~Décider EN seul ou bilingue FR/EN~~ — **EN seul**, tranché le 27 juillet 2026 avant d'ajouter
+      les neuf pages Solutions : huit 404 en ligne coûtaient plus cher que le rétrofit i18n.
+      `src/data/solutions.ts` est façonné pour accueillir une clé de locale (`CONTENT[slug][locale]`)
+      sans restructuration, et aucun composant ne porte de texte en dur — c'est cette dernière
+      propriété qui rend la promesse tenable, et c'est elle qu'on casse en premier.
+- [ ] Gabarits restants : **comparative** (voir `docs/site-architecture.md`). Le gabarit secteur et
+      le méga-menu sont livrés ; les dix pages par fonction réutilisent `ProductPillar` et lisent
+      `src/data/product.ts`.
 - [ ] Vérifier le rendu mobile réel (points de rupture posés, pas testés visuellement) — fait
-      pour `/pricing` (620 / 560 / 360 px) et `/product` (900 / 561 / 360 px), reste l'accueil
+      pour `/pricing` (620 / 560 / 360 px), `/product` (900 / 561 / 360 px) et les neuf pages
+      `/solutions` (1440 / 1240 / 901 / 720 / 620 / 561 / 480 / 360 px), reste l'accueil
 
 ## Documents de référence
 
@@ -355,6 +629,10 @@ changent ensemble. Deux tailles hors gamme viennent aussi du handoff : 17 px (co
 | `docs/design-handoff/` | Maquettes HTML de référence — ouvrir dans un navigateur |
 | `docs/design_handoff_pricing_cards/` | Cartes cornées de `/pricing` — **remplace `Pricing.dc.html`** |
 | `docs/design_handoff_product/` | Fiche technique de `/product` + `docs/prompts/product-page-design-brief.md` |
+| `docs/design_handoff_sectors/` | Index secteurs éditorial de l'accueil — **implémenter l'option `3c` seule** |
+| `docs/prompts/solutions-pages-implementation.md` | Le mandat de la section Solutions : contenu, menu, tiroir |
+| `docs/prompts/solutions-mega-menu-design-brief.md` | Dessin du panneau et du tiroir mobile |
+| `docs/prompts/solutions-sector-page-design-brief.md` | Dessin de la page secteur, avec la page Agences écrite en entier |
 
 ---
 

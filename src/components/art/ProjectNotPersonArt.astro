@@ -1,0 +1,188 @@
+---
+/**
+ * `/solutions/project-profitability` — section « objection » (pression).
+ *
+ * L'objection est « suivre la marge en cours de chantier revient à suivre les
+ * gens ». La réponse est une question de PLACEMENT : le chiffre est une
+ * propriété du projet. Le dessin le montre littéralement — la marge est sur la
+ * fiche du projet, et les personnes sont en dessous, sans chiffre en face
+ * d'elles.
+ *
+ * ⚠️ Aucune valeur par personne, jamais, dans ce dessin. Une seule colonne de
+ * chiffres en regard des avatars et il dirait le contraire de la section.
+ */
+import { CONTACTS } from "../../data/site";
+---
+
+<div class="scope" data-art>
+  {/* Le chiffre : sur le projet, en haut, seul. */}
+  <section class="project" data-art-in>
+    <header class="head">
+      <span class="label">Fairview · phase 2</span>
+      <span class="chip">In progress</span>
+    </header>
+
+    <div class="figures">
+      <span class="figure">
+        <span class="value">320 h</span>
+        <span class="cap">budgeted</span>
+      </span>
+      <span class="figure">
+        <span class="value over">249 h</span>
+        <span class="cap">actual</span>
+      </span>
+    </div>
+  </section>
+
+  {/* Les personnes : assignées, sans chiffre en face. */}
+  <section class="team">
+    <p class="label" data-art-in>Assigned · no per-person figure</p>
+
+    <ul class="people">
+      {
+        CONTACTS.map((contact) => (
+          <li data-art-in data-use-case-motion-row>
+            <span class="avatar" style={`background:${contact.tone}`}>
+              {contact.initials}
+            </span>
+            <span class="name">{contact.name}</span>
+            <span class="role">{contact.role}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <footer class="foot" data-art-pop>Visibility by role, not by person</footer>
+</div>
+
+<style>
+  .scope {
+    border: 1px solid var(--color-rule);
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+  }
+
+  .project {
+    border-bottom: 1px solid var(--color-rule);
+    padding: 14px 18px 16px;
+  }
+
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  .chip {
+    flex: none;
+    border-radius: 3px;
+    background: var(--color-hour);
+    padding: 3px 8px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+
+  .figures {
+    display: flex;
+    gap: 28px;
+    margin-top: 14px;
+  }
+
+  .figure {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .value {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .over {
+    color: var(--color-hour);
+  }
+
+  .cap {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  .team {
+    background: var(--color-paper);
+    padding: 13px 18px 15px;
+  }
+
+  .people {
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .people li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 0;
+  }
+
+  /* 9px : le pas `annotation`, plancher de la gamme — « en dessous, rien ». Même
+     valeur que les initiales d'avatar de `ClientMock`. */
+  .avatar {
+    display: grid;
+    height: 24px;
+    width: 24px;
+    flex: none;
+    place-items: center;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: #fff;
+  }
+
+  .name {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--color-ink);
+  }
+
+  .role {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-slate);
+  }
+
+  .foot {
+    border-top: 1px solid var(--color-rule);
+    padding: 12px 18px 13px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-live-on-light);
+  }
+</style>
+
+<script>
+  import "../../scripts/art";
+</script>

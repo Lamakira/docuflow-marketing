@@ -1,0 +1,144 @@
+---
+/**
+ * `/solutions/onboarding-documentation` — section « the situation ».
+ *
+ * L'arborescence de pages à gauche, la recherche à droite : la réponse EXISTE
+ * (elle est dans l'arbre, en surbrillance) mais la personne neuve ne sait pas
+ * où. C'est exactement l'écart que la section décrit — un problème d'accès, pas
+ * de rédaction.
+ *
+ * La page trouvée est celle du scénario (la politique de remboursement).
+ */
+const TREE = [
+  { label: "Getting started", depth: 0 },
+  { label: "Accounts", depth: 0 },
+  { label: "Ridgeline · runbook", depth: 1 },
+  { label: "Refunds policy", depth: 2, found: true },
+  { label: "Escalation matrix", depth: 2 },
+  { label: "Onboarding sessions", depth: 0 },
+];
+---
+
+<div class="tree" data-art>
+  <header class="search" data-art-in>
+    <span class="glass" aria-hidden="true"></span>
+    <span class="query">refund over $500</span>
+  </header>
+
+  <ul class="nodes">
+    {
+      TREE.map((node) => (
+        <li
+          class:list={{ found: node.found }}
+          style={`--depth:${node.depth}`}
+          data-art-in
+          data-use-case-motion-row
+        >
+          <span class="dot" aria-hidden="true"></span>
+          <span class="name">{node.label}</span>
+          {node.found && <span class="badge" data-art-pop>match</span>}
+        </li>
+      ))
+    }
+  </ul>
+
+  <footer class="foot" data-art-in>Full-text search · pages and transcribed calls</footer>
+</div>
+
+<style>
+  .tree {
+    border: 1px solid var(--color-rule);
+    border-radius: 8px;
+    background: #fff;
+    padding: 14px 18px 16px;
+  }
+
+  /* La requête est en mono : elle a été TAPÉE dans le produit, pas rédigée pour
+     cette page — la règle Recorded/Written. */
+  .search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 6px;
+    background: var(--color-paper);
+    padding: 10px 12px;
+  }
+
+  .glass {
+    height: 11px;
+    width: 11px;
+    flex: none;
+    border-radius: 999px;
+    border: 2px solid var(--color-slate);
+  }
+
+  .query {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-ink);
+  }
+
+  .nodes {
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Le retrait porte la hiérarchie : c'est ce qui fait lire « pages imbriquées »
+     sans un mot d'explication. */
+  .nodes li {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 0 7px calc(var(--depth) * 18px);
+  }
+
+  .dot {
+    height: 5px;
+    width: 5px;
+    flex: none;
+    border-radius: 999px;
+    background: var(--color-rule);
+  }
+
+  .name {
+    font-size: 12.5px;
+    color: var(--color-slate);
+  }
+
+  /* La page trouvée : la seule note ambre, et le seul texte en `ink`. */
+  .found .name {
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .found .dot {
+    background: var(--color-hour);
+  }
+
+  .badge {
+    margin-left: auto;
+    border-radius: 3px;
+    background: var(--color-hour);
+    padding: 2px 7px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+
+  .foot {
+    margin-top: 12px;
+    border-top: 1px solid var(--color-rule);
+    padding-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-slate);
+  }
+</style>
+
+<script>
+  import "../../scripts/art";
+</script>

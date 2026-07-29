@@ -1,0 +1,165 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import SectorEntry from "../../components/SectorEntry.astro";
+import UseCaseList from "../../components/solutions/UseCaseList.astro";
+import FinalCta from "../../components/sections/FinalCta.astro";
+import TradeStack from "../../components/art/TradeStack.astro";
+import PillarMatrix from "../../components/art/PillarMatrix.astro";
+import { SECTORS } from "../../data/site";
+import { SOLUTIONS_MENU, FINE_PRINT } from "../../data/solutions";
+
+const title = "DocuFlow solutions - by industry and by use case";
+const description =
+  "Eight industries and six use cases, each with the pillars ordered the way that industry actually works. Find the page written for how your team bills.";
+
+/** L'index Solutions. Il doit MÉRITER son existence face à l'index secteurs de
+ *  l'accueil, qui liste déjà les mêmes huit entrées avec les mêmes blurbs :
+ *  deux fois la même page, c'est du contenu dupliqué et un clic perdu.
+ *
+ *  Trois choses l'en distinguent, dans l'ordre :
+ *   1. Son propre H1 et son intro — « lequel est le mien ? » plutôt que « à qui
+ *      ça s'adresse ? ». L'accueil présente une audience, cette page trie.
+ *   2. L'AXE PAR CAS D'USAGE, que l'accueil n'a pas. C'est lui qui justifie la
+ *      page, et ce sont ses six ancres que le méga-menu vise.
+ *   3. Une sortie pour l'indécis, vers `/product`.
+ *
+ *  Rythme des bandes : paper → white → paper → ink → hour. Deux sections
+ *  voisines ne partagent jamais un fond.
+ *
+ *  Rail retiré : `LEAD → COMPLETED` raconte le mandat client de l'accueil, pas
+ *  un sommaire. */
+---
+
+<Layout title={title} description={description} rail={false}>
+  {/* Deux colonnes comme les huit héros secteur : cette page les introduit, elle
+      ne peut pas être la seule à laisser sa moitié droite vide.
+      Pas de `data-reveal` sur le héros — le trigger serait déjà actif au
+      chargement et le H1, élément LCP, partirait d'`opacity: 0`. */}
+  <section class="pb-16 pt-16">
+    <div
+      class="container-wide grid grid-cols-1 items-center gap-14 min-[901px]:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]"
+    >
+      <div>
+        <p class="label-mono mb-4 text-ink">Solutions</p>
+
+        <h1 class="max-w-[16ch] text-balance text-[clamp(32px,5vw,54px)] leading-[1.04]">
+          Which of these is you?
+        </h1>
+
+        <p class="mt-6 max-w-[56ch] text-[18px] leading-[1.55] text-slate">
+          DocuFlow replaces a time tracker, a monitoring tool, a CRM and a wiki - but which of those
+          four matters most depends entirely on how you bill. Pick the page written for your trade,
+          or the one written for your problem.
+        </p>
+
+        <p class="mt-6 font-mono text-[12.5px] text-slate">{FINE_PRINT}</p>
+      </div>
+
+      <div>
+        <TradeStack />
+      </div>
+    </div>
+  </section>
+
+  {/* Le même registre réglé que l'accueil (`SectorEntry`), une section neuve
+      autour. `on-white` : le lavis de survol est du blanc à 55 %, invisible ici
+      — c'est `paper` qui désigne la ligne sur une bande blanche. */}
+  <section class="bg-white py-[88px]">
+    <div class="container-wide">
+      {/* L'en-tête passe en deux colonnes, la liste des huit reste pleine
+          largeur en dessous. L'illustration est décorative : elle disparaît sous
+          901px plutôt que de repousser la liste d'un écran entier. */}
+      <div
+        class="grid grid-cols-1 items-center gap-14 min-[901px]:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]"
+      >
+        <div>
+          <p class="label-mono text-[11px] text-ink">By industry</p>
+
+          {/* ⚠️ Cette intro ne parle PAS de la page. Une première version disait
+          « These are not the same page eight times » et nommait les piliers :
+          c'est la stratégie éditoriale du site qui plaidait sa cause auprès du
+          lecteur, dans un vocabulaire (« pillar ») qu'il n'a aucune raison de
+          connaître. Un visiteur qui cherche son métier n'arbitre pas notre SEO.
+          La règle : MONTRER que les huit pages diffèrent, par trois douleurs
+          qu'on ne peut pas confondre, plutôt que de l'affirmer. */}
+          <h2 class="mt-4 max-w-[22ch] text-[clamp(28px,4vw,42px)]">
+            Every trade loses money somewhere different.
+          </h2>
+
+          <p class="mt-5 max-w-[54ch] text-[17px] leading-[1.6] text-slate">
+            A retainer that overruns before anyone notices. A docket written from memory at six
+            o'clock. A shift the client wants proof was staffed. Each page opens on the one that
+            costs you, and leads with the part of DocuFlow that answers it.
+          </p>
+        </div>
+
+        <div class="hidden min-[901px]:block">
+          <PillarMatrix />
+        </div>
+      </div>
+
+      <ul class="mt-12 grid grid-cols-1 gap-x-[72px] gap-y-0 min-[901px]:grid-cols-2">
+        {
+          SECTORS.map((sector, i) => (
+            <li>
+              <SectorEntry sector={sector} index={i} onWhite />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <UseCaseList />
+
+  {/* La sortie pour qui ne se reconnaît nulle part. Même copy que le rail du
+      méga-menu (`SOLUTIONS_MENU.promo`) et lue depuis la même source : l'écho
+      est voulu, la divergence non. */}
+  <section class="bg-ink py-[72px]">
+    <div class="container-wide">
+      <div class="grid grid-cols-1 items-end gap-8 min-[901px]:grid-cols-[minmax(0,1.3fr)_auto]">
+        <div>
+          <p class="label-mono text-[11px] text-hour">{SOLUTIONS_MENU.promo.eyebrow}</p>
+
+          <h2 class="mt-4 max-w-[20ch] text-[clamp(26px,3.4vw,36px)] text-white">
+            {SOLUTIONS_MENU.promo.title}
+          </h2>
+
+          <p class="mt-4 max-w-[52ch] text-[16.5px] leading-[1.6] text-slate-on-ink">
+            {SOLUTIONS_MENU.promo.body}
+          </p>
+        </div>
+
+        <p>
+          <a href={SOLUTIONS_MENU.promo.link.href} class="route">
+            {SOLUTIONS_MENU.promo.link.label}
+            <span class="route-arrow font-mono" aria-hidden="true">→</span>
+          </a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <FinalCta
+    title="Start with the way you already bill."
+    note="No credit card. Desktop app for Windows, macOS and Linux."
+  />
+</Layout>
+
+<style>
+  /* Lien texte à flèche, pas un bouton : la bande d'appel à l'action est juste
+     en dessous et porte déjà l'ambre plein. Sur `ink`, la flèche peut être ambre
+     dès le repos — elle y tient 8,4:1, contrairement aux bandes claires. */
+  .route {
+    font-size: 15px;
+    font-weight: 500;
+    color: #fff;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .route-arrow {
+    margin-left: 8px;
+    color: var(--color-hour);
+  }
+</style>

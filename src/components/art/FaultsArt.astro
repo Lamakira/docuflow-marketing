@@ -1,0 +1,99 @@
+---
+/**
+ * Illustration de l'en-tête « The problem » — les HUIT pages secteur.
+ *
+ * Un relevé réglé, propre en apparence, dont trois rangées sont rompues : la
+ * barre s'interrompt, et une marque ambre attend en marge. Trois ruptures pour
+ * les trois points de douleur numérotés qui suivent immédiatement.
+ *
+ * Volontairement ABSTRAIT, et c'est ce qui lui permet de servir les huit pages
+ * sans mentir : il dessine la FORME d'un problème — un enregistrement qui a des
+ * trous — et non le problème d'un secteur en particulier. Un dessin spécifique
+ * par secteur aurait dû inventer huit situations, or les seules situations
+ * vérifiées sont déjà dans la copy.
+ *
+ * Les marques arrivent en DERNIER (`data-art-pop`) : le relevé se pose, puis les
+ * défauts apparaissent dedans. C'est la lecture, pas un effet.
+ *
+ * Bande BLANCHE : les barres saines sont en `rule`, jamais en blanc.
+ */
+const ROWS = [
+  { bar: 150 },
+  { split: [70, 54] },
+  { bar: 132 },
+  { split: [88, 42] },
+  { bar: 168 },
+  { split: [58, 76] },
+  { bar: 144 },
+];
+
+const TOP = 12;
+const PITCH = 34;
+/** L'écart qui fait la rupture. Assez large pour se voir à 40% de la taille. */
+const GAP = 16;
+---
+
+<svg
+  class="art"
+  viewBox="0 0 440 260"
+  fill="none"
+  role="presentation"
+  aria-hidden="true"
+  focusable="false"
+  data-art
+>
+  {
+    ROWS.map((row, i) => {
+      const y = TOP + i * PITCH;
+      return (
+        <g data-art-in>
+          <line class="rule" x1="0" y1={y} x2="440" y2={y} />
+
+          {row.split ? (
+            <>
+              <rect class="mark" x="4" y={y + 12} width="10" height="10" rx="2" data-art-pop />
+              <rect class="bar" x="26" y={y + 13} width={row.split[0]} height="8" rx="4" />
+              <rect
+                class="bar"
+                x={26 + row.split[0] + GAP}
+                y={y + 13}
+                width={row.split[1]}
+                height="8"
+                rx="4"
+              />
+            </>
+          ) : (
+            <rect class="bar" x="26" y={y + 13} width={row.bar} height="8" rx="4" />
+          )}
+        </g>
+      );
+    })
+  }
+</svg>
+
+<style>
+  .art {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .rule {
+    stroke: var(--color-rule);
+    stroke-width: 1;
+  }
+
+  .bar {
+    fill: var(--color-rule);
+  }
+
+  /* L'ambre ne marque qu'une chose à la fois, et ici c'est le défaut. Trois
+     marques, pas huit : au-delà, l'oeil cesse de les compter. */
+  .mark {
+    fill: var(--color-hour);
+  }
+</style>
+
+<script>
+  import "../../scripts/art";
+</script>

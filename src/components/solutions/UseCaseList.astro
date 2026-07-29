@@ -1,0 +1,135 @@
+---
+import { USE_CASES } from "../../data/solutions";
+import ConvergeArt from "../art/ConvergeArt.astro";
+
+/** L'axe « par cas d'usage » — ce qui justifie l'existence de `/solutions` face
+ *  à l'index secteurs de l'accueil, qui liste déjà les mêmes huit entrées avec
+ *  les mêmes blurbs. Deux fois la même page serait du contenu dupliqué et un
+ *  clic perdu ; le même visiteur rangé par PROBLÈME plutôt que par métier, non.
+ *
+ *  Chaque bloc est désormais un LIEN vers `/solutions/{id}` : les six cas
+ *  d'usage ont leurs pages depuis que la direction les a voulues indexables au
+ *  même niveau d'URL que les huit secteurs.
+ *
+ *  ⚠️ Les `id` restent sur les `<li>`, et ce n'est pas un reliquat. Un fragment
+ *  d'URL n'est jamais envoyé au serveur : `/solutions#client-billing` ne peut
+ *  être redirigé par personne, jamais. L'ancre EST donc le seul chemin de
+ *  migration pour un lien déjà partagé, et elle ne coûte rien. */
+---
+
+<section class="py-[88px]" data-reveal-group>
+  <div class="container-wide">
+    {/* En-tête sur deux colonnes, les six blocs restent pleine largeur en
+        dessous. L'illustration est décorative : elle disparaît sous 901px. */}
+    <div
+      class="grid grid-cols-1 items-center gap-14 min-[901px]:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]"
+    >
+      <div>
+        <p class="label-mono text-[11px] text-hour" data-reveal>By use case</p>
+
+        <h2 class="mt-4 max-w-[20ch] text-[clamp(28px,4vw,42px)]" data-reveal>
+          Or start from the problem, not the industry.
+        </h2>
+
+        <p class="mt-5 max-w-[54ch] text-[17px] leading-[1.6] text-slate" data-reveal>
+          The same four pillars, arranged around what is going wrong. Most teams recognise
+          themselves in one of these before they recognise themselves in a sector.
+        </p>
+      </div>
+
+      <div class="hidden min-[901px]:block">
+        <ConvergeArt />
+      </div>
+    </div>
+
+    <ul class="mt-12 grid grid-cols-1 gap-x-14 gap-y-0 min-[901px]:grid-cols-2" data-reveal>
+      {
+        USE_CASES.map((useCase, i) => (
+          <li id={useCase.id}>
+            <a href={`/solutions/${useCase.id}`} class="case">
+              <span class="case-index" aria-hidden="true">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <span class="case-head">
+                <span class="case-name">{useCase.title}</span>
+                <span class="case-arrow font-mono" aria-hidden="true">
+                  →
+                </span>
+              </span>
+              <span class="case-body">{useCase.body}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  /* Le bloc entier est le lien. Registre de l'index secteurs : filet en haut,
+     lavis au survol qui déborde du texte, ni encadré ni soulèvement — le
+     langage de survol du site est un lavis, pas un saut. */
+  .case {
+    display: block;
+    margin-inline: -16px;
+    border-top: 1px solid var(--color-rule);
+    border-radius: 6px;
+    padding: 24px 16px 26px;
+    color: var(--color-ink);
+    text-decoration: none;
+    transition: background-color 0.25s ease;
+  }
+
+  .case:hover {
+    background-color: rgb(255 255 255 / 0.55);
+  }
+
+  .case-index {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-slate-on-ink);
+  }
+
+  .case-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  .case-name {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.02em;
+  }
+
+  /* La flèche au repos en `slate`, ambre au survol : six flèches ambre au repos
+     feraient de l'ambre une décoration. Même arbitrage que la carte d'index de
+     `/product`. */
+  .case-arrow {
+    margin-left: auto;
+    font-size: 15px;
+    color: var(--color-slate);
+    transition: color 0.15s ease;
+  }
+
+  .case:hover .case-arrow,
+  .case:focus-visible .case-arrow {
+    color: var(--color-hour);
+  }
+
+  .case-body {
+    display: block;
+    margin-top: 10px;
+    max-width: 46ch;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--color-slate);
+  }
+</style>
+
+<script>
+  import "../../scripts/reveal";
+</script>

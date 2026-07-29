@@ -1,0 +1,68 @@
+---
+import SectorMockup from "./mockups/SectorMockup.astro";
+import { FINE_PRINT, type Mockup } from "../../data/solutions";
+
+/** Le héros d'une page secteur. Même forme à deux colonnes que `ProductHero` —
+ *  plutôt qu'un troisième héros pour le site — mais la colonne de droite porte
+ *  une maquette du produit et non un sommaire : ici le lecteur ne cherche pas un
+ *  plan de page, il cherche à se reconnaître.
+ *
+ *  L'oeil-de-boeuf porte le tag du secteur (`AGENCY`, `LEGAL`…) : c'est le mot
+ *  que le lecteur est venu chercher, et il est en `ink` — l'ambre voisinerait le
+ *  CTA, et il ne fait que 1,98:1 sur `paper` (même arbitrage que `/product`).
+ *
+ *  ⚠️ Pas de reveal ici, comme sur `ProductHero`. Le trigger serait déjà dans sa
+ *  plage active au chargement, donc l'animation se jouerait à l'ouverture de la
+ *  page : le H1 — l'élément LCP — partirait d'`opacity: 0`, or un élément à
+ *  `opacity: 0` est IGNORÉ par la mesure du LCP. La page mettrait une seconde de
+ *  plus à en déclarer un. Même raison que le fondu des cartes tarifaires, qui
+ *  part de 0.25 et non de 0. */
+interface Props {
+  tag: string;
+  h1: string;
+  lede: string;
+  mock: Mockup;
+  warmMockup?: boolean;
+}
+
+const { tag, h1, lede, mock, warmMockup = false } = Astro.props;
+---
+
+<section class="pb-20 pt-16">
+  <div
+    class="container-wide grid grid-cols-1 items-center gap-14 min-[901px]:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]"
+  >
+    <div>
+      <p class="label-mono mb-4 text-ink">{tag}</p>
+
+      {/* 20ch et non les 15 de `/product` : ces H1 sont des phrases entières,
+          jusqu'à dix-sept mots, et 15ch en ferait une tour de six lignes. */}
+      <h1 class="max-w-[20ch] text-balance text-[clamp(30px,4.2vw,46px)] leading-[1.05]">
+        {h1}
+      </h1>
+
+      <p class="mt-5 max-w-[52ch] text-[18px] leading-[1.55] text-slate">{lede}</p>
+
+      <div class="mt-7 flex flex-wrap items-center gap-3">
+        <a
+          href="/signup"
+          class="rounded-[6px] bg-hour px-[22px] py-[13px] font-medium text-ink transition-colors hover:bg-hour-hover"
+        >
+          Start free trial
+        </a>
+        <a
+          href="/demo"
+          class="rounded-[6px] border border-rule bg-white px-[22px] py-[13px] font-medium transition-colors hover:border-ink"
+        >
+          Book a 15-minute demo
+        </a>
+      </div>
+
+      <p class="mt-5 font-mono text-[12.5px] text-slate">{FINE_PRINT}</p>
+    </div>
+
+    <div>
+      <SectorMockup mock={mock} warm={warmMockup} />
+    </div>
+  </div>
+</section>

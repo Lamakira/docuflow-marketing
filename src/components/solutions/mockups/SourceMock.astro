@@ -1,0 +1,35 @@
+---
+/** La réponse de l'assistant, avec ses sources citées — paramétrée.
+ *
+ *  Frère de `product/mockups/AnswerMock.astro`, qui lit `ANSWER_CARD` (question
+ *  partagée avec l'accueil). Ici la question est celle du secteur : c'est elle
+ *  qui fait la démonstration, parce qu'une question qu'on se pose vraiment vaut
+ *  mieux qu'une capture d'interface.
+ *
+ *  La question est en mono : elle a été TAPÉE dans le produit, pas rédigée pour
+ *  cette page (« The Recorded/Written Rule »). Les puces de source sont cerclées
+ *  de vert : c'est le filet qui fait qu'une réponse a l'air redevable. */
+interface Props {
+  question: string;
+  answer: string;
+  sources: string[];
+}
+
+const { question, answer, sources } = Astro.props;
+---
+
+<div class="rounded-[8px] border border-rule bg-white p-5">
+  <p class="rounded-[6px] bg-paper px-[14px] py-3 font-mono text-[13px]">{question}</p>
+
+  <p class="mt-4 text-[15px] leading-[1.6]">{answer}</p>
+
+  <div class="mt-4 flex flex-wrap gap-2">
+    {
+      sources.map((source) => (
+        <span class="rounded-[3px] border border-live-on-light px-[9px] py-[4px] font-mono text-[11px] text-live-on-light">
+          {source}
+        </span>
+      ))
+    }
+  </div>
+</div>

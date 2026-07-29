@@ -1,0 +1,37 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import SectorPage from "../../components/solutions/SectorPage.astro";
+import UseCasePage from "../../components/solutions/UseCasePage.astro";
+import { SOLUTION_ROUTES, type SolutionRoute } from "../../data/solutions";
+
+/** Toutes les pages de `/solutions/{slug}` — les huit secteurs ET les cas
+ *  d'usage, qui partagent ce niveau d'URL depuis la décision de la direction
+ *  (elle remplace le préfixe `/solutions/use-cases/…` arbitré le 27 juillet).
+ *
+ *  Source UNIQUE : `SOLUTION_ROUTES`. Une page présente dans les données ne peut
+ *  donc pas manquer de route, et un secteur sans contenu casse le build au lieu
+ *  de livrer un 404.
+ *
+ *  ⚠️ Les deux listes partageant un espace de noms, une collision de slug ferait
+ *  disparaître une page sans erreur. La garde qui l'empêche est dans
+ *  `src/data/solutions.ts` — au niveau module, donc elle casse le build. */
+export function getStaticPaths() {
+  return SOLUTION_ROUTES.map((route) => ({ params: { slug: route.slug }, props: { route } }));
+}
+
+interface Props {
+  route: SolutionRoute;
+}
+
+const { route } = Astro.props;
+const { copy } = route.page;
+
+/** Le rail d'étapes est retiré : `LEAD → COMPLETED` raconte le cycle de vie d'un
+ *  mandat client sur l'accueil, il ne décrit rien ici.
+ *  Pas de `scrollPad` : aucune de ces pages n'empile de barre collante. */
+---
+
+<Layout title={copy.meta.title} description={copy.meta.description} rail={false}>
+  {route.kind === "sector" && <SectorPage page={route.page} />}
+  {route.kind === "use-case" && <UseCasePage page={route.page} />}
+</Layout>

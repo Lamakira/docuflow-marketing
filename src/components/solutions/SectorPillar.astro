@@ -1,0 +1,147 @@
+---
+import SpecStrip from "../product/SpecStrip.astro";
+import SectorMockup from "./mockups/SectorMockup.astro";
+import type { SolutionPillar } from "../../data/solutions";
+
+/** Un bloc pilier d'une page secteur.
+ *
+ *  Sa propre forme, et pas `ProductPillar` : celui-là est documenté comme le
+ *  gabarit des dix pages par fonction, il porte un oeil-de-boeuf `index / NOM DU
+ *  PILIER` et une carte d'index. Ici l'oeil-de-boeuf porte le mot DU SECTEUR
+ *  (« THE DOCKET », « COVERAGE »), et le bloc se termine par un lien vers le
+ *  pilier correspondant de `/product` : cette page argumente, la fiche technique
+ *  spécifie, et le lecteur doit pouvoir passer de l'une à l'autre.
+ *
+ *  Ce qui est vraiment commun est réutilisé, pas recopié : `SpecStrip` pour les
+ *  chiffres durs, `src/scripts/reveal.ts` pour l'arrivée.
+ *
+ *  `band`, `eyebrowTone`, `index` et `reverse` viennent tous de `solutions.ts`,
+ *  DÉRIVÉS du rang : une page ne choisit pas son propre rythme de bandes, sinon
+ *  deux sections voisines finissent par partager un fond. */
+interface Props {
+  pillar: SolutionPillar;
+  /** Nom du pilier produit (« Time », « Clients »…) pour le lien de sortie. */
+  productName: string;
+  warmMockup?: boolean;
+}
+
+const { pillar, productName, warmMockup = false } = Astro.props;
+
+const EYEBROW_CLASS = {
+  hour: "text-hour",
+  live: "text-live-on-light",
+  ink: "text-ink",
+} as const;
+---
+
+<section class:list={["pillar", pillar.band]} data-reveal-group>
+  <div class="container-wide">
+    {/* Titre puis visuel dans le DOM, dans toutes les sections sans exception :
+        le côté se joue à l'affichage (`order-*`), jamais dans le balisage, pour
+        que la narration et le parcours au clavier restent identiques.
+        `grid-cols-1` explicite : une piste implicite se dimensionne sur son
+        min-content et garantit une barre horizontale à 360px. */}
+    <div class="pillar-grid grid grid-cols-1 items-center gap-14 min-[901px]:grid-cols-2">
+      <div class={pillar.reverse ? "min-[901px]:order-2" : ""} data-reveal>
+        <p class:list={["mb-5 font-mono text-[13px]", EYEBROW_CLASS[pillar.eyebrowTone]]}>
+          {pillar.index} / {pillar.label.toUpperCase()}
+        </p>
+
+        <h2 class="max-w-[18ch] text-[clamp(28px,3.6vw,42px)]">{pillar.heading}</h2>
+
+        <p class="mt-4 max-w-[48ch] text-[17px] leading-[1.55] text-slate">{pillar.body}</p>
+
+        {/* Deux colonnes de puces : c'est la densité qui fait l'argument. Le
+            point vert est un remplissage pur, donc `live` et non
+            `live-on-light` — il ne porte aucun signe, le libellé est à côté.
+            Les libellés viennent de `PRODUCT_PILLARS` et ne sont jamais
+            réécrits ici : voir `capsOf()` dans `src/data/solutions.ts`. */}
+        <ul class="mt-7 grid grid-cols-1 gap-x-6 gap-y-[9px] min-[561px]:grid-cols-2">
+          {
+            pillar.caps.map((cap) => (
+              <li class="flex items-start gap-[9px] text-[13.5px] leading-[1.4]">
+                <span
+                  class="mt-[7px] h-[5px] w-[5px] shrink-0 rounded-full bg-live"
+                  aria-hidden="true"
+                />
+                <span class={cap.key ? "font-semibold text-ink" : "text-slate"}>{cap.text}</span>
+              </li>
+            ))
+          }
+        </ul>
+
+        <SpecStrip items={pillar.spec} class="mt-[26px]" />
+
+        {/* Lien texte à flèche ambre, pas un bouton : la page a déjà son CTA
+            ambre dans le héros et un autre en pied. C'est le motif du site pour
+            une route secondaire. La flèche est au repos en `slate` et ne passe à
+            l'ambre qu'au survol — même arbitrage que la carte d'index de
+            `/product`. */}
+        <p class="mt-6">
+          <a href={pillar.href} class="jump-out">
+            Everything in {productName}
+            <span class="jump-arrow font-mono" aria-hidden="true">→</span>
+          </a>
+        </p>
+      </div>
+
+      <div
+        class={pillar.reverse ? "min-[901px]:order-1" : ""}
+        data-reveal
+      >
+        <SectorMockup mock={pillar.mock} warm={warmMockup} />
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .pillar {
+    padding-block: 88px;
+    /* Le bord bas bascule VERS le spectateur pendant le reveal : la perspective
+       l'agrandit et le projette hors du conteneur. `clip` et non `hidden` —
+       `hidden` créerait un conteneur de défilement et casserait le collant de
+       la nav. */
+    overflow-x: clip;
+  }
+
+  /* Point de fuite commun aux deux colonnes : c'est lui qui les fait lire comme
+     une seule étoffe. `perspective` ne s'applique qu'aux ENFANTS directs, d'où
+     `preserve-3d` sur la grille. Aucune des deux règles ne masque quoi que ce
+     soit : sans JS elles ne font rien, l'état initial vient de `gsap.set()`. */
+  .pillar .container-wide {
+    perspective: 1200px;
+  }
+
+  .pillar-grid {
+    transform-style: preserve-3d;
+  }
+
+  .jump-out {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+
+  .jump-arrow {
+    margin-left: 8px;
+    color: var(--color-slate);
+    transition: color 0.15s ease;
+  }
+
+  .jump-out:hover .jump-arrow,
+  .jump-out:focus-visible .jump-arrow {
+    color: var(--color-hour);
+  }
+
+  @media (max-width: 900px) {
+    .pillar {
+      padding-block: 64px;
+    }
+  }
+</style>
+
+<script>
+  import "../../scripts/reveal";
+</script>

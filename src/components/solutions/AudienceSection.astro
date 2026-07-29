@@ -1,0 +1,67 @@
+---
+import SectorEntry from "../SectorEntry.astro";
+import { getSolution } from "../../data/solutions";
+
+/**
+ * « Who this bites hardest » — les trois métiers que ce problème frappe le plus,
+ * chacun avec SA raison.
+ *
+ * ─── Pourquoi ce n'est pas `RelatedSectors` avec des props en plus ──────────
+ *
+ * Les deux sections listent trois secteurs, et s'arrêter là aurait donné une
+ * seule enveloppe à six props. Trois différences de fond l'interdisent :
+ *
+ *  1. `RelatedSectors` rend `page.sector.icon` sans condition. Ici les entrées
+ *     restent iconographiées comme les index — c'est bien le métier qu'on
+ *     désigne — mais la SECTION, elle, n'a ni le dessin ni le rail de sortie de
+ *     `RelatedSectors`.
+ *  2. Son illustration (`SiblingsArt`) dit « trois feuilles de même facture,
+ *     aucune hiérarchie », ce qui est « Also for ». « Qui en souffre le plus »
+ *     est une autre affirmation, et un dessin doit dire ce que sa section dit.
+ *  3. Elle termine par un rail `/product` + `/pricing` codé en dur. Une page cas
+ *     d'usage sort vers SON pilier, pas vers la fiche produit générique.
+ *
+ * Ce qui devait être partagé l'est : la RANGÉE vient de `SectorEntry`, la même
+ * que l'accueil et l'index `/solutions`. C'est elle que le commentaire d'AGENTS
+ * protège (« ~90 lignes de CSS, deux exemplaires auraient divergé ») — pas
+ * l'enveloppe de section, qui ne fait ici qu'une quinzaine de lignes.
+ *
+ * ⚠️ Position dans la page : cette section vient TÔT (juste après « the
+ * situation »), pas en pied. Deux raisons — la première question du lecteur est
+ * « est-ce que ça parle de moi ? » et la réponse est un nom de métier ; et
+ * `SectorEntry` porte une flèche ambre au repos, qui dans le viewport de la
+ * bande d'appel à l'action (`bg-hour`, l'unique aplat ambre autorisé) ferait
+ * quatre ambres pour une seule action.
+ */
+interface Props {
+  /** Slugs de SECTEUR + la raison propre à chacun. `getSolution()` lève sur un
+   *  slug inconnu, donc un lien mort casse le build. */
+  audience: { slug: string; reason: string }[];
+  heading: string;
+}
+
+const { audience, heading } = Astro.props;
+const rows = audience.map((entry) => ({ ...entry, page: getSolution(entry.slug) }));
+---
+
+<section class="py-[88px]" data-reveal-group>
+  <div class="container-wide">
+    <p class="label-mono text-[11px] text-hour" data-reveal>Who this bites hardest</p>
+
+    <h2 class="mt-4 max-w-[20ch] text-[clamp(26px,3.4vw,36px)]" data-reveal>{heading}</h2>
+
+    <ul class="mt-10 grid grid-cols-1 gap-x-[72px] gap-y-0 min-[901px]:grid-cols-2" data-reveal>
+      {
+        rows.map((row, i) => (
+          <li>
+            <SectorEntry sector={row.page.sector} index={i} note={row.reason} />
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<script>
+  import "../../scripts/reveal";
+</script>

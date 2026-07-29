@@ -1,0 +1,171 @@
+---
+/**
+ * `/solutions/project-profitability` — section « the situation ».
+ *
+ * Le budget et le réel semaine par semaine. Les deux courbes partent ensemble et
+ * se séparent en semaine 2 — c'est le moment que la page défend : on le voit
+ * quand on peut encore agir, pas au mois suivant.
+ *
+ * ⚠️ La marque ambre est sur la SEMAINE 2, pas sur la fin. Le sujet de la page
+ * est le délai de connaissance, pas le dépassement lui-même.
+ *
+ * Valeurs du scénario : 320 h budgétées, 249 h réelles à la fin de la semaine 2.
+ */
+const BUDGET = 320;
+/** Consommation prévue et réelle, en heures cumulées, semaine par semaine.
+ *  Le réel s'arrête à la semaine 2 — la suite n'a pas eu lieu. */
+const WEEKS = [
+  { label: "W1", planned: 53, actual: 96 },
+  { label: "W2", planned: 107, actual: 249 },
+  { label: "W3", planned: 160, actual: null },
+  { label: "W4", planned: 213, actual: null },
+  { label: "W5", planned: 267, actual: null },
+  { label: "W6", planned: 320, actual: null },
+];
+
+const pct = (value: number) => `${Math.round((value / BUDGET) * 100)}%`;
+---
+
+<div class="drift" data-art>
+  <header class="head" data-art-in>
+    <span class="label">Fairview · phase 2</span>
+    <span class="budget">{BUDGET} h budgeted</span>
+  </header>
+
+  <div class="chart" aria-hidden="true">
+    {
+      WEEKS.map((week) => (
+        <div class="col">
+          <span class="track">
+            <span class="planned" style={`height:${pct(week.planned)}`} data-art-grow />
+            {week.actual !== null && (
+              <span
+                class:list={["actual", { over: week.actual > week.planned }]}
+                style={`height:${pct(week.actual)}`}
+                data-art-grow
+              />
+            )}
+          </span>
+          <span class="tick">{week.label}</span>
+        </div>
+      ))
+    }
+  </div>
+
+  {/* Le constat, à la semaine où il devient actionnable. */}
+  <footer class="foot" data-art-pop data-use-case-motion-row>
+    <span class="mark"></span>
+    Week 2 · 249 h actual against 107 h planned
+  </footer>
+</div>
+
+<style>
+  .drift {
+    border: 1px solid var(--color-rule);
+    border-radius: 8px;
+    background: #fff;
+    padding: 14px 18px 16px;
+  }
+
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  .budget {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .col {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Deux barres dans la même piste : le prévu en fond, le réel devant. Leur
+     écart EST le sujet — deux graphiques séparés l'auraient caché. */
+  .track {
+    position: relative;
+    display: block;
+    height: 62px;
+    width: 100%;
+  }
+
+  .planned,
+  .actual {
+    position: absolute;
+    bottom: 0;
+    display: block;
+    border-radius: 2px;
+    transform-origin: 50% 100%;
+  }
+
+  .planned {
+    left: 0;
+    width: 100%;
+    background: var(--color-rule);
+  }
+
+  /* Le réel, plus étroit et centré : il se lit PAR-DESSUS le prévu. */
+  .actual {
+    left: 25%;
+    width: 50%;
+    background: var(--color-live-on-light);
+  }
+
+  /* Au-delà du prévu, la barre passe à l'ambre : l'état qui demande une action. */
+  .actual.over {
+    background: var(--color-hour);
+  }
+
+  .tick {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--color-slate);
+  }
+
+  .foot {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 14px;
+    border-top: 1px solid var(--color-rule);
+    padding-top: 12px;
+    font-size: 12.5px;
+    color: var(--color-ink);
+  }
+
+  .mark {
+    height: 10px;
+    width: 10px;
+    flex: none;
+    border-radius: 2px;
+    background: var(--color-hour);
+  }
+</style>
+
+<script>
+  import "../../scripts/art";
+</script>

@@ -1,0 +1,114 @@
+---
+import type { Mockup } from "../../../data/solutions";
+import RecordMock from "./RecordMock.astro";
+import TimerMock from "./TimerMock.astro";
+import QueryMock from "./QueryMock.astro";
+import ScoreMock from "./ScoreMock.astro";
+import SourceMock from "./SourceMock.astro";
+
+/** Aiguillage des quatre maquettes. Le `kind` de l'union discriminée choisit le
+ *  dessin, donc `solutions.ts` décrit un visuel en données et aucune page n'a à
+ *  importer quatre composants pour en rendre un.
+ *
+ *  Une variante ajoutée à `Mockup` sans sa branche ici ne dessine RIEN et ne
+ *  casse rien — même piège que les icônes Lucide absentes d'`include`. Les
+ *  branches sont donc la liste à tenir à jour ; `kinds` juste au-dessus
+ *  la rend vérifiable par le compilateur : une clé manquante y échoue au build. */
+interface Props {
+  mock: Mockup;
+  /** Warm, layered paper treatment used by the client-billing visual pilot. */
+  warm?: boolean;
+}
+
+const { mock, warm = false } = Astro.props;
+
+/** Miroir typé des branches rendues plus bas. Il ne sert qu'à une chose :
+ *  `Record<Mockup["kind"], …>` exige LES QUATRE clés, donc une variante ajoutée
+ *  à l'union sans être traitée ici échoue à la vérification des types au lieu de
+ *  laisser un blanc sur la page. À tenir aligné avec le balisage. */
+const kinds: Record<Mockup["kind"], true> = {
+  record: true,
+  timer: true,
+  query: true,
+  score: true,
+  source: true,
+};
+void kinds;
+---
+
+<div class:list={["mock-stage", { "mock-stage--warm": warm }]} data-use-case-motion-card>
+  {warm && <span class="paper-back paper-back--one" aria-hidden="true"></span>}
+  {warm && <span class="paper-back paper-back--two" aria-hidden="true"></span>}
+
+  <div class="mock-face">
+    {mock.kind === "record" && <RecordMock {...mock} warm={warm} />}
+    {mock.kind === "timer" && <TimerMock {...mock} warm={warm} />}
+    {mock.kind === "query" && <QueryMock {...mock} warm={warm} />}
+    {mock.kind === "score" && <ScoreMock {...mock} />}
+    {mock.kind === "source" && <SourceMock {...mock} />}
+  </div>
+</div>
+
+<style>
+  .mock-stage {
+    position: relative;
+  }
+
+  .mock-face {
+    position: relative;
+    z-index: 2;
+  }
+
+  .mock-stage--warm {
+    padding: 14px 16px 18px;
+  }
+
+  .paper-back {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    bottom: 14px;
+    left: 20px;
+    border-radius: var(--radius-paper-card);
+    transition: transform var(--paper-motion-duration) var(--paper-motion-ease);
+  }
+
+  .paper-back--one {
+    background: var(--color-paper-layer);
+    transform: translate(-7px, 5px) rotate(-2.4deg);
+  }
+
+  .paper-back--two {
+    background: var(--color-paper-layer-light);
+    transform: translate(6px, 3px) rotate(1.7deg);
+  }
+
+  .mock-stage--warm .mock-face {
+    transition: transform var(--paper-motion-duration) var(--paper-motion-ease);
+    transform: rotate(-0.6deg);
+  }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .mock-stage--warm:hover .paper-back--one {
+      transform: translate(-13px, 8px) rotate(-3.8deg);
+    }
+
+    .mock-stage--warm:hover .paper-back--two {
+      transform: translate(10px, 5px) rotate(2.8deg);
+    }
+
+    .mock-stage--warm:hover .mock-face {
+      transform: translateY(-5px) rotate(0);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .mock-stage--warm {
+      padding: 10px 11px 14px;
+    }
+
+    .paper-back {
+      inset: 15px 15px 10px;
+    }
+  }
+</style>

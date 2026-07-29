@@ -1,0 +1,108 @@
+---
+/**
+ * Illustration de la section « objection » — les huit pages secteur.
+ *
+ * Une capture dont le contenu est illisible : la bande centrale est rayée à 45°,
+ * la texture « image retenue » déjà utilisée par les vignettes de
+ * `ScoreMock` / `EvidenceMock`. Autour, l'enregistrement continue — un en-tête,
+ * deux lignes, une pastille verte.
+ *
+ * C'est l'argument commun aux huit objections, dessiné : **la preuve peut exister
+ * sans que le contenu soit lisible.** Le privilège en juridique, le matériel
+ * client en conseil, les états financiers chez les comptables — tous répondus par
+ * la même chose, et c'est le floutage qui est la fonction réelle du produit
+ * (« Screenshots can be blurred so content is never legible »).
+ *
+ * La bande rayée arrive en dernier : la capture existe d'abord, puis devient
+ * illisible. Dans l'autre ordre, le dessin raconterait une absence.
+ *
+ * Plus compacte que les autres (320×180) : elle se loge sous la colonne de texte,
+ * en face des quatre garanties, sans leur faire concurrence.
+ *
+ * Bande BLANCHE : la feuille est donc `paper` cernée d'un filet.
+ */
+
+/** L'`id` du motif doit être unique dans le document. Le composant n'est rendu
+ *  qu'une fois par page ; s'il en venait deux, il faudrait le suffixer. */
+const HATCH = "art-redacted-hatch";
+---
+
+<svg
+  class="art"
+  viewBox="0 0 320 180"
+  fill="none"
+  role="presentation"
+  aria-hidden="true"
+  focusable="false"
+  data-art
+>
+  <defs>
+    <pattern id={HATCH} width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect class="hatch" width="4" height="8" />
+    </pattern>
+  </defs>
+
+  <g data-art-in>
+    <rect class="sheet" x="8" y="8" width="304" height="164" rx="8" />
+    <rect class="bar" x="26" y="30" width="118" height="8" rx="4" />
+    {/* Le point vert est un remplissage pur — il ne porte aucun signe, donc
+        `live` et non `live-on-light`. */}
+    <circle class="live" cx="288" cy="34" r="5" />
+  </g>
+
+  {/* La zone illisible. C'est elle qui porte l'argument, donc c'est elle qui
+      arrive en dernier. */}
+  <rect
+    class="redacted"
+    x="26"
+    y="56"
+    width="268"
+    height="58"
+    rx="6"
+    fill={`url(#${HATCH})`}
+    data-art-pop
+  />
+
+  <g data-art-in>
+    <rect class="bar" x="26" y="130" width="176" height="8" rx="4" />
+    <rect class="bar" x="26" y="148" width="112" height="8" rx="4" />
+  </g>
+</svg>
+
+<style>
+  .art {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* Bande blanche : la feuille se creuse en `paper`. */
+  .sheet {
+    fill: var(--color-paper);
+    stroke: var(--color-rule);
+    stroke-width: 1;
+  }
+
+  .bar {
+    fill: var(--color-rule);
+  }
+
+  .live {
+    fill: var(--color-live);
+  }
+
+  .hatch {
+    fill: var(--color-rule);
+  }
+
+  /* Le filet referme la zone rayée : sans lui, la texture bave sur la feuille
+     au lieu de se lire comme une région. */
+  .redacted {
+    stroke: var(--color-rule);
+    stroke-width: 1;
+  }
+</style>
+
+<script>
+  import "../../scripts/art";
+</script>

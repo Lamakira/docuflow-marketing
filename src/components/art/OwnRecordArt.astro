@@ -1,0 +1,142 @@
+---
+/**
+ * `/solutions/remote-teams` — section « objection » (surveillance).
+ *
+ * Le relevé vu par LA PERSONNE QU'IL DÉCRIT, pas par un administrateur : c'est
+ * la réponse à l'objection, dessinée. Un indicateur visible en haut, les entrées
+ * de la journée, et la mention que cette vue est la sienne.
+ *
+ * Volontairement PAS un tableau de bord d'admin : un dessin de supervision en
+ * face d'une objection sur la surveillance illustrerait l'objection, pas la
+ * réponse.
+ */
+const ENTRIES = [
+  { task: "Atlas · Code review", duration: "1:04:22" },
+  { task: "Atlas · Standup", duration: "0:12:00" },
+  { task: "Idle · prompted 14:20", duration: "0:08:10" },
+];
+---
+
+<div class="own" data-art>
+  <header class="head" data-art-in>
+    <span class="who">Your record</span>
+    <span class="live">
+      <span class="dot" aria-hidden="true"></span>
+      Timer running
+    </span>
+  </header>
+
+  <ul class="entries">
+    {
+      ENTRIES.map((entry) => (
+        <li data-art-in data-use-case-motion-row>
+          <span class="task">{entry.task}</span>
+          <span class="dur">{entry.duration}</span>
+        </li>
+      ))
+    }
+  </ul>
+
+  {/* La ligne qui porte l'argument : la vue appartient à la personne. */}
+  <footer class="foot" data-art-pop>
+    <span class="tick" aria-hidden="true"></span>
+    Visible to you, editable by you
+  </footer>
+</div>
+
+<style>
+  .own {
+    border: 1px solid var(--color-rule);
+    border-radius: 8px;
+    background: #fff;
+    padding: 14px 18px 16px;
+  }
+
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 12px;
+  }
+
+  .who {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  /* L'indicateur visible : la garantie no 1 de la section, dessinée telle
+     quelle. Le point est un remplissage pur, donc `live`. */
+  .live {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    border-radius: 999px;
+    background: var(--color-band-mint);
+    padding: 4px 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-live-on-light);
+  }
+
+  .dot {
+    height: 7px;
+    width: 7px;
+    border-radius: 999px;
+    background: var(--color-live);
+  }
+
+  .entries {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .entries li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    border-top: 1px solid var(--color-rule);
+    padding: 9px 0;
+  }
+
+  .task {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-slate);
+  }
+
+  .dur {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .foot {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 12px;
+    border-top: 1px solid var(--color-rule);
+    padding-top: 12px;
+    font-size: 12.5px;
+    color: var(--color-ink);
+  }
+
+  .tick {
+    height: 12px;
+    width: 12px;
+    flex: none;
+    border-radius: 999px;
+    border: 2px solid var(--color-live-on-light);
+  }
+</style>
+
+<script>
+  import "../../scripts/art";
+</script>

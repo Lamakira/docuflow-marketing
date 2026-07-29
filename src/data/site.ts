@@ -5,18 +5,48 @@
 
 export const STAGES = ["LEAD", "WON", "IN PROGRESS", "IN REVIEW", "COMPLETED"] as const;
 
-export const NAV_LINKS = [
+/** Un lien de la barre peut porter un méga-menu. `menu` nomme le jeu de données
+ *  que `Nav.astro` déroulera — pas un composant : le panneau est générique et se
+ *  peuple depuis `MegaMenu` (voir plus bas). Le jour où `/product` gagne le sien,
+ *  c'est une clé de plus ici et un objet de plus dans `product.ts`. */
+export type MenuId = "solutions";
+
+export const NAV_LINKS: { label: string; href: string; menu?: MenuId }[] = [
   { label: "Product", href: "/product" },
-  // "/#solutions" et non "#solutions" : l'ancre vit sur l'accueil
-  // (`sections/Sectors.astro`), un lien relatif à la seule page ne résout que là.
-  // Avec le "/", le lien fonctionne depuis /pricing et /product ; sur l'accueil
-  // le navigateur défile quand même jusqu'à la section.
-  { label: "Solutions", href: "/#solutions" },
+  // Pointait sur "/#solutions", l'index secteurs de l'accueil, faute de page
+  // Solutions. La section existe depuis le 27 juillet 2026 : le lien vise la
+  // vraie page, et le déroulé mène aux huit secteurs.
+  { label: "Solutions", href: "/solutions", menu: "solutions" },
   { label: "Pricing", href: "/pricing" },
   // Resources reviendra quand la page existera — l'ancre #resources ne pointait
   // nulle part (aucune section, aucune route `/resources`). Prévue dans
   // `docs/site-architecture.md`, pas encore construite.
 ];
+
+/** La forme d'un méga-menu, indépendante de son contenu.
+ *
+ *  Elle vit ici et non dans `solutions.ts` pour deux raisons : `Nav.astro` et
+ *  `nav/SolutionsPanel.astro` n'ont alors à connaître qu'une forme, pas une
+ *  page ; et un futur `PRODUCT_MENU` (dix pages par fonction, prévues depuis
+ *  `docs/design-brief.md`) remplit exactement le même contrat sans réécrire le
+ *  panneau. Les colonnes viennent des données — le composant ne connaît aucune
+ *  taxonomie.
+ *
+ *  `icon` est optionnel PAR COLONNE et c'est structurel : l'absence d'icônes sur
+ *  la colonne « By use case » est ce qui sépare les deux taxonomies d'un coup
+ *  d'oeil (brief du menu §5.5). Une colonne sans icône n'est pas une colonne
+ *  inachevée. */
+export interface MegaMenu {
+  /** La rangée d'en-tête, pleine largeur : elle porte le lien vers la page
+   *  elle-même, que le `<summary>` ne peut plus porter. Load-bearing. */
+  overview: { label: string; blurb: string; href: string };
+  columns: {
+    heading: string;
+    items: { label: string; href: string; tag?: string; icon?: string }[];
+  }[];
+  /** Le rail : la sortie pour qui ne se reconnaît dans aucune des colonnes. */
+  promo: { eyebrow: string; title: string; body: string; link: { label: string; href: string } };
+}
 
 /** Le même trio de contacts apparaît sur trois cartes : la fiche du héros
  *  (`sections/Hero.astro`), la fiche client du pilier CRM (`sections/ClientRecord.astro`)
@@ -70,6 +100,19 @@ export const PROOF_STATS = [
  *  d'intégration tierce : ce sont des affirmations vérifiables, et au Canada une
  *  indication trompeuse relève de la Loi sur la concurrence.
  *
+ *  ⚠️ Deux blurbs corrigés le 27 juillet 2026, en écrivant les pages secteur.
+ *  DocuFlow est un agent bureau plus une application web :
+ *   - Construction promettait « Site hours and captures on the right job », donc
+ *     un suivi des heures DE CHANTIER. Les ouvriers n'ont pas de poste — la page
+ *     ne peut pas tenir cette promesse, et le brouillon la faisait quand même.
+ *   - Staffing promettait « Placed staff, their hours and their output », donc le
+ *     monitoring de contractuels travaillant sur le matériel du CLIENT, où
+ *     l'installation d'un agent est souvent interdite et n'appartient de toute
+ *     façon pas à l'agence.
+ *  Les deux disent maintenant ce que le produit sert réellement. `name`, `tag`,
+ *  `icon` et `href` sont intacts. Ces deux lignes restent à faire signer par
+ *  Masdouk comme les six autres — voir `src/data/solutions.ts`.
+ *
  *  `icon` : nom Lucide, à tenir synchronisé avec `include` dans `astro.config.mjs`
  *  — un nom absent de cette liste ne rend rien et ne casse pas le build. */
 export const SECTORS = [
@@ -118,14 +161,14 @@ export const SECTORS = [
   {
     tag: "field",
     name: "Construction",
-    blurb: "Site hours and captures on the right job.",
+    blurb: "Drawings, RFIs and office hours on the right job.",
     icon: "lucide:hard-hat",
     href: "/solutions/construction",
   },
   {
     tag: "placement",
     name: "Staffing agencies",
-    blurb: "Placed staff, their hours and their output.",
+    blurb: "What a mandate costs your desk to fill.",
     icon: "lucide:user-search",
     href: "/solutions/staffing-agencies",
   },

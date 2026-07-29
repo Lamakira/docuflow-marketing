@@ -28,6 +28,42 @@
   --color-band-mint: #eaf2ed;
   --color-band-warm: #fbf3e6;
 
+  /* Layered Paper — palette d'ILLUSTRATION, jamais une nouvelle peau pour l'UI.
+     Ces tons servent aux maquettes marketing qui représentent des relevés,
+     factures et dossiers comme des feuilles physiques superposées. Une carte
+     autonome reste seule : les deux couches derrière elle donnent la profondeur,
+     aucun conteneur coloré ne l'encadre. Voir DESIGN.md, « Layered Paper Card ». */
+  --color-paper-canvas: #f6ecdf;
+  --color-paper-surface: #fffaf4;
+  --color-paper-accent: #fff0d8;
+  --color-paper-layer: #dfcbb4;
+  --color-paper-layer-light: #eddbc6;
+  --color-paper-rule: #eadfd4;
+  --color-paper-chip: #f0e5d9;
+  --color-paper-track: #eee1d3;
+  --color-paper-label: #75685a;
+  --color-paper-connector: #bc9063;
+  --color-paper-callout: #f0c987;
+  --color-paper-callout-text: #5f4528;
+  --color-paper-sage: #f3f8ef;
+  --color-paper-sage-surface: #f7fbf4;
+  --color-paper-sage-rule: #dfe9da;
+  --color-paper-sage-fill: #cddfc8;
+  --color-paper-sage-text: #52654d;
+
+  --radius-paper-inset: 12px;
+  --radius-paper-card: 16px;
+  --radius-paper-scene: 18px;
+
+  --shadow-paper-scene: inset 0 0 0 1px rgb(121 89 56 / 0.1);
+  --shadow-paper-card: 0 18px 38px rgb(70 43 18 / 0.18);
+  --shadow-paper-card-raised: 0 20px 42px rgb(70 43 18 / 0.2);
+  --shadow-paper-card-dark: 0 18px 38px rgb(31 21 12 / 0.24);
+  --shadow-paper-card-hover: 0 28px 52px rgb(70 43 18 / 0.24);
+  --shadow-paper-inset: 0 8px 18px rgb(91 58 25 / 0.1);
+  --shadow-paper-control: 0 4px 10px rgb(70 43 18 / 0.12);
+  --shadow-paper-callout: 0 6px 14px rgb(99 66 29 / 0.12);
+
   /* Filets du reçu de la section « the bill » : pointillés, tirets et
      perforations entre souches. Teinte propre au reçu, entre `rule` et
      `slate-on-ink` — `rule` disparaît sur `paper`, `slate-on-ink` fait
@@ -136,6 +172,8 @@
 :root {
   --edge-extra: min(180px, max(0px, calc((100% - 1200px) / 2 - 24px)));
   --edge-side: max(0px, calc((100% - 1200px) / 2));
+  --paper-motion-duration: 420ms;
+  --paper-motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* La hauteur de la barre de nav, UNE seule source — consommée par la
      sentinelle, les caches collants (comparatif de `/pricing`, barre de saut

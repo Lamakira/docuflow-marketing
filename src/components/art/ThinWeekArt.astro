@@ -1,0 +1,144 @@
+---
+/**
+ * `/solutions/remote-teams` — section « the situation ».
+ *
+ * Deux semaines côte à côte : l'une pleine, l'autre creuse. Sans le score, elles
+ * se ressemblent — c'est exactement l'ambiguïté que la section décrit. Le score
+ * est ce qui les sépare, donc c'est lui qui arrive en dernier.
+ *
+ * Les valeurs sont celles du scénario de la page (38 h / 11 h, 84 et 38).
+ */
+const WEEKS = [
+  { label: "Week 31", hours: "38 h", score: 84, grade: "STRONG", bars: [70, 88, 64, 92, 76] },
+  { label: "Week 32", hours: "11 h", score: 38, grade: "WEAK", bars: [22, 14, 8, 10, 6] },
+];
+---
+
+<div class="weeks" data-art>
+  {
+    WEEKS.map((week, i) => (
+      <section class:list={["week", { thin: i === 1 }]} data-art-in data-use-case-motion-row>
+        <header class="head">
+          <span class="label">{week.label}</span>
+          <span class="hours">{week.hours}</span>
+        </header>
+
+        <div class="bars" aria-hidden="true">
+          {week.bars.map((value) => (
+            <span class="bar" style={`height:${value}%`} data-art-grow />
+          ))}
+        </div>
+
+        {/* Le seul élément qui distingue les deux semaines. */}
+        <footer class="score" data-art-pop>
+          <span class="value">{week.score}<span class="of">/100</span></span>
+          <span class="grade">{week.grade}</span>
+        </footer>
+      </section>
+    ))
+  }
+</div>
+
+<style>
+  .weeks {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .week {
+    border: 1px solid var(--color-rule);
+    border-radius: 8px;
+    background: #fff;
+    padding: 14px 16px 16px;
+  }
+
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  .hours {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 5px;
+    height: 44px;
+    margin-top: 14px;
+  }
+
+  .bar {
+    flex: 1;
+    border-radius: 2px;
+    background: var(--color-live);
+    transform-origin: 50% 100%;
+  }
+
+  /* La semaine creuse garde des barres neutres : rien n'y est « mauvais », il
+     n'y a simplement pas grand-chose d'enregistré. */
+  .thin .bar {
+    background: var(--color-rule);
+  }
+
+  .score {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 14px;
+    border-top: 1px solid var(--color-rule);
+    padding-top: 12px;
+  }
+
+  .value {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .of {
+    font-size: 11px;
+    color: var(--color-slate);
+  }
+
+  .grade {
+    border: 1px solid var(--color-live-on-light);
+    border-radius: 3px;
+    padding: 3px 7px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    color: var(--color-live-on-light);
+  }
+
+  /* Le verdict faible se cerne en ambre : c'est l'état qui demande une action —
+     vérifier le poste, pas la personne. */
+  .thin .grade {
+    border-color: var(--color-hour);
+    color: var(--color-ink);
+    background: var(--color-hour);
+  }
+</style>
+
+<script>
+  import "../../scripts/art";
+</script>

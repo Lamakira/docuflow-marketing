@@ -1,0 +1,940 @@
+---
+/**
+ * Illustration du héros de `/solutions` — « Which of these is you? »
+ *
+ * **Un carrousel de trois dossiers, en boucle.** La carte de devant recule au
+ * fond de la pile, la suivante avance et se pose avec un rebond. La question du
+ * H1 se re-pose donc toute seule : à chaque tour un autre métier devient « le
+ * tien », et sa puce passe à l'ambre.
+ *
+ * ─── ⚠️ LA RÈGLE DE CE DESSIN : TROIS SURFACES DIFFÉRENTES ─────────────────
+ *
+ * Une version précédente donnait la MÊME jauge de progression aux trois cartes.
+ * Deux torts, dont le second est grave :
+ *
+ *  1. L'information devenait floue — 3,4 h dockétées et un forfait consommé à
+ *     62 % ne sont pas la même grandeur, et une barre de progression le
+ *     prétendait.
+ *  2. Surtout, **le dessin disait le contraire de la section.** Tout l'argument
+ *     de `/solutions` est que chaque métier mène par une moitié différente du
+ *     produit ; trois barres identiques affirment que c'est pareil partout.
+ *
+ * Donc chaque carte montre la surface que SON métier mène réellement, d'après
+ * `src/data/solutions.ts` — et ce sont les trois premières rangées de la matrice
+ * de la section suivante (`PillarMatrix`), dans le même ordre :
+ *
+ *   agency   → CLIENTS   → le dossier client et sa jauge de forfait
+ *   finance  → TIME      → le chronomètre en cours et sa feuille de temps
+ *   advisory → ACTIVITY  → le score de qualité de la preuve
+ *
+ * Trois dessins, trois mouvements différents : une jauge qui se remplit, un
+ * compteur qui tourne, un score qui monte. Si une quatrième carte arrive un
+ * jour, elle doit apporter une quatrième surface (KNOWLEDGE, la réponse citée),
+ * pas une variante d'une des trois.
+ *
+ * Les valeurs viennent des pages elles-mêmes ; rien n'est inventé, mais rien
+ * n'est dérivé non plus — si elles changent là-bas, celles-ci deviennent fausses.
+ */
+
+/** Quarante fenêtres d'activité d'une minute. Valeurs figées, jamais tirées au
+ *  hasard : un `Math.random()` au build donnerait un dessin différent à chaque
+ *  déploiement, donc une capture de recette jamais reproductible.
+ *  Quarante et non vingt : à 3px de trait, il faut assez d'échantillons pour que
+ *  la bande se lise comme une mesure et non comme une rangée de bâtons. */
+const ACTIVITY = [
+  52, 78, 84, 61, 47, 73, 91, 22, 58, 66, 44, 55, 81, 88, 39, 72, 95, 63, 49, 77, 34, 69, 86, 41,
+  57, 92, 28, 74, 65, 48, 83, 59, 37, 71, 90, 53, 45, 79, 62, 33,
+];
+
+/** Le chrono du dossier comptable : 0:26:14 = 1574 s. Le compteur monte jusque
+ *  là à l'arrivée de la carte, ce qui le fait lire comme un chrono qui tourne. */
+const ELAPSED = 26 * 60 + 14;
+
+/* ── Le dossier agence, « dollars first » ───────────────────────────────────
+ * Un pourcentage est une abstraction ; un montant, non. La carte énonce donc ce
+ * qui est consommé et ce qui reste EN DOLLARS, la jauge se réduit à un filet
+ * sous eux, et le taux part dans la bande de specs.
+ *
+ * ⚠️ TOUT EST DÉRIVÉ de trois valeurs — le forfait, le pourcentage et le jour.
+ * Écrire « $29,760 » et « $18,240 » à la main marcherait aujourd'hui et
+ * mentirait le jour où le pourcentage bouge. Les sommes doivent tomber juste
+ * pour le premier lecteur qui les additionne. */
+const BUDGET = 48000;
+const PERCENT = 62;
+const DAY = 11;
+const DAYS = 30;
+
+const CONSUMED = Math.round((BUDGET * PERCENT) / 100);
+const REMAINING = BUDGET - CONSUMED;
+const PER_DAY = Math.round(CONSUMED / DAY);
+
+/** Séparateur de milliers posé à la main plutôt que `toLocaleString()` : celui-ci
+ *  dépend de la locale de la MACHINE DE BUILD, et livrerait « 29 760 » ou
+ *  « 29.760 » selon l'endroit où le site est compilé. */
+const money = (value: number) => `$${value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+---
+
+{/* Sans JS, `.stack` reste une colonne de trois dossiers lisibles — c'est la
+    classe `is-live`, posée par le script, qui les empile en carrousel. L'état
+    superposé n'est donc JAMAIS dans une règle CSS statique. */}
+<div class="stack" data-stack>
+  {/* ── AGENCY · le dossier client ── */}
+  <article class="card" data-card>
+    <header class="head">
+      <span class="tag">agency</span>
+      <span class="name">Northwind Systems</span>
+      <span class="head-note">{money(BUDGET)} budget</span>
+    </header>
+
+    <div class="body">
+      <div class="amounts">
+        <div>
+          <p class="amount-label amount-label-on">Consumed</p>
+          <p class="amount" data-count="money" data-to={CONSUMED}>{money(CONSUMED)}</p>
+        </div>
+        <div>
+          <p class="amount-label">Remaining</p>
+          <p class="amount amount-rest">{money(REMAINING)}</p>
+        </div>
+      </div>
+
+      {/* La jauge n'est plus qu'un filet sous les montants : ce sont eux qui
+          portent l'information, elle n'en donne que la proportion. */}
+      <div class="hairline">
+        <span class="hairline-fill" data-fill></span>
+      </div>
+    </div>
+
+    {/* Bande de specs à fond perdu au pied de la carte. Même grammaire que
+        `product/SpecStrip.astro` — valeur au-dessus, libellé mono en dessous,
+        filets 1px entre les cellules — mais sa boîte est un encadré blanc
+        arrondi, alors qu'ici la bande doit toucher les trois bords. D'où une
+        implémentation locale plutôt qu'une variante de plus sur le composant
+        partagé. */}
+    <dl class="spec">
+      <div class="spec-cell">
+        <dt class="spec-label">Used</dt>
+        <dd class="spec-value">{PERCENT}%</dd>
+      </div>
+      <div class="spec-cell">
+        <dt class="spec-label">Days elapsed</dt>
+        <dd class="spec-value">{DAY} / {DAYS}</dd>
+      </div>
+      <div class="spec-cell">
+        <dt class="spec-label">Per day so far</dt>
+        <dd class="spec-value">{money(PER_DAY)}</dd>
+      </div>
+    </dl>
+  </article>
+
+  {/* ── FINANCE · le chronomètre ── */}
+  <article class="card" data-card>
+    <header class="head">
+      <span class="tag">finance</span>
+      <span class="name">Kestrel Foods</span>
+    </header>
+
+    {/* Le « live block » : l'entrée EN COURS est inversée en `ink` et occupe
+        toute la largeur de la carte ; tout ce qui est déjà consigné recule en
+        dessous, sur blanc. C'est ce qui rend « ce qui se passe maintenant »
+        lisible d'un coup d'oeil, sans avoir à comparer des durées. */}
+    <div class="body">
+      <div class="live">
+        <span class="live-dot" aria-hidden="true"></span>
+
+        <span class="live-text">
+          <span class="live-task">T2 return</span>
+          <span class="live-sub">year-end adjustments</span>
+        </span>
+
+        <span class="live-time" data-count="duration" data-to={ELAPSED}>0:26:14</span>
+
+        {/* Élément d'interface inerte : la maquette ne prétend pas être
+            cliquable. `<span>` et non `<button>` — un bouton qui ne fait rien
+            est un mensonge pour un lecteur d'écran comme pour le clavier. */}
+        <span class="live-pause" aria-hidden="true">
+          <span></span><span></span>
+        </span>
+      </div>
+
+      <ul class="entries">
+        {/* Le total est la SOMME des deux lignes (41:20 + 4:11 = 45:31). Une
+            valeur ronde inventée trahirait le dessin au premier lecteur qui
+            additionne. */}
+        <li class="entries-head">
+          <span class="entries-label">Earlier today</span>
+          <span class="dur-total">0:45:31</span>
+        </li>
+        <li><span class="entry">Bramble Cafe · Bookkeeping</span><span class="dur">0:41:20</span></li>
+        <li><span class="entry">Novak · Payroll call</span><span class="dur">0:04:11</span></li>
+      </ul>
+    </div>
+  </article>
+
+  {/* ── ADVISORY · le score de qualité de la preuve ── */}
+  <article class="card" data-card>
+    <header class="head">
+      <span class="tag">advisory</span>
+      <span class="name">Meridian Group</span>
+    </header>
+
+    <div class="body">
+      <div class="score">
+        <div>
+          <p class="score-label">Evidence quality</p>
+          <p class="score-value"><span data-count="int" data-to="84">84</span><span class="score-of"
+              >/100</span
+            ></p>
+        </div>
+        <span class="grade">STRONG</span>
+      </div>
+
+      <div class="bars" aria-hidden="true">
+        {
+          ACTIVITY.map((value) => (
+            <span
+              class:list={["bar", { "bar-high": value > 70 }]}
+              style={`height:${value}%`}
+              data-bar
+            />
+          ))
+        }
+      </div>
+    </div>
+  </article>
+</div>
+
+<style>
+  /* Repli sans JS : trois dossiers en colonne. */
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Carrousel : les cartes sortent du flux et s'empilent par le bas. Hauteur du
+     conteneur ET hauteur commune des cartes sont posées par le script — elles
+     dépendent de la police et du contenu le plus haut. */
+  /* ⚠️ `z-index: 0` n'est PAS décoratif : il crée un contexte d'empilement, et
+     c'est lui qui enferme les `z-index` des cartes (30 / 20 / 10) à l'intérieur
+     de la pile.
+     Sans lui, ces valeurs vivent dans le contexte racine et entrent en
+     concurrence directe avec `.nav-header`, qui vaut aussi `z-30`. À égalité,
+     c'est l'ordre du DOM qui tranche — et `<main>` vient APRÈS `<header>` :
+     la pastille de nav passait donc derrière les cartes une fois repliée.
+     Toute la pile compte désormais pour un seul plan, au rang 0.
+     Même piège que le panneau du méga-menu, dans l'autre sens : là il ne faut
+     surtout PAS de `z-index`, ici il en faut un — parce que ce bloc-ci contient
+     des enfants empilés, alors que celui-là n'est qu'un descendant. */
+  .stack.is-live {
+    display: block;
+    position: relative;
+    z-index: 0;
+  }
+
+  .stack.is-live .card {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    /* Hauteur commune : les trois cartes n'ont pas le même contenu, et sans ça
+       les bandes visibles de la pile seraient de hauteurs différentes. */
+    min-height: var(--card-h);
+    /* Origine en bas : une carte qui recule rétrécit vers le bas de la pile et
+       laisse dépasser son en-tête au-dessus de celle de devant. */
+    transform-origin: 50% 100%;
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--color-rule);
+    border-radius: 8px;
+    background: #fff;
+    /* 14px en haut : c'est le premier terme du calcul de bande visible du
+       carrousel (voir `POS` dans le script). */
+    padding: 14px 20px 18px;
+  }
+
+  .head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    /* La rangée d'en-tête est ce qui dépasse de la pile : elle ne doit jamais
+       passer à la ligne, sinon les bandes visibles changent de hauteur. */
+    white-space: nowrap;
+  }
+
+  /* Le corps se centre dans la hauteur commune : une carte plus courte que la
+     plus haute ne laisse pas un trou en bas. */
+  .body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    margin-top: 16px;
+  }
+
+  .tag {
+    flex: none;
+    border: 1px solid var(--color-rule);
+    border-radius: 3px;
+    padding: 3px 7px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+    /* Sortie RAPIDE (0,14 s, sans délai) : la puce qui recule doit avoir perdu
+       son ambre avant que la suivante ne l'attrape. Avec une durée symétrique,
+       les deux se croisent et on voit DEUX ambres à l'écran pendant un tiers de
+       seconde — la « One Amber Rule » de `DESIGN.md` est justement la règle qui
+       fait tenir le rail comme information plutôt que comme décor, et un
+       carrousel n'a pas le droit de la casser vingt fois par minute. */
+    transition:
+      background-color 0.14s ease,
+      color 0.14s ease,
+      border-color 0.14s ease;
+  }
+
+  /* Le métier de devant : la seule note ambre du dessin, et elle voyage avec la
+     carte qui arrive. Arrivée plus lente et retardée — la place est libre. */
+  .card.is-front .tag {
+    transition:
+      background-color 0.4s ease 0.16s,
+      color 0.4s ease 0.16s,
+      border-color 0.4s ease 0.16s;
+    border-color: transparent;
+    background: var(--color-hour);
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+
+  .name {
+    overflow: hidden;
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+    text-overflow: ellipsis;
+  }
+
+  .entry {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-slate);
+  }
+
+  /* ── AGENCY : les dollars d'abord ── */
+
+  .head-note {
+    margin-left: auto;
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-slate);
+  }
+
+  .amounts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .amount-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  /* Le vert de « consommé » porte du texte : variante lisible obligatoire
+     (5,53:1 sur blanc, contre 3,45:1 pour `live` plein). */
+  .amount-label-on {
+    color: var(--color-live-on-light);
+  }
+
+  /* Le montant est un relevé du système, donc mono. 24px : la même valeur hors
+     gamme que le score de la carte conseil, réutilisée plutôt que multipliée. */
+  .amount {
+    margin-top: 7px;
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Ce qui reste est une information secondaire : même taille, voix plus
+     basse. C'est le contraste entre les deux qui dit lequel compte. */
+  .amount-rest {
+    color: var(--color-slate);
+  }
+
+  .hairline {
+    display: block;
+    overflow: hidden;
+    height: 3px;
+    margin-top: 18px;
+    border-radius: 999px;
+    background: var(--color-rule);
+  }
+
+  .hairline-fill {
+    display: block;
+    height: 100%;
+    width: 62%;
+    border-radius: 999px;
+    background: var(--color-live-on-light);
+    transform-origin: 0% 50%;
+  }
+
+  /* Bande de specs : à fond perdu sur les trois bords bas de la carte. Le rayon
+     reprend celui de la carte moins son filet (8 − 1). */
+  .spec {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 18px -20px -18px;
+    border-top: 1px solid var(--color-rule);
+    border-radius: 0 0 7px 7px;
+    background: var(--color-paper);
+  }
+
+  .spec-cell {
+    display: flex;
+    /* Libellé avant valeur dans le DOM — une paire terme/définition, c'est ce
+       qu'un lecteur d'écran doit entendre. L'affichage les inverse parce qu'à
+       l'oeil c'est le chiffre qui mène. Même dispositif que `SpecStrip`. */
+    flex-direction: column-reverse;
+    padding: 10px 14px 11px;
+  }
+
+  .spec-cell + .spec-cell {
+    border-left: 1px solid var(--color-rule);
+  }
+
+  .spec-value {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .spec-label {
+    margin-top: 3px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+
+  /* ── FINANCE : le « live block » ──
+     Bande `ink` À FOND PERDU dans la carte : elle touche les deux bords, d'où
+     les marges négatives qui annulent le padding. Pas de rayon — un bloc
+     arrondi flotterait DANS la carte, alors qu'il doit la traverser.
+     L'inversion n'est pas décorative : c'est ce qui sépare l'entrée en cours de
+     tout ce qui est déjà consigné, sans avoir à lire une seule durée. */
+  .live {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-inline: -20px;
+    background: var(--color-ink);
+    padding: 13px 20px;
+  }
+
+  /* Remplissage pur, aucun signe porté : `live` et non `live-on-light`. Sur
+     `ink`, c'est de toute façon le vert plein qui reste lisible. */
+  .live-dot {
+    height: 8px;
+    width: 8px;
+    flex: none;
+    border-radius: 999px;
+    background: var(--color-live);
+  }
+
+  .live-text {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  /* Une personne a nommé la tâche : Switzer. La précision sous elle est ce que
+     le système a enregistré : mono. La règle Recorded/Written vaut aussi à
+     l'intérieur d'une carte. */
+  .live-task {
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    text-overflow: ellipsis;
+  }
+
+  .live-sub {
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-slate-on-ink);
+    text-overflow: ellipsis;
+  }
+
+  /* ⚠️ L'ambre du chrono est l'usage CANONIQUE de la couleur — « l'étape en
+     cours, et elle seule ». Sur `ink` il tient 8,4:1.
+     Reste que la carte porte aussi une puce ambre (le métier au premier plan),
+     donc deux marques ambre coexistent dans la même vue : c'est un écart à la
+     « One Amber Rule », assumé parce qu'il vient de la référence validée. À
+     joindre à l'arbitrage ambre déjà en attente — voir « À faire ». */
+  .live-time {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-hour);
+    /* Chiffres à chasse fixe : sans ça le compteur qui monte fait trembler la
+       ligne à chaque changement de digit. */
+    font-variant-numeric: tabular-nums;
+  }
+
+  .live-pause {
+    display: grid;
+    height: 30px;
+    width: 30px;
+    flex: none;
+    grid-auto-flow: column;
+    place-content: center;
+    gap: 3px;
+    border: 1px solid var(--color-ink-border);
+    border-radius: 6px;
+    background: var(--color-ink-raised);
+  }
+
+  .live-pause span {
+    height: 11px;
+    width: 3px;
+    border-radius: 1px;
+    background: var(--color-slate-on-ink);
+  }
+
+  .entries {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .entries li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 0;
+  }
+
+  /* Filet ENTRE les lignes seulement : la bande `ink` fait déjà la séparation
+     du haut, un filet de plus juste sous elle doublerait le trait. */
+  .entries li + li {
+    border-top: 1px solid var(--color-rule);
+  }
+
+  /* La rangée de tête n'est pas une entrée : elle nomme ce qui suit et en donne
+     le total. D'où le mono en capitales, le registre « annotation machine ». */
+  .entries-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  .dur-total {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-slate);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .dur {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── ADVISORY : le score de preuve ── */
+
+  /* Mint seul, sans filet vert. Le fond tinté sépare déjà le bloc ; le cerner
+     en `live-on-light` ajoutait un trait dur autour d'une zone qui contient
+     ensuite un chiffre et une pastille — trois niveaux de vert empilés. */
+  .score {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-radius: 6px;
+    background: var(--color-band-mint);
+    padding: 11px 12px;
+  }
+
+  .score-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-live-on-light);
+  }
+
+  /* Un relevé du système, donc mono — la règle Recorded/Written.
+     24px et non 26 : `DESIGN.md` classe les gros chiffres mono en valeurs non
+     systématisées et n'en compte que deux (24px pour le chiffre de la bande de
+     preuve, 34px pour un prix). Reprendre le 24 existant vaut mieux que d'en
+     inventer un troisième — la règle est explicite : si une valeur hors gamme
+     se répète, on la promeut, on ne la recopie pas. */
+  .score-value {
+    margin-top: 4px;
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .score-of {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-slate);
+  }
+
+  /* Pastille CERNÉE, pas pleine — c'est le `chip-source` du système (vert
+     porteur de texte, filet 1px, fond transparent), celui des sources citées
+     d'une réponse IA. Un aplat vert foncé posé sur du mint était le point le
+     plus lourd de la pile : une tache sombre dans un bloc clair.
+     `live-on-light` sur `band-mint` tient 4,85:1 — le vert plein n'aurait pas
+     pu porter du texte ici de toute façon. */
+  .grade {
+    flex: none;
+    border: 1px solid var(--color-live-on-light);
+    border-radius: 3px;
+    padding: 3px 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--color-live-on-light);
+  }
+
+  /* Barres à largeur FIXE, espacées par `space-between`, et non `flex: 1`.
+     En `flex: 1`, vingt barres sur ~500px faisaient ~22px de large : des dalles,
+     pas un relevé. L'histogramme d'`EvidenceMock` tient ses barres autour de
+     9px parce que sa carte est étroite — c'est la finesse du trait qui fait lire
+     une mesure, pas le nombre d'échantillons. À 3px, la bande redevient un
+     instrument et cesse de peser dans la carte. */
+  .bars {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    height: 24px;
+    margin-top: 14px;
+  }
+
+  .bar {
+    width: 3px;
+    flex: none;
+    border-radius: 999px;
+    background: var(--color-rule);
+    transform-origin: 50% 100%;
+  }
+
+  /* Les barres hautes passent au vert : un SEUIL sur la valeur, jamais un rang.
+     Une coloration en `nth-child` donnait un vert tous les trois, donc un rythme
+     régulier qui se lisait comme un motif décoratif et non comme une mesure. */
+  .bar-high {
+    background: var(--color-live);
+  }
+</style>
+
+<script>
+  /**
+   * Le carrousel de dossiers du héros `/solutions`.
+   *
+   * Boucle continue : une animation d'arrivée se joue une fois puis laisse un
+   * dessin mort. Ici la pile tourne tant qu'elle est à l'écran.
+   *
+   * Chaque carte a SON mouvement, parce qu'elle montre une surface différente :
+   * la jauge se remplit, le chrono monte, le score compte. C'est ce qui empêche
+   * les trois cartes de se ressembler — voir la règle en tête du composant.
+   *
+   * Quatre garde-fous, dans l'ordre d'importance :
+   *  1. **`prefers-reduced-motion` : la boucle ne démarre jamais**, et RIEN
+   *     n'est posé — la colonne de trois dossiers est déjà l'état correct.
+   *  2. **Hors écran, ça s'arrête** (IntersectionObserver) : une timeline qui
+   *     tourne dans le vide brûle de la batterie.
+   *  3. **Onglet caché, ça s'arrête**, sinon la boucle rattrape son retard d'un
+   *     coup au retour.
+   *  4. **Au survol, ça s'arrête** : un lecteur qui regarde une carte doit
+   *     pouvoir la lire jusqu'au bout.
+   */
+  import gsap from "gsap";
+
+  const root = document.querySelector<HTMLElement>("[data-stack]");
+
+  if (root) {
+    const cards = [...root.querySelectorAll<HTMLElement>("[data-card]")];
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    if (cards.length) {
+      /** Échelle par rang. Le décalage vertical, lui, est CALCULÉ dans
+       *  `measure()` — voir plus bas. */
+      const SCALES = [1, 0.96, 0.92];
+
+      /** Hauteur de bande visible voulue pour chaque carte du fond.
+       *
+       *  ⚠️ Elle doit rester supérieure à `padding-top + hauteur de l'en-tête`
+       *  (14 + 23,5 ≈ 37,5px), sinon le nom du dossier se coupe en plein glyphe
+       *  et la pile se lit comme un défaut de rendu.
+       *
+       *  Le décalage NE PEUT PAS être écrit en dur : la bande vaut
+       *  `y − (1 − échelle) × hauteur`, donc ce que l'échelle mange du haut de la
+       *  carte dépend de la hauteur de la carte. Avec un décalage figé à 48px, le
+       *  passage au « live block » a fait grimper la carte de 143 à 250px et la
+       *  bande est tombée de 42 à 38px — 0,5px de marge, mesuré. On inverse donc
+       *  la formule : `y = −(BANDE × rang + hauteur × (1 − échelle))`. */
+      const BAND = 44;
+
+      let POS = SCALES.map((scale, i) => ({ y: -BAND * i, scale, z: 30 - i * 10 }));
+
+      const HOLD = 3.4;
+      const ENTER = 0.9;
+
+      /** Rang courant de chaque carte : `order[0]` est la carte de devant. */
+      let order = cards.map((_, i) => i);
+
+      /** `1574` → `0:26:14`. Le compteur écrit du texte, donc il lui faut son
+       *  format ; sans lui on verrait défiler des secondes brutes. */
+      const hms = (total: number) => {
+        const seconds = Math.max(0, Math.round(total));
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+      };
+
+      /** Même séparateur de milliers que le rendu serveur, et posé à la main
+       *  pour la même raison : `toLocaleString()` suivrait la locale du
+       *  NAVIGATEUR, et le compteur afficherait « 29 760 » chez un visiteur
+       *  français avant de retomber sur « $29,760 » à la fin. */
+      const money = (value: number) =>
+        `$${Math.round(value)
+          .toString()
+          .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+
+      /** Un compteur écrit du TEXTE : il lui faut le format de sa grandeur. */
+      const format = (value: number, kind?: string) => {
+        if (kind === "duration") return hms(value);
+        if (kind === "money") return money(value);
+        return String(Math.round(value));
+      };
+
+      /** Le mouvement propre à la carte qui arrive devant. Chaque surface a le
+       *  sien — c'est le point du dessin. */
+      const enter = (card: HTMLElement) => {
+        const fill = card.querySelector<HTMLElement>("[data-fill]");
+        if (fill) {
+          gsap.fromTo(
+            fill,
+            { scaleX: 0 },
+            { scaleX: 1, duration: ENTER, delay: 0.25, ease: "power2.inOut", overwrite: "auto" }
+          );
+        }
+
+        for (const el of card.querySelectorAll<HTMLElement>("[data-count]")) {
+          const to = Number(el.dataset.to ?? 0);
+          const kind = el.dataset.count;
+          const counter = { value: 0 };
+          gsap.to(counter, {
+            value: to,
+            duration: ENTER,
+            delay: 0.25,
+            ease: "power2.out",
+            overwrite: "auto",
+            onUpdate: () => el.textContent = format(counter.value, kind),
+            // Le compteur DOIT finir sur la valeur exacte du HTML : un arrondi
+            // d'interpolation laisserait « 83 » ou « $29,759 » à l'écran pour
+            // toujours, et sur cette carte les sommes doivent s'additionner.
+            onComplete: () => {
+              el.textContent = format(to, kind);
+            },
+          });
+        }
+
+        const bars = card.querySelectorAll<HTMLElement>("[data-bar]");
+        if (bars.length) {
+          gsap.fromTo(
+            bars,
+            { scaleY: 0 },
+            {
+              scaleY: 1,
+              duration: 0.5,
+              delay: 0.3,
+              stagger: 0.015,
+              ease: "power2.out",
+              overwrite: "auto",
+            }
+          );
+        }
+      };
+
+      /** Hauteur commune des cartes ET du conteneur : mesurées, jamais écrites
+       *  en dur — elles dépendent de la police et du contenu le plus haut. */
+      const measure = () => {
+        root.style.removeProperty("--card-h");
+        const tallest = Math.max(...cards.map((card) => card.offsetHeight));
+        root.style.setProperty("--card-h", `${tallest}px`);
+
+        // Le décalage est dérivé de la hauteur RÉELLE, jamais figé : c'est ce
+        // qui garantit une bande de `BAND` px quels que soient le contenu, la
+        // police et la largeur.
+        POS = SCALES.map((scale, i) => ({
+          y: -(BAND * i + tallest * (1 - scale)),
+          scale,
+          z: 30 - i * 10,
+        }));
+
+        root.style.height = `${tallest - POS[POS.length - 1].y}px`;
+      };
+
+      const place = (animate: boolean) => {
+        order.forEach((cardIndex, rank) => {
+          const card = cards[cardIndex];
+          const spot = POS[rank];
+          const front = rank === 0;
+
+          card.classList.toggle("is-front", front);
+
+          if (!animate) {
+            gsap.set(card, { y: spot.y, scale: spot.scale, zIndex: spot.z });
+            return;
+          }
+
+          gsap.to(card, {
+            y: spot.y,
+            scale: spot.scale,
+            // Le rebond n'est QUE sur la carte qui arrive devant : appliqué à
+            // toute la pile, il ferait tanguer le dessin entier.
+            duration: front ? ENTER : 0.65,
+            ease: front ? "back.out(1.7)" : "power2.inOut",
+            overwrite: "auto",
+          });
+
+          // La carte qui part au fond ne passe derrière qu'à mi-course : sans ce
+          // délai, elle plonge d'un coup alors qu'elle est encore grande.
+          gsap.to(card, {
+            zIndex: spot.z,
+            duration: 0,
+            delay: rank === POS.length - 1 ? 0.22 : 0,
+            overwrite: "auto",
+          });
+
+          if (front) enter(card);
+        });
+      };
+
+      const advance = () => {
+        order = [...order.slice(1), order[0]];
+        place(true);
+      };
+
+      /** L'horloge. `gsap.delayedCall` et non un tween vide (`gsap.to({}, …)`) :
+       *  un tween sans propriété animable est une idiome fragile — GSAP n'a rien
+       *  à interpoler et le déclenchement des callbacks n'est pas garanti. */
+      let timer: gsap.core.Tween | null = null;
+      let hovered = false;
+
+      const stop = () => {
+        timer?.kill();
+        timer = null;
+      };
+
+      const tick = () => {
+        advance();
+        timer = gsap.delayedCall(HOLD, tick);
+      };
+
+      const start = () => {
+        if (timer || reduced.matches || hovered || document.hidden) return;
+        timer = gsap.delayedCall(HOLD, tick);
+      };
+
+      // ⚠️ RIEN ne doit être posé hors de cette branche. En mouvement réduit, la
+      // colonne de trois dossiers EST déjà l'état correct : appliquer `place()`
+      // sans passer en `is-live` collerait des `translate(-48px)` à des cartes
+      // restées dans le flux, donc trois dossiers décalés au hasard.
+      if (!reduced.matches) {
+        root.classList.add("is-live");
+        // Mesurer APRÈS le passage en absolu : en flux, la hauteur de la pile
+        // n'est pas celle d'une carte.
+        measure();
+        place(false);
+
+        const view = new IntersectionObserver(
+          ([entry]) => {
+            if (entry.isIntersecting) {
+              // La carte de devant joue son mouvement à la première arrivée à
+              // l'écran, sinon la pile paraît figée jusqu'au premier tour.
+              if (!timer) enter(cards[order[0]]);
+              start();
+            } else {
+              stop();
+            }
+          },
+          { threshold: 0.25 }
+        );
+        view.observe(root);
+
+        document.addEventListener("visibilitychange", () => (document.hidden ? stop() : start()));
+        root.addEventListener("pointerenter", () => {
+          hovered = true;
+          stop();
+        });
+        root.addEventListener("pointerleave", () => {
+          hovered = false;
+          start();
+        });
+
+        let queued = false;
+        window.addEventListener(
+          "resize",
+          () => {
+            if (queued) return;
+            queued = true;
+            requestAnimationFrame(() => {
+              queued = false;
+              measure();
+              // Les décalages dépendent de la hauteur, qui dépend de la largeur :
+              // remesurer sans reposer laisserait les cartes sur les anciens `y`.
+              place(false);
+            });
+          },
+          { passive: true }
+        );
+
+        // Les polices auto-hébergées changent la hauteur des cartes, donc les
+        // décalages : remesurer ET reposer, comme au redimensionnement.
+        if (document.fonts?.ready) {
+          document.fonts.ready.then(() => {
+            measure();
+            place(false);
+          });
+        }
+      }
+    }
+  }
+</script>

@@ -1,0 +1,159 @@
+---
+import SectorHero from "./SectorHero.astro";
+import PainPoints from "./PainPoints.astro";
+import AudienceSection from "./AudienceSection.astro";
+import SectorPillar from "./SectorPillar.astro";
+import ScenarioBand from "./ScenarioBand.astro";
+import ObjectionSection from "./ObjectionSection.astro";
+import FinalCta from "../sections/FinalCta.astro";
+import UseCaseArt from "../art/UseCaseArt.astro";
+import type { UseCasePage } from "../../data/solutions";
+import { PRODUCT_PILLARS, type PillarId } from "../../data/product";
+
+/**
+ * Le corps d'une page CAS D'USAGE — `/solutions/{use-case}`.
+ *
+ * ⚠️ SON SQUELETTE DIFFÈRE DE `SectorPage`, et c'est tout l'enjeu. Quatorze
+ * pages sous `/solutions` bâties sur un seul gabarit seraient la doorway page
+ * que ce dépôt a déjà refusée une fois — et le référencement étant la raison
+ * même de ces pages, un décalque les rendrait contre-productives.
+ *
+ *   secteur      hero → problème → 3-4 piliers → scénario → objection → frères → CTA
+ *   cas d'usage  hero → situation → QUI → 2 piliers → scénario → objection → CTA
+ *
+ * La différence n'est pas cosmétique : « qui en souffre le plus » monte en
+ * troisième position. Sur une page secteur le métier est déjà dans
+ * l'oeil-de-boeuf du héros, les frères peuvent donc attendre la fin. Sur une
+ * page cas d'usage la première question du lecteur est « est-ce que ça parle de
+ * moi ? », et la réponse est un nom de métier : elle vient tôt ou elle ne sert
+ * à rien.
+ *
+ * Rythme des bandes — vérifié, aucune voisine identique, et la progression
+ * froid → chaud → ink de `DESIGN.md` est respectée :
+ *
+ *   paper → white     → paper → mint → warm → ink      → white     → hour
+ *   Hero    Situation   Qui     P.01   P.02   Scenario   Objection   Cta
+ *
+ * Les bandes des piliers viennent de `pillarsOf(…, 1)` dans `solutions.ts` —
+ * l'offset est une propriété du squelette, pas un choix de page.
+ */
+interface Props {
+  page: UseCasePage;
+}
+
+const { page } = Astro.props;
+const { copy, pillars } = page;
+const warmMockups = page.slug === "client-billing";
+
+/** Le nom du pilier produit pour le lien de sortie de chaque bloc, lu depuis la
+ *  même source que l'ancre visée — « Everything in Clients → » ne peut donc pas
+ *  pointer sur `#time`. */
+const PRODUCT_NAMES = Object.fromEntries(
+  PRODUCT_PILLARS.map((pillar) => [pillar.id, pillar.name])
+) as Record<PillarId, string>;
+---
+
+<div data-use-case-page={page.slug}>
+<SectorHero
+  tag={copy.eyebrow}
+  h1={copy.h1}
+  lede={copy.lede}
+  mock={copy.hero}
+  warmMockup={warmMockups}
+/>
+
+{/* Le dessin est propre au cas d'usage, jamais le relevé troué des pages
+    secteur : la page doit s'annoncer avant d'être lue. `UseCaseArt` lève si un
+    slug n'a pas le sien. */}
+<PainPoints
+  eyebrow="The situation"
+  heading={copy.situation.heading}
+  points={copy.situation.points}
+>
+  <UseCaseArt slot="art" slug={page.slug} spot="situation" />
+</PainPoints>
+
+<AudienceSection audience={copy.audience} heading={copy.audienceHeading} />
+
+{
+  pillars.map((pillar) => (
+    <SectorPillar
+      pillar={pillar}
+      productName={PRODUCT_NAMES[pillar.ref]}
+      warmMockup={warmMockups}
+    />
+  ))
+}
+
+<ScenarioBand
+  eyebrow={copy.scenario.eyebrow}
+  heading={copy.scenario.heading}
+  lines={copy.scenario.lines}
+  mock={copy.scenario.mock}
+  warmMockup={warmMockups}
+/>
+
+{/* Le dessin par défaut d'`ObjectionSection` est la capture illisible — la
+    réponse commune aux huit objections SECTEUR. Une objection de cas d'usage
+    parle d'autre chose, donc elle amène le sien. */}
+<ObjectionSection
+  eyebrow={copy.objection.eyebrow}
+  heading={copy.objection.heading}
+  body={copy.objection.body}
+  argument={copy.objection.argument}
+  guarantees={copy.objection.guarantees}
+  artLayout="above-guarantees"
+>
+  <UseCaseArt slot="art" slug={page.slug} spot="objection" />
+</ObjectionSection>
+
+<FinalCta title={copy.cta.title} note={copy.cta.note} />
+</div>
+
+<style>
+  /* Sur les pages cas d'usage, les maquettes se comportent comme les relevés,
+     feuilles et dossiers que l'on rapproche pour les inspecter. Le mouvement
+     reste assez court pour ne pas faire passer ces surfaces inertes pour des
+     contrôles. */
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    :global([data-use-case-page] [data-use-case-motion-card]) {
+      transform-origin: 50% 50%;
+      transition:
+        transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
+        border-color 180ms ease;
+    }
+
+    :global([data-use-case-page] [data-use-case-motion-card]:hover) {
+      transform: translateY(-3px) scale(1.012);
+      will-change: transform;
+    }
+
+    :global([data-use-case-page] [data-use-case-motion-row]) {
+      transform-origin: 50% 50%;
+      transition:
+        transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+        background-color 180ms ease;
+    }
+
+    :global([data-use-case-page] [data-use-case-motion-row]:hover) {
+      transform: translateX(4px) scale(1.008);
+      background-color: color-mix(in srgb, var(--color-paper) 72%, white);
+      will-change: transform;
+    }
+
+    :global([data-use-case-page] [data-use-case-motion-guarantee]) {
+      transform-origin: 50% 50%;
+      transition:
+        transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+        border-color 180ms ease,
+        background-color 180ms ease;
+    }
+
+    :global([data-use-case-page] [data-use-case-motion-guarantee]:hover) {
+      transform: scale(1.018);
+      border-color: color-mix(in srgb, var(--color-live) 45%, var(--color-rule));
+      background-color: color-mix(in srgb, var(--color-paper) 82%, white);
+      will-change: transform;
+    }
+  }
+</style>

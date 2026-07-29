@@ -1,0 +1,141 @@
+---
+/**
+ * `/solutions/employee-productivity` — section « objection » (consentement).
+ *
+ * Ce que la mesure enregistre, énoncé ligne par ligne, avec ce qu'elle ne fait
+ * PAS en regard. L'objection est « personne ne veut d'un score dans le dos » :
+ * la réponse tient dans la dernière ligne — le score note le relevé, jamais la
+ * personne, et il ne change pas le temps compté.
+ *
+ * Les paires viennent des garanties de la section ; aucune n'est ajoutée ici.
+ */
+const PAIRS = [
+  { on: "Activity in 60-second windows", off: "No keystroke content" },
+  { on: "Idle prompted with a countdown", off: "Never deducted silently" },
+  { on: "Evidence score on the record", off: "Never a score on the person" },
+];
+---
+
+<div class="measure" data-art>
+  <header class="head" data-art-in>
+    <span class="label">What is recorded</span>
+    <span class="live">
+      <span class="dot" aria-hidden="true"></span>
+      Visible while running
+    </span>
+  </header>
+
+  <ul class="pairs">
+    {
+      PAIRS.map((pair) => (
+        <li data-art-in data-use-case-motion-row>
+          <span class="on">
+            <span class="tick" aria-hidden="true"></span>
+            {pair.on}
+          </span>
+          <span class="off">{pair.off}</span>
+        </li>
+      ))
+    }
+  </ul>
+
+  <footer class="foot" data-art-pop>Openable by the person it describes</footer>
+</div>
+
+<style>
+  .measure {
+    border: 1px solid var(--color-rule);
+    border-radius: 8px;
+    background: #fff;
+    padding: 14px 18px 16px;
+  }
+
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 12px;
+  }
+
+  .label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  .live {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    border-radius: 999px;
+    background: var(--color-band-mint);
+    padding: 4px 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-live-on-light);
+  }
+
+  .dot {
+    height: 7px;
+    width: 7px;
+    border-radius: 999px;
+    background: var(--color-live);
+  }
+
+  .pairs {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .pairs li {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-top: 1px solid var(--color-rule);
+    padding: 10px 0;
+  }
+
+  .on {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 12.5px;
+    color: var(--color-ink);
+  }
+
+  .tick {
+    height: 11px;
+    width: 11px;
+    flex: none;
+    border-radius: 999px;
+    border: 2px solid var(--color-live-on-light);
+  }
+
+  /* La contrepartie, en retrait et décalée sous la coche : ce que la mesure ne
+     fait pas compte autant que ce qu'elle fait. */
+  .off {
+    margin-left: 20px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-slate);
+  }
+
+  .foot {
+    margin-top: 12px;
+    border-top: 1px solid var(--color-rule);
+    padding-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-live-on-light);
+  }
+</style>
+
+<script>
+  import "../../scripts/art";
+</script>

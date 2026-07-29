@@ -1,0 +1,154 @@
+---
+import { Icon } from "astro-icon/components";
+import type { SECTORS } from "../data/site";
+
+/** Une entrée de l'index secteurs — le registre réglé du handoff `3c` :
+ *  numéro mono, icône, nom en display, puce de domaine, flèche ambre, blurb
+ *  dessous. Pas de carte, pas de boîte : un filet 1 px en haut et un lavis au
+ *  survol.
+ *
+ *  Extrait de `sections/Sectors.astro` le 27 juillet 2026, quand `/solutions` a
+ *  eu besoin du même registre. Un composant partagé plutôt qu'une copie : le
+ *  dessin tient dans ~90 lignes de CSS, et deux exemplaires auraient divergé au
+ *  premier réglage. Ce qui change entre les deux pages, c'est la SECTION autour
+ *  — titre, intro, colonne voisine — pas l'entrée. */
+interface Props {
+  sector: (typeof SECTORS)[number];
+  /** Rang dans la liste, base 0. L'affichage le passe en `01`, `02`… */
+  index: number;
+  /** Le lavis de survol est du blanc à 55 % : invisible sur une bande blanche.
+   *  Seule la section connaît son fond, donc c'est elle qui le dit. */
+  onWhite?: boolean;
+  /** Remplace le `blurb` du secteur. Les deux index (accueil, `/solutions`)
+   *  n'en passent pas et gardent le blurb ; une page cas d'usage passe la raison
+   *  pour laquelle CE métier-là souffre de CE problème-là — un blurb générique
+   *  n'y dirait rien. */
+  note?: string;
+}
+
+const { sector, index, onWhite = false, note } = Astro.props;
+---
+
+<a href={sector.href} class:list={["entry", "group", { "on-white": onWhite }]}>
+  <span class="entry-head">
+    {/* Numéro et flèche sont décoratifs : l'un ordonne à l'œil, l'autre signale
+        un lien qu'un lecteur d'écran annonce déjà. Les lire donnerait « zéro un
+        … flèche droite » avant chaque secteur. */}
+    <span class="entry-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+
+    {/* Le frisson est déclenché par l'entrée entière (`group`), pas par l'icône :
+        viser 20 px de glyphe alors que toute la ligne est cliquable rendrait
+        l'effet inatteignable. */}
+    <Icon name={sector.icon} class="entry-icon group-hover:animate-icon-shake" aria-hidden="true" />
+
+    <span class="entry-name">{sector.name}</span>
+    <span class="entry-tag">{sector.tag}</span>
+
+    <span class="entry-arrow" aria-hidden="true">→</span>
+  </span>
+
+  <span class="entry-blurb">{note ?? sector.blurb}</span>
+</a>
+
+<style>
+  .entry {
+    display: block;
+    padding: 24px 20px;
+    /* Le lavis de survol déborde du texte : l'entrée se pose sur la page, elle
+       n'y est pas encadrée. Les 16 px tiennent dans la gouttière de 72 px. */
+    margin-inline: -16px;
+    border-top: 1px solid var(--color-rule);
+    border-radius: 6px;
+    color: var(--color-ink);
+    text-decoration: none;
+    /* Survol volontairement doux : ni filet qui change, ni soulèvement. Le
+       blanc à 55 % sur `paper` suffit à désigner la ligne visée. */
+    transition: background-color 0.25s ease;
+  }
+
+  .entry:hover {
+    background-color: rgb(255 255 255 / 0.55);
+  }
+
+  /* Sur une bande BLANCHE le lavis blanc ne fait rien : c'est `paper` qui
+     désigne alors la ligne. Même geste, ton inversé — la classe est posée par
+     la section, qui seule connaît son fond. */
+  .entry.on-white:hover {
+    background-color: var(--color-paper);
+  }
+
+  .entry-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .entry-index {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-slate-on-ink);
+  }
+
+  .entry-icon {
+    width: 20px;
+    height: 20px;
+    flex: none;
+    color: var(--color-ink);
+  }
+
+  .entry-name {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+  }
+
+  .entry-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+    border: 1px solid var(--color-rule);
+    border-radius: 3px;
+    padding: 3px 7px;
+    white-space: nowrap;
+  }
+
+  .entry-arrow {
+    margin-left: auto;
+    padding-left: 8px;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    color: var(--color-hour);
+  }
+
+  /* 34px = 11px de numéro + 14px de gouttière + le début de l'icône : le texte
+     s'aligne sous l'icône et le nom, pas sous le numéro. */
+  .entry-blurb {
+    display: block;
+    margin: 8px 0 0 34px;
+    max-width: 44ch;
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--color-slate);
+  }
+
+  /* Sous 620px le nom en 24px, la puce et la flèche ne tiennent plus sur une
+     ligne. La flèche sort du flux plutôt que de comprimer le nom — elle est
+     décorative, elle ne doit jamais gagner contre le libellé. */
+  @media (max-width: 620px) {
+    .entry-head {
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .entry-arrow {
+      display: none;
+    }
+
+    .entry-blurb {
+      margin-left: 0;
+    }
+  }
+</style>

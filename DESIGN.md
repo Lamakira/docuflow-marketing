@@ -1,6 +1,6 @@
 ---
 name: DocuFlow
-description: The client dossier as a website — hairline-ruled records on cold stock, with amber marking only what matters now.
+description: The client dossier as a website — precise operational records, with warm layered paper reserved for explanatory illustrations.
 colors:
   ink: "#0F1524"
   ink-raised: "#161D30"
@@ -17,6 +17,23 @@ colors:
   receipt-rule: "#B9C2CF"
   band-mint: "#EAF2ED"
   band-warm: "#FBF3E6"
+  paper-canvas: "#F6ECDF"
+  paper-surface: "#FFFAF4"
+  paper-accent: "#FFF0D8"
+  paper-layer: "#DFCBB4"
+  paper-layer-light: "#EDDBC6"
+  paper-rule: "#EADFD4"
+  paper-chip: "#F0E5D9"
+  paper-track: "#EEE1D3"
+  paper-label: "#75685A"
+  paper-connector: "#BC9063"
+  paper-callout: "#F0C987"
+  paper-callout-text: "#5F4528"
+  paper-sage: "#F3F8EF"
+  paper-sage-surface: "#F7FBF4"
+  paper-sage-rule: "#DFE9DA"
+  paper-sage-fill: "#CDDFC8"
+  paper-sage-text: "#52654D"
 typography:
   display:
     fontFamily: "Cabinet Grotesk, ui-sans-serif, system-ui, sans-serif"
@@ -96,6 +113,18 @@ typography:
     fontWeight: 400
     lineHeight: 1.2
     letterSpacing: "0.06em"
+  paper-callout:
+    fontFamily: "JetBrains Mono, ui-monospace, monospace"
+    fontSize: "8px"
+    fontWeight: 400
+    lineHeight: 1.2
+    letterSpacing: "normal"
+  timer-metric:
+    fontFamily: "JetBrains Mono, ui-monospace, monospace"
+    fontSize: "22px"
+    fontWeight: 700
+    lineHeight: 1
+    letterSpacing: "-0.02em"
 rounded:
   xs: "1px"
   sm: "3px"
@@ -104,6 +133,9 @@ rounded:
   full: "9999px"
   receipt-xs: "2px"
   receipt-sm: "4px"
+  paper-inset: "12px"
+  paper-card: "16px"
+  paper-scene: "18px"
 spacing:
   tight: "8px"
   card-sm: "20px"
@@ -151,6 +183,16 @@ components:
     textColor: "{colors.ink}"
     rounded: "{rounded.lg}"
     padding: "24px"
+  card-layered-paper:
+    backgroundColor: "{colors.paper-surface}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.paper-card}"
+    padding: "18px"
+  scene-layered-paper:
+    backgroundColor: "{colors.paper-canvas}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.paper-scene}"
+    padding: "18px"
   badge-stage:
     backgroundColor: "{colors.hour}"
     textColor: "{colors.ink}"
@@ -195,18 +237,19 @@ legible without a single shadow.
 
 The register is precise and unfussy. The buyer is a skeptical operator who has been sold to before,
 so the design earns trust by looking like something that was *kept* rather than something that was
-*produced*. Restraint is the house style: one risk per page (the stage rail), one animation (the
-stack fold), one lift (the arrival card). Every number is monospaced because monospace means the
-system recorded it; prose is Switzer because a human wrote it. That single distinction does more
-work than any amount of styling.
+*produced*. Operational UI remains ruled, compact and square to the page. Explanatory illustrations
+may instead use **Layered Paper**: warm sheets, softened corners and real overlap that makes the
+relationship between records visible. Every number is monospaced because monospace means the system
+recorded it; prose is Switzer because a human wrote it.
 
 **Key Characteristics:**
 
-- Hairline rules instead of shadows — flatness is the law, not a limitation
+- Hairline rules for operational UI; physical paper depth for explanatory illustrations
 - Monospace for anything recorded; sans for anything written
 - Flat, held section bands that never blend into one another
 - Amber rationed to a single mark per screenful
 - Purpose-built structural visuals: every card encodes real product shape
+- Standalone illustrated cards stay standalone — backing sheets add depth, never an enclosing card
 - Reserved heights on anything that changes, so nothing reflows
 
 ## Colors
@@ -262,6 +305,24 @@ amber for *now* and green for *confirmed*.
 - **Manila** (`#FBF3E6`): The documentation band. The one warm ground in the system, and it belongs
   to the knowledge pillar — the folder color, in a system named after documents.
 
+### Layered Paper — illustration palette
+
+This palette belongs to structural marketing illustrations, not to application UI or ordinary
+content cards.
+
+- **Paper Canvas** (`#F6ECDF`): a bounded scene containing several overlapping objects. Never wrap
+  a single card in it.
+- **Paper Surface** (`#FFFAF4`): the primary sheet or card face.
+- **Paper Accent** (`#FFF0D8`): the one selected line, current timer row or queried amount.
+- **Paper Layer / Light** (`#DFCBB4` / `#EDDBC6`): the two offset sheets behind a standalone card.
+- **Paper Rule / Chip / Track** (`#EADFD4` / `#F0E5D9` / `#EEE1D3`): internal separators, quiet
+  metadata capsules and meter tracks.
+- **Paper Sage family** (`#F3F8EF`, `#F7FBF4`, `#DFE9DA`, `#CDDFC8`, `#52654D`): retained or
+  confirmed information inside the paper scene.
+- **Paper Connector** (`#BC9063`): lineage paths between source records and the invoice.
+- **Paper Callout** (`#F0C987` with `#5F4528` text): a small explanatory bridge such as “Traced to
+  the work.” It is not a CTA and never replaces Amber Tab.
+
 ### Named Rules
 
 **The One Amber Rule.** Amber marks the current step or the next action — never both in the same
@@ -275,6 +336,10 @@ any direction, at any opacity.
 
 **The Two Voices Rule.** Green is a confirmed result; amber is a present state. A budget bar that has
 been consumed is green. A stage that is happening is amber. Reversing them makes the interface lie.
+
+**The Layered Paper Boundary.** Warm paper colors communicate that the visitor is looking at an
+illustration of records, not a live product panel. Do not apply them to navigation, forms, pricing
+cards, ordinary content containers or the application itself.
 
 ## Typography
 
@@ -391,14 +456,17 @@ concern.
 
 ## Elevation & Depth
 
-**This system is flat.** Depth comes from three sources, in this order: 1px hairlines, tonal layering
-(Cold Stock inset inside Card White; Ink Raised on Case Ink), and flat band grounds. There is no
-resting shadow on any surface in the system — not on the sticky nav, not on hover, not on a card
-that sits square to the page.
+**Operational UI is flat.** Depth there comes from three sources, in this order: 1px hairlines,
+tonal layering (Cold Stock inset inside Card White; Ink Raised on Case Ink), and flat band grounds.
+There is no resting shadow on navigation, controls, tables or ordinary content cards.
 
-Shadows are licensed one object at a time, and every licensed object has physically left the plane of
-the page. There are three, and the test is the same each time: could a hairline describe this? If yes,
-the shadow is decoration.
+**Layered Paper illustrations are intentionally physical.** Their sheets are rotated, offset and
+overlapping, so soft shadows describe actual separation between paper planes. This is an
+illustration grammar, not permission to put shadows on the interface.
+
+Shadows are licensed one object at a time, and every licensed object has physically left the plane
+of the page. The test is always the same: could a hairline describe this relationship? If yes, the
+shadow is decoration.
 
 ### Shadow Vocabulary
 
@@ -414,21 +482,26 @@ the shadow is decoration.
 - **The torn stub** (`filter: drop-shadow(0 20px 26px rgba(0, 0, 0, .5))`): The selected plan stub,
   which lifts `16px` and rotates `±1°` as if half-pulled from the perforation. Same argument as the
   arrival lift, and it is the *only* hover- or selection-driven shadow in the system.
+- **Layered Paper card** (`--shadow-paper-card`, with `raised`, `dark` and `hover` variants): A
+  marketing illustration of a physical record. The face sits over two rotated backing sheets.
+  `--shadow-paper-inset` is reserved for the selected line inside it; it must not create a second
+  outer card.
 
-A fourth use needs the same argument — an object that has genuinely left the page — not a preference
+A new use needs the same argument — an object that has genuinely left the page — not a preference
 for depth. Nothing that sits square to the grid gets one, including on hover.
 
 ### Named Rules
 
 **The Off-Plane Rule.** A shadow is earned only by an element that has physically left the page —
 rotated, or arriving from elsewhere. Anything sitting square to the grid separates with a hairline,
-including on hover, including when it is the most important object on the screen.
+including on hover, including when it is the most important object on the screen. Layered Paper
+qualifies because its face and backing sheets visibly occupy different planes.
 
 ### Named Rules
 
 **The Hairline-First Rule.** A 1px `Divider Grey` rule (or `Ink Border` on dark) is the default
-answer to every separation problem. Reach for tonal layering second. A shadow requires the same
-justification the arrival lift earned: a genuine moment of arrival, once per page at most.
+answer to every operational separation problem. Reach for tonal layering second. A shadow requires
+a genuine off-plane object or the named Layered Paper illustration pattern.
 
 **The Sticky Nav Rule.** The header separates from scrolling content with a 1px bottom rule and a
 `90%` paper background at `blur(8px)` — never a drop shadow. Translucency plus a hairline is how this
@@ -448,6 +521,15 @@ Radii are small and stepped by function, never by size:
   system, and it marks "this is a document".
 - **full** — only for genuinely circular things: avatars, meter tracks and fills, the rail dot,
   status dots.
+
+Layered Paper illustrations carry their own larger, named scale:
+
+- **12px** (`paper-inset`) — selected lines and inset evidence rows.
+- **16px** (`paper-card`) — the face and both backing sheets of a physical card.
+- **18px** (`paper-scene`) — a canvas containing several independently positioned paper objects.
+
+These values do not enter buttons, navigation, forms, application panels or ordinary marketing
+cards. Their names carry their scope.
 
 **The paper exception.** The pricing receipt is the one surface that steps outside this scale, and it
 does so as a set, not one value at a time: `3px 3px 0 0` on the receipt body (square along the bottom,
@@ -500,6 +582,41 @@ round marker is a document. Never assign these arbitrarily; the shapes are a leg
 - **Internal structure:** Fields are separated by a full-width 1px rule with `16px` above and below.
   A dossier card reads top to bottom as identity → rule → people → rule → figures → rule → tags →
   rule → footnote.
+
+### Layered Paper Card — illustration pattern
+
+Use this pattern when a marketing illustration depicts a record, invoice, timesheet or query as a
+physical object. The production reference is
+`src/components/solutions/mockups/SectorMockup.astro`; activate it with
+`<SectorMockup mock={mock} warm />`.
+
+**Standalone recipe**
+
+1. The stage is transparent and has padding only. **Do not give it a background, border, radius or
+   shadow. A card alone never sits inside another card.**
+2. Place two `aria-hidden` backing sheets behind the face. Both use `paper-card` radius:
+   - dark layer: `paper-layer`, `translate(-7px, 5px) rotate(-2.4deg)`
+   - light layer: `paper-layer-light`, `translate(6px, 3px) rotate(1.7deg)`
+3. The face uses `paper-surface`, `paper-card` radius and `shadow-paper-card`. It carries the real
+   content and semantics.
+4. Selected rows use `paper-accent` with `paper-inset` radius. Internal rules use `paper-rule`;
+   quiet metadata uses `paper-chip`.
+5. On a dark band, use `shadow-paper-card-dark`; do not add a dark enclosing panel.
+
+**Multi-object scene**
+
+Use `paper-canvas`, `paper-scene` radius and `shadow-paper-scene` only when the illustration contains
+multiple independently positioned objects—such as source records converging into an invoice. The
+canvas is the physical desk. It is not available to a single-card mockup.
+
+**Motion**
+
+- Duration: `--paper-motion-duration` (`420ms`)
+- Ease: `--paper-motion-ease` (`cubic-bezier(0.16, 1, 0.3, 1)`)
+- Hover may separate the backing sheets and lift the face by up to `5px`.
+- Gate the effect behind `(hover: hover)`, `(pointer: fine)` and
+  `(prefers-reduced-motion: no-preference)`.
+- Content is visible and correctly composed without JavaScript.
 
 ### Chips
 
@@ -565,10 +682,10 @@ immediately with no transition; below 900px the bills are not rendered at all.
 - **Easing:** `cubic-bezier(0.4, 0, 0.2, 1)` for anything choreographed; plain `ease` for state.
 - **Durations:** 0.12s for a hover fill, ~0.15s for color transitions, 0.32s for a cross-fade,
   0.7–0.9s for the fold's staged transforms.
-- **Nothing is displaced on hover.** Surfaces change color and nothing else — no lift, no scale, no
-  shadow. The sector index makes the point: hovering an entry washes it with white at 55% over
-  `0.25s`, and the rule, the position and the type all hold still. A row in a ruled index that jumps
-  under the pointer stops being an index.
+- **Operational surfaces are not displaced on hover.** Controls, rows and ordinary cards change
+  color without lift, scale or shadow. Layered Paper illustrations are the explicit exception:
+  their backing sheets separate and the face may rise by at most `5px`, because the movement
+  explains their physical construction rather than pretending a control was pressed.
 - **One thing moves on hover, and it is an icon.** The sector entry's Lucide glyph runs a single
   damped wobble — `rotate` through −8°, +6°, −4°, +2°, back to 0 over 420ms, `ease-out` — triggered
   by the whole entry, never by the glyph itself, which would be a 20px hover target inside a
@@ -595,20 +712,24 @@ immediately with no transition; below 900px the bills are not rendered at all.
   `min-height: 58px`.
 - **Do** structure a card as a record: identity, rule, fields, rule, footnote — with `16px` on either
   side of every rule.
+- **Do** use Layered Paper for explanatory record illustrations, with two backing sheets and one
+  semantic face. Keep the stage transparent when there is only one card.
 - **Do** keep the global focus ring (`2px solid #E9A23B`, `2px` offset) on every interactive element,
   and honour `prefers-reduced-motion` on anything that moves.
 
 ### Don't:
 
 - **Don't** use a gradient. Anywhere, in any direction, at any opacity. Bands are single held colors.
-- **Don't** add a shadow where a hairline would do. Three objects carry one — the fold's arriving
-  card and the hero's tilted card, the receipt, and the torn stub — and all three have physically
-  left the plane of the page. A fourth needs that same argument, not a preference for depth.
+- **Don't** add a shadow where a hairline would do. Shadows belong to off-plane objects, the receipt
+  and the named Layered Paper illustration pattern—not to ordinary interface cards.
 - **Don't** put amber twice in the same screenful, or use it as a resting border, body text or
   decoration. One mark, and it means *now*.
 - **Don't** swap the amber/green meanings. Amber is a present state; green is a confirmed result.
-- **Don't** introduce a fourth typeface, or a new radius step outside 1 / 3 / 6 / 8 / full. The
-  receipt's 2px and 4px belong to that object because it is paper; they are not available elsewhere.
+- **Don't** introduce a fourth typeface or an unnamed radius. The operational scale remains
+  1 / 3 / 6 / 8 / full; receipt and Layered Paper radii are available only through their named,
+  scoped tokens.
+- **Don't** put a standalone card inside a rounded warm container. If there is one card, use a
+  transparent stage and backing sheets. `paper-canvas` is only for a multi-object scene.
 - **Don't** use a 2px border beyond the featured plan card and the proof-band left rule, or a dashed
   or dotted rule anywhere but the receipt. Every other separation in the system is a solid hairline.
 - **Don't** route the stage rail's scroll progress — or any per-pixel value — through framework

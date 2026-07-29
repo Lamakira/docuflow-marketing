@@ -1,0 +1,296 @@
+---
+import { Icon } from "astro-icon/components";
+import type { MegaMenu } from "../../data/site";
+
+/** L'INTÉRIEUR du panneau déroulant, et rien d'autre.
+ *
+ *  La boîte, sa position et son animation restent dans `Nav.astro` : la
+ *  géométrie a un seul propriétaire, et aucun sélecteur `:global()` n'est
+ *  nécessaire entre les deux fichiers.
+ *
+ *  Générique par construction — les colonnes viennent de `menu`, le composant ne
+ *  connaît aucune taxonomie. Le méga-menu Produit prévu par `docs/design-brief.md`
+ *  (dix pages par fonction) le remplira sans réécriture.
+ *
+ *  Un index de classement, pas un panneau marketing : des filets et des
+ *  libellés, pas des boîtes. Quatorze liens dans quatorze cartes se liraient
+ *  comme un tableau de bord — d'où des colonnes séparées par un filet 1 px, sous
+ *  un intitulé mono.
+ *
+ *  ⚠️ Pas de `role="menu"` ni de `role="menuitem"`. `role="menu"` fait basculer
+ *  les technologies d'assistance en mode application et casse la sémantique de
+ *  Tab dans une navigation. Des `<ul>`, des `<li>` et des `<a>`. */
+interface Props {
+  menu: MegaMenu;
+  /** Chemin courant, normalisé par `Nav.astro`. `aria-current` ne peut pas
+   *  vivre sur un `<summary>` : il vit ici, sur le lien correspondant, où il est
+   *  valide. */
+  path: string;
+}
+
+const { menu, path } = Astro.props;
+const isCurrent = (href: string) => path === href || path.startsWith(`${href}/`);
+---
+
+<div class="panel-inner">
+  {/* La rangée d'en-tête PORTE le lien vers `/solutions` : sous l'approche
+      `<details>`, le `<summary>` n'est plus un lien. Elle est donc
+      load-bearing et non décorative — d'où sa présence pleine largeur, au
+      sommet, avec son propre filet. */}
+  <a href={menu.overview.href} class="overview" aria-current={isCurrent(menu.overview.href) ? "page" : undefined}>
+    <span class="overview-text">
+      <span class="overview-label">{menu.overview.label}</span>
+      <span class="overview-blurb">{menu.overview.blurb}</span>
+    </span>
+    <span class="overview-arrow font-mono" aria-hidden="true">→</span>
+  </a>
+
+  <div class="regions">
+    {
+      menu.columns.map((column) => (
+        <div class="region">
+          <p class="region-head">{column.heading}</p>
+          <ul class="rows">
+            {column.items.map((item) => (
+              <li>
+                <a
+                  href={item.href}
+                  class="row"
+                  aria-current={isCurrent(item.href) ? "page" : undefined}
+                >
+                  {item.icon && <Icon name={item.icon} class="row-icon" aria-hidden="true" />}
+                  <span class="row-name">{item.label}</span>
+                  {item.tag && <span class="row-tag">{item.tag}</span>}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))
+    }
+
+    {/* Le rail : une sortie pour qui ne se reconnaît dans aucune des deux
+        colonnes. Lien texte à flèche ambre et NON un bouton plein — l'en-tête
+        porte déjà l'unique CTA ambre de la page, et un second aplat ambre à
+        400px de distance lui ferait concurrence. */}
+    <div class="rail">
+      <p class="rail-eyebrow">{menu.promo.eyebrow}</p>
+      <p class="rail-title">{menu.promo.title}</p>
+      <p class="rail-body">{menu.promo.body}</p>
+      <a href={menu.promo.link.href} class="rail-link">
+        {menu.promo.link.label}
+        <span class="rail-arrow font-mono" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .panel-inner {
+    padding: 0;
+  }
+
+  /* ── La rangée d'en-tête ── */
+
+  .overview {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--color-rule);
+    padding: 18px 28px;
+    color: var(--color-ink);
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+  }
+
+  .overview:hover {
+    background-color: var(--color-paper);
+  }
+
+  .overview-text {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+  }
+
+  .overview-label {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .overview-blurb {
+    font-size: 14px;
+    color: var(--color-slate);
+  }
+
+  .overview-arrow {
+    margin-left: auto;
+    font-size: 15px;
+    color: var(--color-hour);
+  }
+
+  /* ── Les trois régions ── */
+
+  .regions {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 0.85fr);
+  }
+
+  .region {
+    padding: 22px 24px 26px;
+  }
+
+  /* Filet 1 px entre régions, jamais autour : le cadre est déjà porté par la
+     feuille. */
+  .region + .region,
+  .regions > .rail {
+    border-left: 1px solid var(--color-rule);
+  }
+
+  .region-head {
+    margin-bottom: 12px;
+    padding-inline: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  .rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* ── Une rangée ── */
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 6px;
+    padding: 7px 8px;
+    color: var(--color-ink);
+    text-decoration: none;
+    /* Lavis sur toute la largeur de la rangée, sans filet qui change ni
+       soulèvement : le langage de survol du site est un lavis, pas un saut.
+       Sur cette feuille BLANCHE c'est `paper` qui joue le rôle que le blanc à
+       55 % joue sur `paper` ailleurs. */
+    transition: background-color 0.15s ease;
+  }
+
+  .row:hover {
+    background-color: var(--color-paper);
+  }
+
+  /* La page courante est marquée en `ink` et par `aria-current`, jamais par la
+     seule couleur. */
+  .row[aria-current="page"] {
+    background-color: var(--color-paper);
+    font-weight: 600;
+  }
+
+  .row-icon {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    color: var(--color-ink);
+  }
+
+  .row-name {
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .row-tag {
+    margin-left: auto;
+    border: 1px solid var(--color-rule);
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--color-slate);
+  }
+
+  /* ── Le rail ── */
+
+  .rail {
+    margin: 22px 24px 26px 0;
+    border-radius: 6px;
+    background-color: var(--color-paper);
+    padding: 20px;
+  }
+
+  .rail-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  .rail-title {
+    margin-top: 10px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: -0.02em;
+  }
+
+  .rail-body {
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--color-slate);
+  }
+
+  .rail-link {
+    display: inline-block;
+    margin-top: 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+
+  .rail-arrow {
+    margin-left: 6px;
+    color: var(--color-hour);
+  }
+
+  /* Sous 1000px de panneau, le rail passe SOUS les deux taxonomies plutôt que
+     de laisser une colonne se replier : le brief le demande explicitement, et
+     une colonne de secteurs sur deux lignes cesse d'être scannable. */
+  @media (max-width: 1000px) {
+    .regions {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .regions > .rail {
+      grid-column: 1 / -1;
+      border-top: 1px solid var(--color-rule);
+      border-left: none;
+      margin: 0;
+      border-radius: 0;
+      background-color: transparent;
+      padding: 22px 24px 26px;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .regions {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .region + .region {
+      border-top: 1px solid var(--color-rule);
+      border-left: none;
+    }
+  }
+</style>

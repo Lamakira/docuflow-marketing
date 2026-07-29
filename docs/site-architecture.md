@@ -96,14 +96,19 @@ Par secteur :
 
 Par cas d'usage :
 ```
-/use-cases/remote-teams
-/use-cases/hybrid-teams
-/use-cases/client-billing
-/use-cases/employee-productivity
-/use-cases/project-profitability
-/use-cases/onboarding-documentation
+/solutions/remote-teams
+/solutions/hybrid-teams
+/solutions/client-billing
+/solutions/employee-productivity
+/solutions/project-profitability
+/solutions/onboarding-documentation
 ```
 **6 pages**
+
+⚠️ Depuis le 29 juillet 2026 les cas d'usage vivent au MÊME niveau d'URL que les secteurs, à la
+demande de la direction (référencement : mêmes requêtes, même profondeur). Les deux listes partagent
+donc `/solutions/{slug}` — une collision de slug ferait disparaître une page sans erreur, d'où la
+garde au build dans `src/data/solutions.ts`.
 
 ### Pages comparatives — le vrai levier SEO
 

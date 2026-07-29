@@ -1,0 +1,64 @@
+---
+import SectorHero from "./SectorHero.astro";
+import PainPoints from "./PainPoints.astro";
+import SectorPillar from "./SectorPillar.astro";
+import ScenarioBand from "./ScenarioBand.astro";
+import ObjectionSection from "./ObjectionSection.astro";
+import RelatedSectors from "./RelatedSectors.astro";
+import FinalCta from "../sections/FinalCta.astro";
+import type { SolutionPage } from "../../data/solutions";
+import { PRODUCT_PILLARS, type PillarId } from "../../data/product";
+
+/** Le corps d'une page SECTEUR. Extrait de `pages/solutions/[slug].astro` le
+ *  jour où les cas d'usage ont rejoint le même espace d'URL : la route est
+ *  devenue un aiguillage entre deux types de page, et deux gabarits se lisent
+ *  mieux en deux fichiers qu'en un seul coupé par une condition.
+ *
+ *  Rythme des bandes, règle du site : deux sections voisines ne partagent jamais
+ *  un fond.
+ *
+ *    paper → white  → paper/mint/warm[/white] → ink      → white     → paper   → hour
+ *    Hero    Problem  Piliers (3 ou 4)          Scenario   Objection   Related   Cta
+ *
+ *  Les bandes des piliers sont DÉRIVÉES de leur rang (`pillarsOf` dans
+ *  `solutions.ts`), pas posées ici : trois ou quatre piliers tombent juste sans
+ *  qu'on y revienne, et une page ne peut pas se tromper de rythme toute seule. */
+interface Props {
+  page: SolutionPage;
+}
+
+const { page } = Astro.props;
+const { copy, pillars, sector } = page;
+
+/** Le nom du pilier produit pour le lien de sortie de chaque bloc. Lu depuis
+ *  `PRODUCT_PILLARS` : le libellé du lien et l'ancre visée viennent de la même
+ *  source, donc « Everything in Clients → » ne peut pas pointer sur `#time`. */
+const PRODUCT_NAMES = Object.fromEntries(
+  PRODUCT_PILLARS.map((pillar) => [pillar.id, pillar.name])
+) as Record<PillarId, string>;
+---
+
+<SectorHero tag={sector.tag.toUpperCase()} h1={copy.h1} lede={copy.lede} mock={copy.hero} />
+
+<PainPoints heading={copy.problem.heading} points={copy.problem.points} />
+
+{pillars.map((pillar) => <SectorPillar pillar={pillar} productName={PRODUCT_NAMES[pillar.ref]} />)}
+
+<ScenarioBand
+  eyebrow={copy.scenario.eyebrow}
+  heading={copy.scenario.heading}
+  lines={copy.scenario.lines}
+  mock={copy.scenario.mock}
+/>
+
+<ObjectionSection
+  eyebrow={copy.objection.eyebrow}
+  heading={copy.objection.heading}
+  body={copy.objection.body}
+  argument={copy.objection.argument}
+  guarantees={copy.objection.guarantees}
+/>
+
+<RelatedSectors related={copy.related} />
+
+<FinalCta title={copy.cta.title} note={copy.cta.note} />

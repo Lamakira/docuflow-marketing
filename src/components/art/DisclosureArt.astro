@@ -1,0 +1,382 @@
+---
+/**
+ * Illustration de la section « objection » de `/solutions/client-billing`.
+ *
+ * ─── Pourquoi elle remplace `RedactedArt` ──────────────────────────────────
+ *
+ * Le défaut montrait une capture floutée. L'objection de cette page ne parle pas
+ * de capture : elle parle de la QUANTITÉ DE DÉTAIL QU'ON ENVOIE. Un dessin qui
+ * illustre un autre argument que celui de sa section ne dit rien — c'est
+ * exactement la faute que la règle « chaque dessin dit ce que sa section dit »
+ * existe pour empêcher.
+ *
+ * ─── Ce que celui-ci montre ────────────────────────────────────────────────
+ *
+ * Le contraste que la première phrase du corps énonce : **ce qu'on garde** —
+ * quarante-deux entrées, denses, en retrait — et **ce qu'on envoie** : une
+ * ligne. Le lecteur voit d'un coup que la profondeur du relevé n'oblige à rien
+ * sur la facture, ce qui EST la réponse à « itemiser invite le client à tout
+ * auditer ».
+ *
+ * ⚠️ Les valeurs sont celles de la page (`solutions.ts`, `client-billing`) :
+ * 42 entrées et 3 tâches viennent de la maquette du héros, la ligne à 4 200 $ du
+ * scénario et de `InvoiceArt`. Trois endroits, une seule vérité — si l'une bouge,
+ * les autres mentent.
+ */
+const ENTRIES = 42;
+const TASKS = 3;
+
+/** Largeurs des lignes du relevé, en pourcentage. Figées, jamais tirées au
+ *  hasard : un `Math.random()` au build donnerait un dessin différent à chaque
+ *  déploiement. Volontairement irrégulières — un relevé réel n'aligne pas. */
+const ROWS = [
+  [62, 24],
+  [38, 44],
+  [70, 18],
+  [46, 34],
+];
+---
+
+{/* THESIS: the deep internal record and the single outgoing line are separate
+    physical layers. OWN-WORLD: warm archive papers, a soft green retained file
+    and one lifted invoice slip. STORY: keep the detail, choose what leaves.
+    FIRST VIEWPORT: the dense record sits back-left while the sent line rises
+    front-right. FORM: overlapping disclosure documents, paired with the billing
+    desk illustration but composed around selection rather than traceability. */}
+<div class="disclosure-desk" data-art>
+  <header class="desk-head" data-art-in>
+    <span class="desk-label">Disclosure control</span>
+    <span class="desk-note">You choose what leaves</span>
+  </header>
+
+  <div class="desk-stage">
+    <span class="archive-backing archive-one" aria-hidden="true"></span>
+    <span class="archive-backing archive-two" aria-hidden="true"></span>
+
+    <section class="held-card" aria-label="Detailed record retained inside DocuFlow">
+      <header class="head" data-art-in>
+        <span class="label">Kept on the record</span>
+        <span class="count">{ENTRIES} entries · {TASKS} tasks</span>
+      </header>
+
+      <div class="rows">
+        {
+          ROWS.map((row, index) => (
+            <div class="row" data-art-in data-use-case-motion-row>
+              <span class="row-index">{String(index + 1).padStart(2, "0")}</span>
+              <span class="bar-track" aria-hidden="true">
+                <span class="bar" style={`width:${row[0]}%`} data-art-fill></span>
+                <span class="bar-soft" style={`width:${row[1]}%`}></span>
+              </span>
+              <span class="entry-count">{[12, 11, 10, 9][index]} entries</span>
+            </div>
+          ))
+        }
+      </div>
+
+      <footer class="held-foot" data-art-in>
+        <span class="lock-dot" aria-hidden="true"></span>
+        Editable history stays inside
+      </footer>
+    </section>
+
+    <svg class="selection-path" viewBox="0 0 600 270" preserveAspectRatio="none" aria-hidden="true">
+      <path data-art-draw d="M278 145 C360 145 353 188 425 188" />
+    </svg>
+
+    <span class="choice-label" data-art-pop>Selected for invoice</span>
+
+    <section class="sent-card" aria-label="Single line sent on the invoice">
+      <header class="head" data-art-in>
+        <span class="label">Sent to the client</span>
+        <span class="count">1 line</span>
+      </header>
+
+      <div class="line" data-art-pop data-use-case-motion-row>
+        <span class="mark"></span>
+        <span class="line-name">Campaign production</span>
+        <span class="line-total">$4,200</span>
+      </div>
+
+      <footer class="sent-foot" data-art-in>Invoice · March</footer>
+    </section>
+  </div>
+</div>
+
+<style>
+  .disclosure-desk {
+    position: relative;
+    min-height: 320px;
+    overflow: clip;
+    border-radius: var(--radius-paper-scene);
+    background: var(--color-paper-canvas);
+    box-shadow: var(--shadow-paper-scene);
+    padding: 16px 18px 18px;
+  }
+
+  .desk-head,
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .desk-label,
+  .desk-note,
+  .label,
+  .count,
+  .held-foot,
+  .sent-foot {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--color-paper-label);
+  }
+
+  .desk-label,
+  .label {
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .desk-stage {
+    position: relative;
+    height: 258px;
+    margin-top: 9px;
+  }
+
+  .archive-backing,
+  .held-card,
+  .sent-card {
+    position: absolute;
+    transition:
+      transform 420ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 420ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .archive-backing {
+    left: 3%;
+    top: 32px;
+    width: 62%;
+    height: 202px;
+    border-radius: var(--radius-paper-card);
+  }
+
+  .archive-one {
+    background: var(--color-paper-layer);
+    transform: translate(-8px, 8px) rotate(-4.5deg);
+  }
+
+  .archive-two {
+    background: var(--color-paper-layer-light);
+    transform: translate(4px, 3px) rotate(2.4deg);
+  }
+
+  .held-card {
+    z-index: 2;
+    left: 4%;
+    top: 24px;
+    width: 62%;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-sage-surface);
+    box-shadow: var(--shadow-paper-card);
+    padding: 15px 16px 13px;
+    transform: rotate(-1.3deg);
+  }
+
+  .rows {
+    margin-top: 10px;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    border-top: 1px solid var(--color-paper-sage-rule);
+    padding: 8px 0;
+  }
+
+  .row-index,
+  .entry-count {
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    color: var(--color-paper-sage-text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bar-track {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 7px;
+  }
+
+  .bar,
+  .bar-soft {
+    display: block;
+    height: 6px;
+    border-radius: 999px;
+  }
+
+  .bar {
+    flex: none;
+    background: var(--color-live);
+  }
+
+  .bar-soft {
+    background: var(--color-paper-sage-fill);
+  }
+
+  .held-foot {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    border-top: 1px solid var(--color-paper-sage-rule);
+    padding-top: 10px;
+    color: var(--color-paper-sage-text);
+  }
+
+  .lock-dot {
+    height: 7px;
+    width: 7px;
+    border-radius: 50%;
+    background: var(--color-live);
+  }
+
+  .selection-path {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    height: 100%;
+    width: 100%;
+    pointer-events: none;
+  }
+
+  .selection-path path {
+    fill: none;
+    stroke: var(--color-paper-connector);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .choice-label {
+    position: absolute;
+    z-index: 5;
+    left: 62%;
+    top: 167px;
+    border-radius: 999px;
+    background: var(--color-paper-callout);
+    box-shadow: var(--shadow-paper-callout);
+    padding: 5px 9px;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 8px;
+    color: var(--color-paper-callout-text);
+    transform: translateX(-50%);
+  }
+
+  .sent-card {
+    z-index: 4;
+    right: 2%;
+    bottom: 10px;
+    width: 43%;
+    border-radius: var(--radius-paper-card);
+    background: #fff;
+    box-shadow: var(--shadow-paper-card-raised);
+    padding: 15px 16px 13px;
+    transform: rotate(1.5deg);
+  }
+
+  .line {
+    display: grid;
+    grid-template-columns: 10px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 9px;
+    margin-top: 13px;
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper-accent);
+    padding: 12px;
+  }
+
+  .mark {
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    background: var(--color-hour);
+  }
+
+  .line-name {
+    overflow: hidden;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--color-ink);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .line-total {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sent-foot {
+    margin-top: 12px;
+    border-top: 1px solid var(--color-paper-rule);
+    padding-top: 9px;
+  }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .disclosure-desk:hover .archive-one {
+      transform: translate(-15px, 11px) rotate(-6.5deg);
+    }
+
+    .disclosure-desk:hover .archive-two {
+      transform: translate(7px, 5px) rotate(3.8deg);
+    }
+
+    .disclosure-desk:hover .held-card {
+      box-shadow: var(--shadow-paper-card-hover);
+      transform: translate(-4px, 1px) rotate(-2.2deg);
+    }
+
+    .disclosure-desk:hover .sent-card {
+      box-shadow: var(--shadow-paper-card-hover);
+      transform: translate(5px, -7px) rotate(2.2deg);
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .desk-note {
+      display: none;
+    }
+
+    .held-card {
+      left: 2%;
+      width: 66%;
+      padding-inline: 13px;
+    }
+
+    .archive-backing {
+      left: 1%;
+      width: 66%;
+    }
+
+    .sent-card {
+      right: 0;
+      width: 47%;
+      padding-inline: 13px;
+    }
+
+    .choice-label {
+      left: 58%;
+    }
+  }
+</style>
+
+<script>
+  import "../../scripts/art";
+</script>

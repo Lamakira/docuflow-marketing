@@ -1,0 +1,111 @@
+---
+import { Icon } from "astro-icon/components";
+import RedactedArt from "../art/RedactedArt.astro";
+
+/** L'objection du secteur, répondue directement.
+ *
+ *  Même forme que `sections/Transparency.astro` sur l'accueil — c'est le même
+ *  genre d'argument, et le site n'a pas besoin de deux dessins pour ça. Ce qui
+ *  change ici, c'est que l'objection N'EST PAS la même d'une page à l'autre :
+ *  le privilège en juridique, la confidentialité du matériel client en conseil,
+ *  la culture d'ingénierie chez les devs, et la LIMITE DU PRODUIT elle-même en
+ *  construction et en placement. Deux paragraphes : le premier répond, le second
+ *  retourne l'objection en argument pour ce secteur-là.
+ *
+ *  Oeil-de-boeuf en `live-on-light` : la section parle de garanties, et c'est
+ *  déjà le ton de `Transparency`. Sur blanc, l'ambre tomberait à 1,90:1. */
+interface Props {
+  eyebrow: string;
+  heading: string;
+  body: string;
+  argument: string;
+  guarantees: string[];
+  /** La disposition par défaut garde le petit dessin sous la réponse. Un cas
+   *  d'usage dont le dessin EST la démonstration peut former une seule colonne
+   *  de preuve à droite : dessin, puis garanties. */
+  artLayout?: "below-copy" | "above-guarantees";
+}
+
+const {
+  eyebrow,
+  heading,
+  body,
+  argument,
+  guarantees,
+  artLayout = "below-copy",
+} = Astro.props;
+---
+
+<section class="bg-white py-[88px]" data-reveal-group>
+  <div class="container-wide">
+    <div
+      class:list={[
+        "grid grid-cols-1",
+        artLayout === "above-guarantees"
+          ? "gap-8 min-[901px]:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] min-[901px]:gap-x-16 min-[901px]:gap-y-6"
+          : "gap-12 min-[901px]:grid-cols-2",
+      ]}
+    >
+      <div class:list={[artLayout === "above-guarantees" && "min-[901px]:row-span-2"]} data-reveal>
+        <p class="label-mono text-[11px] text-live-on-light">{eyebrow}</p>
+
+        <h2 class="mt-4 max-w-[18ch] text-[clamp(28px,4vw,42px)]">{heading}</h2>
+
+        <p class="mt-5 max-w-[48ch] text-[17px] leading-[1.6] text-slate">{body}</p>
+
+        {/* Le paragraphe qui retourne l'objection. En `ink` et non en `slate` :
+            c'est la phrase que la section existe pour dire. */}
+        <p class="mt-5 max-w-[48ch] text-[17px] leading-[1.6] font-medium text-ink">{argument}</p>
+      </div>
+
+      {/* Par défaut, le petit dessin termine la colonne de réponse. Pour
+          `client-billing`, il ouvre plutôt la colonne de preuve et prend toute
+          sa largeur : l'illustration et les garanties forment alors un seul
+          groupe, au lieu de flotter dans deux zones sans rapport. */}
+      <div
+        class:list={[
+          "hidden min-[901px]:block",
+          artLayout === "above-guarantees"
+            ? "min-[901px]:col-start-2 min-[901px]:row-start-1"
+            : "max-w-[340px] min-[901px]:col-start-1 min-[901px]:row-start-2",
+        ]}
+        data-use-case-motion-card
+      >
+        <slot name="art"><RedactedArt /></slot>
+      </div>
+
+      {/* Le filet 1 px porte le bord, le fond `paper` ne fait que nuancer : sans
+          filet, du paper sur blanc (1,09:1) ne délimiterait rien.
+          `aria-hidden` sur les icônes — quatre coches identiques n'ajoutent rien
+          que la ligne ne dise déjà. */}
+      <ul
+        class:list={[
+          artLayout === "above-guarantees"
+            ? "grid grid-cols-1 gap-3 min-[1180px]:grid-cols-2 min-[901px]:col-start-2 min-[901px]:row-start-2"
+            : "space-y-3 min-[901px]:col-start-2 min-[901px]:row-start-1",
+        ]}
+        data-reveal
+      >
+        {
+          guarantees.map((item) => (
+            <li
+              class="flex items-start gap-3 rounded-[6px] border border-rule bg-paper p-4"
+              data-use-case-motion-guarantee
+            >
+              <Icon
+                name="lucide:circle-check"
+                class="mt-[2px] h-[18px] w-[18px] shrink-0 text-live-on-light"
+                aria-hidden="true"
+              />
+              <span class="text-[15px] leading-snug">{item}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>
+
+<script>
+  import "../../scripts/reveal";
+</script>
