@@ -29,6 +29,7 @@ pnpm-debug.log*
 .codex/
 .cursor/
 .impeccable/
+.codegraph/
 
 # Polices des maquettes de handoff : copies conformes de public/fonts, présentes
 # uniquement pour ouvrir les prototypes .dc.html hors du site. Les récupérer là
