@@ -379,11 +379,23 @@ are self-hosted; no third-party font request is ever made.
 - **Data-sm** (400, 10px): Badges, tags, stage strips, connectors — mono at annotation scale.
 - **Annotation** (400, 9px, `0.06em`, uppercase): The smallest step. Gutter labels on a record row
   (`CLIENT` / `HOURS` / `SHOTS`) and avatar initials. Below this, nothing.
+- **Score** (700 mono, 36px, `-0.02em`, 1.0): The evidence quality figure, and only that figure —
+  `84`, `38`, always followed by a 14px `/100` in Archive Slate. It is the one number in the system
+  set larger than a headline's neighbours, because it is the number a skeptical operator came to the
+  page to check. Carried by `product/mockups/EvidenceMock`, `solutions/mockups/ScoreMock`,
+  `solutions/mockups/WeekMock` and `solutions/mockups/SilenceMock`. A second figure reaching for
+  this size is almost certainly a proof stat (24px) or a plan price (34px) instead.
 
 Sizes outside this ramp are one-offs, not steps: `14.5px` (sector blurb), `22px` (block-editor
 heading), `24px` (proof figure), `26px` (proof heading), `34px` (plan price). Each appears exactly
 once. Treat them as unsystematized rather than as license to add a size — if one starts repeating,
 promote it to a role here instead of copying the literal.
+
+**Score is what that promotion looks like.** `36px` sat outside the ramp while already appearing in
+two shipped mockups, so it was neither a step nor a one-off — the state this paragraph exists to
+prevent. A third use (`SilenceMock`, 30 July 2026) forced the call, and the rule above answers it:
+the size was promoted to a role rather than copied again. The three components were already
+identical; none of their values changed.
 
 ### Named Rules
 

@@ -554,6 +554,18 @@ rangées dont une est trouvée EST la question « Which of these is you? » ; la
 pleine change de colonne à chaque rangée EST « every trade loses money somewhere different » ; le
 relevé troué de trois marques ambre EST les trois points de douleur numérotés juste en dessous.
 
+**⚠️ Cette règle a été étendue et durcie le 30 juillet 2026** par la revue des maquettes des SIX pages
+cas d'usage, toute entière sur le même défaut : un chiffre posé sur une texture ne dit rien. **Avant
+de dessiner ou de modifier une maquette, lire `docs/mockup-corrections.md`** : il porte le test
+d'acceptation en quatre points (ça se compte, ça dit ce que SA section dit, ça ne la CONTREDIT pas,
+ça ne se répète pas), les règles qui en sortent, et surtout **les approches refusées**, dont
+plusieurs paraissent évidentes et sont fausses.
+
+**Et la règle la plus chère de cette revue, apprise quatre fois : CHANGER UNE MAQUETTE OBLIGE À
+RELIRE LES DESSINS DE LA MÊME PAGE.** Le dessin ne bouge pas, c'est la maquette voisine qui prend son
+sujet. Quatre illustrations sont mortes de ça (`IdlePromptArt`, `TwoPlacesArt`, `CitedAnswerArt`,
+`InvoiceArt`). Faire le contrôle de collision **avant** de construire.
+
 ### Quatre pièges
 
 0. **⚠️ Une illustration qui empile ses enfants DOIT créer son propre contexte
@@ -600,8 +612,21 @@ vérifié), et `prefers-reduced-motion` coupe l'animation entièrement plutôt q
       les valeurs réelles de la base. Bloquant avant toute mise en ligne.
 - [ ] **Faire signer la copy neuve de `/product`** par Masdouk : le H2 de Knowledge, le libellé
       « THE ARGUMENT » et les cinq phrases de `PRODUCT_ARGUMENT` (signalées dans `product.ts`).
+- [ ] **Faire signer la copy des maquettes de `/solutions/remote-teams`** — table complète dans
+      `docs/mockup-corrections.md`. Aucun de ces mots n'est validé.
+- [ ] **Passer les pages SECTEUR au test d'acceptation** de `docs/mockup-corrections.md` :
+      `digital-agencies` et `bpo-call-centers` rendent chacune une carte de score identique en héros
+      et en pilier. Les six pages cas d'usage sont faites.
 - [ ] Arbitrer l'ambre des oeils-de-boeuf sur bande claire (voir « La page `/product` ») — décision
       de site, pas de page.
+- [ ] **Arbitrer les deux ambres de la bande `ink`** : l'oeil-de-boeuf de `ScenarioBand` et le badge
+      `WEAK`. La « One Amber Rule » est entamée (voir `docs/mockup-corrections.md`).
+- [ ] **Arbitrer les tirets hors du reçu** — `DESIGN.md` les réserve à `/pricing`, trois maquettes
+      cas d'usage en utilisent. Soit la règle s'élargit, soit les trois passent en trait plein.
+- [ ] **Trancher la contradiction « aucun texte dans les dessins »** — la règle visait les six SVG
+      d'en-tête, les maquettes cas d'usage en sont pleines depuis le 29 juillet.
+- [ ] Rafraîchir le sidecar d'impeccable (`/impeccable document`) : `DESIGN.md` a bougé, ses
+      signalements 36px sont désormais du bruit.
 - [ ] **Corriger le débordement horizontal de `/pricing` à 360 px** — 7 px, **préexistant** et
       découvert en balayant les largeurs le 27 juillet 2026. Le `<table>` du comparatif demande
       343 px dans un conteneur de 312 px (`ComparisonTable.astro`). Ni l'accueil, ni `/product`, ni
@@ -625,6 +650,7 @@ vérifié), et `prefers-reduced-motion` coupe l'animation entièrement plutôt q
 |---|---|
 | `docs/design-brief.md` | Brief initial — ⚠️ décrit l'ancien concept « journée de travail » |
 | `docs/landing-corrections.md` | Le delta qui a corrigé le concept — **c'est la version qui fait foi** |
+| `docs/mockup-corrections.md` | Revue des maquettes cas d'usage — **fait foi sur leur style**, approches refusées incluses |
 | `docs/site-architecture.md` | Arborescence complète, matrice SEO, fondations techniques |
 | `docs/design-handoff/` | Maquettes HTML de référence — ouvrir dans un navigateur |
 | `docs/design_handoff_pricing_cards/` | Cartes cornées de `/pricing` — **remplace `Pricing.dc.html`** |
