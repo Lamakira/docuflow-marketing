@@ -1,0 +1,297 @@
+---
+/** Le projet comme OBJET — étapes, tâches, et ce qui s'y rattache.
+ *
+ * ─── Ce que la section demande ─────────────────────────────────────────────
+ *
+ * Le pilier « The project » de `/solutions/project-profitability` décrit un
+ * CONTENANT : « Every project carries its budget, stages and tasks. Logged
+ * hours move the actual figure as they arrive. »
+ *
+ * La carte y rendait une fiche `record` — la même que le héros, aux mêmes
+ * valeurs, avec la même jauge à 78 %. Elle montrait donc le budget CONSOMMÉ,
+ * c'est-à-dire le sujet du héros, et pas la structure qui le porte.
+ *
+ * ─── Les étapes viennent du produit ────────────────────────────────────────
+ *
+ * ⚠️ `LEAD → WON → IN PROGRESS → IN REVIEW → COMPLETED` est le rail de
+ * l'accueil, et c'est le cycle de vie réel de `crmProjects` dans l'application.
+ * L'accueil et cette page décrivent le même objet : elles ne peuvent pas le
+ * nommer différemment. Les libellés arrivent par les données plutôt que d'être
+ * écrits ici, pour que le jour où le cycle change, il change partout.
+ *
+ * La pastille de l'étape courante est ambre. C'est l'usage que `DESIGN.md` lui
+ * assigne mot pour mot — « the current stage, and only the current stage. It
+ * fills the rail dot » — et la bande de ce bloc est `mint`, dont
+ * l'oeil-de-boeuf est `live` : l'ambre est donc libre sur cet écran.
+ */
+interface Props {
+  title: string;
+  chip: string;
+  stages: string[];
+  at: number;
+  tasks: { state: string; count: number }[];
+  foot: string;
+  /** Traitement Layered Paper — voir `DESIGN.md`, « Layered Paper Card ». */
+  warm?: boolean;
+  /** Bande sombre : seule l'ombre change, la feuille reste claire. */
+  onDark?: boolean;
+}
+
+const { title, chip, stages, at, tasks, foot, warm = false, onDark = false } = Astro.props;
+
+if (at < 0 || at >= stages.length) {
+  throw new Error(
+    `[solutions] ProjectMock : \`at\` vaut ${at} pour ${stages.length} étapes. ` +
+      `L'étape courante doit exister, sinon le rail ne marque rien et la carte perd son seul repère.`
+  );
+}
+
+/** Le total des tâches est DÉRIVÉ. Une carte qui annonce « 52 tasks » au-dessus
+ *  de colonnes qui n'y tombent pas est exactement l'écart que ce projet passe
+ *  son temps à retirer. */
+const totalTasks = tasks.reduce((sum, task) => sum + task.count, 0);
+---
+
+<div
+  class:list={[
+    "project-mock rounded-[8px] border border-rule bg-white p-[18px]",
+    { "project-mock--warm": warm, "project-mock--dark": warm && onDark },
+  ]}
+>
+  <header class="head">
+    <p class="title">{title}</p>
+    <span class="chip">{chip}</span>
+  </header>
+
+  {/* Le cycle de vie. Les étapes franchies sont pleines, la courante est ambre,
+      les suivantes sont des contours — « not yet reached » au sens de
+      `DESIGN.md`, qui leur assigne `Divider Grey`. */}
+  <ol class="rail" aria-label={`Stage ${at + 1} of ${stages.length}: ${stages[at]}`}>
+    {
+      stages.map((stage, index) => (
+        <li
+          class:list={[
+            "stage",
+            { "stage--done": index < at, "stage--now": index === at },
+          ]}
+        >
+          <span class="stage-dot" aria-hidden="true" />
+          <span class="stage-label">{stage}</span>
+        </li>
+      ))
+    }
+  </ol>
+
+  <dl class="tasks">
+    {
+      tasks.map((task) => (
+        <div class="task" data-use-case-motion-row>
+          <dt>{task.state}</dt>
+          <dd>{task.count}</dd>
+        </div>
+      ))
+    }
+  </dl>
+
+  <footer class="foot">
+    <span class="total">{totalTasks} tasks</span>
+    <span class="note">{foot}</span>
+  </footer>
+</div>
+
+<style>
+  .project-mock--warm {
+    border: 0;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+  }
+
+  .project-mock--dark {
+    box-shadow: var(--shadow-paper-card-dark);
+  }
+
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .title {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  .chip {
+    flex: none;
+    border-radius: 3px;
+    background: var(--color-hour);
+    padding: 3px 8px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    color: var(--color-ink);
+  }
+
+  /* Le rail. Horizontal ici — le rail de l'accueil est vertical parce qu'il
+     suit le défilement de la page ; dans une carte, la largeur est ce qu'on a. */
+  .rail {
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .stage {
+    position: relative;
+    display: grid;
+    justify-items: start;
+    gap: 7px;
+  }
+
+  /* Le trait qui relie deux étapes. Il part du centre de la pastille et s'arrête
+     à la suivante ; la dernière n'en porte pas — un cycle terminé ne continue
+     pas dans le vide. */
+  .stage:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    top: 4px;
+    right: 0;
+    left: 9px;
+    height: 1px;
+    background: var(--color-rule);
+  }
+
+  .project-mock--warm .stage:not(:last-child)::before {
+    background: var(--color-paper-rule);
+  }
+
+  .stage-dot {
+    position: relative;
+    z-index: 1;
+    height: 9px;
+    width: 9px;
+    border-radius: 999px;
+    background: var(--color-rule);
+  }
+
+  .project-mock--warm .stage-dot {
+    background: var(--color-paper-layer);
+  }
+
+  .stage--done .stage-dot {
+    background: var(--color-live);
+  }
+
+  /* L'étape courante, et elle seule. Anneau ambre plein — l'usage que
+     `DESIGN.md` réserve à la pastille du rail. */
+  .stage--now .stage-dot {
+    background: var(--color-hour);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-hour) 26%, transparent);
+  }
+
+  .stage-label {
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    letter-spacing: 0.06em;
+    color: var(--color-slate);
+  }
+
+  .project-mock--warm .stage-label {
+    color: var(--color-paper-label);
+  }
+
+  .stage--now .stage-label {
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+
+  .tasks {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin: 18px 0 0;
+    border-top: 1px solid var(--color-rule);
+    padding-top: 14px;
+  }
+
+  .project-mock--warm .tasks {
+    border-top-color: var(--color-paper-rule);
+  }
+
+  .task {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+  }
+
+  .task dt {
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  .project-mock--warm .task dt {
+    color: var(--color-paper-label);
+  }
+
+  .task dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .foot {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-top: 14px;
+    border-top: 1px solid var(--color-rule);
+    padding-top: 12px;
+  }
+
+  .project-mock--warm .foot {
+    border-top-color: var(--color-paper-rule);
+  }
+
+  .total {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .note {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-slate);
+  }
+
+  .project-mock--warm .note {
+    color: var(--color-paper-label);
+  }
+
+  /* Sous 560px cinq étapes ne tiennent plus en une rangée lisible : les
+     libellés passent en deux colonnes plutôt que de se tronquer. */
+  @media (max-width: 560px) {
+    .stage-label {
+      font-size: 8px;
+    }
+
+    .tasks {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

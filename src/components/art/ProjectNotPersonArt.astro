@@ -2,122 +2,188 @@
 /**
  * `/solutions/project-profitability` — section « objection » (pression).
  *
- * L'objection est « suivre la marge en cours de chantier revient à suivre les
- * gens ». La réponse est une question de PLACEMENT : le chiffre est une
- * propriété du projet. Le dessin le montre littéralement — la marge est sur la
- * fiche du projet, et les personnes sont en dessous, sans chiffre en face
- * d'elles.
+ * L'objection est « watching margin mid-job turns into watching people ». La
+ * réponse est une question de PLACEMENT : le chiffre est une propriété du
+ * projet. Le dessin le montre littéralement — la marge est sur la fiche du
+ * projet, et les personnes sont en dessous, sans chiffre en face d'elles.
  *
- * ⚠️ Aucune valeur par personne, jamais, dans ce dessin. Une seule colonne de
- * chiffres en regard des avatars et il dirait le contraire de la section.
+ * ─── Ce qui a changé le 30 juillet 2026 ────────────────────────────────────
+ *
+ * 1. **Layered Paper**, comme le reste de la page.
+ * 2. **L'absence est DESSINÉE, plus seulement omise.** La version précédente se
+ *    contentait de ne pas afficher de colonne par personne, et l'annonçait dans
+ *    un libellé. Une absence qu'on annonce n'est pas une absence qu'on voit :
+ *    la colonne existe maintenant, avec un tiret sur chaque rangée. Le lecteur
+ *    compte quatre personnes et zéro chiffre.
+ *    Même technique que « Before 09:00 and after 18:00 · nothing recorded »
+ *    d'`OwnRecordArt` et que les emplacements vides de `ThinWeekArt` : une
+ *    limite montrée vaut mieux qu'une garantie promise.
+ *
+ * ⚠️ AUCUNE VALEUR PAR PERSONNE, JAMAIS, dans ce dessin. Un tiret est une case
+ * vide ; un nombre, même flatteur, dirait l'inverse de la section. C'est la
+ * seule règle non négociable de ce fichier.
+ *
+ * ⚠️ Pas de `chip` d'état ici, contrairement à `ProjectMock` : cette carte n'est
+ * pas une fiche projet de plus, c'est une démonstration de placement. Tout ce
+ * qui n'y sert pas l'argument la rapprocherait de la maquette du pilier 01.
+ *
+ * Les chiffres sont ceux du scénario et de `VarianceMock`, dont les lignes
+ * s'additionnent aux mêmes totaux.
  */
 import { CONTACTS } from "../../data/site";
+
+const BUDGETED = 320;
+const ACTUAL = 249;
 ---
 
-<div class="scope" data-art>
-  {/* Le chiffre : sur le projet, en haut, seul. */}
-  <section class="project" data-art-in>
-    <header class="head">
+{/* THESIS: the figure is a property of the job, and the people carry none of it.
+    OWN-WORLD: a warm project sheet, the numbers at the top, the team below with
+    an empty column. STORY: read the two figures, then run down the roster and
+    find nothing opposite anyone. FIRST VIEWPORT: the figures; the empty column
+    closes it. FORM: standalone Layered Paper — the situation illustration on
+    this page is a chart, so this one is a record. */}
+<div class="scope-stage" data-art>
+  <span class="sheet-backing backing-one" aria-hidden="true"></span>
+  <span class="sheet-backing backing-two" aria-hidden="true"></span>
+
+  <section class="scope-card" aria-label="The margin belongs to the project, not to the people on it">
+    {/* Le chiffre : sur le projet, en haut, seul. */}
+    <header class="head" data-art-in>
       <span class="label">Fairview · phase 2</span>
-      <span class="chip">In progress</span>
+      <span class="scope-note">figures belong to the job</span>
     </header>
 
-    <div class="figures">
+    <div class="figures" data-art-in>
       <span class="figure">
-        <span class="value">320 h</span>
+        <span class="value">{BUDGETED} h</span>
         <span class="cap">budgeted</span>
       </span>
       <span class="figure">
-        <span class="value over">249 h</span>
-        <span class="cap">actual</span>
+        <span class="value over">{ACTUAL} h</span>
+        <span class="cap">actual · week 2</span>
       </span>
     </div>
+
+    {/* Les personnes : assignées, et la colonne en face d'elles est vide. */}
+    <section class="team">
+      <div class="team-head" data-art-in>
+        <span class="team-label">Assigned</span>
+        <span class="team-label">Per-person figure</span>
+      </div>
+
+      <ul class="people">
+        {
+          CONTACTS.map((contact) => (
+            <li data-art-in data-use-case-motion-row>
+              <span class="avatar" style={`background:${contact.tone}`}>
+                {contact.initials}
+              </span>
+              <span class="name">{contact.name}</span>
+              <span class="role">{contact.role}</span>
+              {/* ⚠️ Un tiret, jamais un nombre. Voir l'en-tête du fichier.
+                  Le glyphe est décoratif et la valeur est dite en toutes
+                  lettres pour les lecteurs d'écran : un « — » se prononce
+                  « tiret cadratin », ce qui n'apprend rien à personne. */}
+              <span class="none" aria-hidden="true">—</span>
+              <span class="sr-only">no figure</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <footer class="foot" data-art-pop>Visibility by role, not by person</footer>
   </section>
-
-  {/* Les personnes : assignées, sans chiffre en face. */}
-  <section class="team">
-    <p class="label" data-art-in>Assigned · no per-person figure</p>
-
-    <ul class="people">
-      {
-        CONTACTS.map((contact) => (
-          <li data-art-in data-use-case-motion-row>
-            <span class="avatar" style={`background:${contact.tone}`}>
-              {contact.initials}
-            </span>
-            <span class="name">{contact.name}</span>
-            <span class="role">{contact.role}</span>
-          </li>
-        ))
-      }
-    </ul>
-  </section>
-
-  <footer class="foot" data-art-pop>Visibility by role, not by person</footer>
 </div>
 
 <style>
-  .scope {
-    border: 1px solid var(--color-rule);
-    border-radius: 8px;
-    background: #fff;
-    overflow: hidden;
+  /* Scène transparente — padding SEULEMENT. Une carte seule ne s'assied jamais
+     dans une autre carte ; les deux feuilles derrière elle SONT la profondeur. */
+  .scope-stage {
+    position: relative;
+    padding: 14px 16px 18px;
   }
 
-  .project {
-    border-bottom: 1px solid var(--color-rule);
-    padding: 14px 18px 16px;
+  .sheet-backing {
+    position: absolute;
+    inset: 20px 20px 14px;
+    border-radius: var(--radius-paper-card);
+    transition: transform var(--paper-motion-duration) var(--paper-motion-ease);
+  }
+
+  .backing-one {
+    background: var(--color-paper-layer);
+    transform: translate(-7px, 5px) rotate(-2.4deg);
+  }
+
+  .backing-two {
+    background: var(--color-paper-layer-light);
+    transform: translate(6px, 3px) rotate(1.7deg);
+  }
+
+  .scope-card {
+    position: relative;
+    z-index: 2;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+    padding: 15px 18px 16px;
+    transition:
+      transform var(--paper-motion-duration) var(--paper-motion-ease),
+      box-shadow var(--paper-motion-duration) var(--paper-motion-ease);
+    transform: rotate(-0.6deg);
   }
 
   .head {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: space-between;
     gap: 12px;
   }
 
-  .label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--color-slate);
-  }
-
-  .chip {
-    flex: none;
-    border-radius: 3px;
-    background: var(--color-hour);
-    padding: 3px 8px;
+  .label,
+  .scope-note {
     font-family: var(--font-mono);
     font-size: 9px;
-    font-weight: 700;
-    color: var(--color-ink);
+    color: var(--color-paper-label);
+  }
+
+  .label {
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
 
   .figures {
-    display: flex;
-    gap: 28px;
-    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper-chip);
+    padding: 12px 14px;
   }
 
   .figure {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    min-width: 0;
     gap: 3px;
   }
 
   .value {
     font-family: var(--font-mono);
-    font-size: 20px;
-    font-weight: 500;
-    line-height: 1;
+    font-size: 17px;
+    font-weight: 700;
     color: var(--color-ink);
     font-variant-numeric: tabular-nums;
   }
 
-  .over {
-    color: var(--color-hour);
+  /* Le réel dépasse : ambre, l'état qui appelle une action — sur le PROJET. */
+  .value.over {
+    color: var(--color-ink);
+    text-decoration: underline;
+    text-decoration-color: var(--color-hour);
+    text-decoration-thickness: 3px;
+    text-underline-offset: 4px;
   }
 
   .cap {
@@ -125,61 +191,122 @@ import { CONTACTS } from "../../data/site";
     font-size: 9px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--color-slate);
+    color: var(--color-paper-label);
   }
 
   .team {
-    background: var(--color-paper);
-    padding: 13px 18px 15px;
+    margin-top: 16px;
+  }
+
+  .team-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid var(--color-paper-rule);
+    padding-bottom: 8px;
+  }
+
+  .team-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-paper-label);
   }
 
   .people {
-    margin: 10px 0 0;
+    margin: 0;
     padding: 0;
     list-style: none;
   }
 
   .people li {
-    display: flex;
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) auto 34px;
     align-items: center;
     gap: 10px;
-    padding: 5px 0;
+    border-bottom: 1px solid var(--color-paper-rule);
+    padding: 9px 0;
   }
 
-  /* 9px : le pas `annotation`, plancher de la gamme — « en dessous, rien ». Même
-     valeur que les initiales d'avatar de `ClientMock`. */
   .avatar {
     display: grid;
-    height: 24px;
-    width: 24px;
-    flex: none;
+    height: 22px;
+    width: 22px;
     place-items: center;
     border-radius: 999px;
     font-family: var(--font-mono);
-    font-size: 9px;
+    font-size: 8.5px;
+    font-weight: 700;
     color: #fff;
   }
 
   .name {
-    font-size: 12.5px;
-    font-weight: 500;
+    overflow: hidden;
+    font-size: 12px;
     color: var(--color-ink);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .role {
     font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--color-slate);
+    font-size: 9px;
+    color: var(--color-paper-label);
+  }
+
+  /* La case vide, dessinée. C'est l'argument de la section : il n'y a rien à
+     lire ici, et on le voit au lieu de devoir le croire.
+     ⚠️ En `paper-label` et non `paper-layer` : la passe polish du 30 juillet
+     2026 l'a mesuré à 1,52:1, c'est-à-dire quasi invisible. Un vide qu'on ne
+     voit pas ne démontre rien — il fallait le rendre PLUS lisible, pas moins.
+     Mesuré après correction : 4,8:1. */
+  .none {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    text-align: right;
+    color: var(--color-paper-label);
   }
 
   .foot {
-    border-top: 1px solid var(--color-rule);
-    padding: 12px 18px 13px;
+    margin-top: 12px;
     font-family: var(--font-mono);
     font-size: 10px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--color-live-on-light);
+    color: var(--color-paper-label);
+  }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .scope-stage:hover .backing-one {
+      transform: translate(-13px, 8px) rotate(-3.8deg);
+    }
+
+    .scope-stage:hover .backing-two {
+      transform: translate(10px, 5px) rotate(2.8deg);
+    }
+
+    .scope-stage:hover .scope-card {
+      box-shadow: var(--shadow-paper-card-hover);
+      transform: translateY(-5px) rotate(0deg);
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .scope-stage {
+      padding: 10px 11px 14px;
+    }
+
+    .sheet-backing {
+      inset: 15px 15px 10px;
+    }
+
+    .scope-card {
+      padding-inline: 14px;
+    }
+
+    .role {
+      display: none;
+    }
   }
 </style>
 

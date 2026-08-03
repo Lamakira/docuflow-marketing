@@ -3,51 +3,136 @@
  * `/solutions/employee-productivity` — section « objection » (consentement).
  *
  * Ce que la mesure enregistre, énoncé ligne par ligne, avec ce qu'elle ne fait
- * PAS en regard. L'objection est « personne ne veut d'un score dans le dos » :
- * la réponse tient dans la dernière ligne — le score note le relevé, jamais la
- * personne, et il ne change pas le temps compté.
+ * PAS en regard. L'objection est « nobody wants a productivity score on their
+ * back » : la réponse tient dans la dernière paire — le score note le relevé,
+ * jamais la personne.
  *
- * Les paires viennent des garanties de la section ; aucune n'est ajoutée ici.
+ * ─── Ce qui a été corrigé le 30 juillet 2026 ───────────────────────────────
+ *
+ * Le concept était bon et il est conservé : les paires viennent des garanties
+ * de la section, aucune n'est inventée ici. Deux choses manquaient.
+ *
+ * 1. **Layered Paper.** La carte restait blanche et plate au milieu d'une page
+ *    passée au papier chaud. Une seule surface froide sur une page chaude se
+ *    voit immédiatement.
+ *
+ * 2. **Un chiffre vérifiable.** L'argument de la section est précis — le score
+ *    « never changes the time counted » — et le dessin ne le montrait pas. Une
+ *    liste de promesses reste une liste de promesses. La carte porte donc
+ *    maintenant les DEUX nombres côte à côte : l'heure comptée et sa note, avec
+ *    un simple filet entre elles. C'est le test « ça se compte » de
+ *    `docs/mockup-corrections.md` — sans chiffre à vérifier, rien à croire.
+ *
+ * ⚠️ La colonne de droite est la seule du site qui liste des NON-actions. Elle
+ * ne doit jamais glisser vers une formulation positive (« votre vie privée est
+ * protégée ») : ce qui rassure ici, c'est une limite énoncée, pas une garantie
+ * promise. Même règle que la fenêtre d'heures actives d'`OwnRecordArt`.
  */
+
+/** Les paires viennent des garanties de la section ; aucune n'est ajoutée ici. */
 const PAIRS = [
   { on: "Activity in 60-second windows", off: "No keystroke content" },
   { on: "Idle prompted with a countdown", off: "Never deducted silently" },
   { on: "Evidence score on the record", off: "Never a score on the person" },
 ];
+
+/** Les deux nombres qui doivent coexister sous les yeux du lecteur. Le premier
+ *  est noté par le second, et le second ne le change pas — c'est exactement la
+ *  phrase de la section, rendue vérifiable. */
+const COUNTED = "6:42:10";
+const SCORE = "88/100";
 ---
 
-<div class="measure" data-art>
-  <header class="head" data-art-in>
-    <span class="label">What is recorded</span>
-    <span class="live">
-      <span class="dot" aria-hidden="true"></span>
-      Visible while running
-    </span>
-  </header>
+{/* THESIS: the score is a property of the record and never reaches the person
+    or the hours. OWN-WORLD: a warm consent sheet, two columns, two figures.
+    STORY: read what is captured, read what never is, then see the counted time
+    sitting untouched beside its grade. FIRST VIEWPORT: the two columns; the
+    figures close it. FORM: standalone Layered Paper — the situation
+    illustration on this page is a tally sheet, so this one is a ledger. */}
+<div class="measure-stage" data-art>
+  <span class="sheet-backing backing-one" aria-hidden="true"></span>
+  <span class="sheet-backing backing-two" aria-hidden="true"></span>
 
-  <ul class="pairs">
-    {
-      PAIRS.map((pair) => (
-        <li data-art-in data-use-case-motion-row>
-          <span class="on">
-            <span class="tick" aria-hidden="true"></span>
-            {pair.on}
-          </span>
-          <span class="off">{pair.off}</span>
-        </li>
-      ))
-    }
-  </ul>
+  <section class="measure-card" aria-label="What the measure records and what it never does">
+    <header class="head" data-art-in>
+      <span class="label">What is recorded</span>
+      <span class="live">
+        <span class="dot" aria-hidden="true"></span>
+        Visible while running
+      </span>
+    </header>
 
-  <footer class="foot" data-art-pop>Openable by the person it describes</footer>
+    <ul class="pairs">
+      {
+        PAIRS.map((pair) => (
+          <li data-art-in data-use-case-motion-row>
+            <span class="on">
+              <span class="tick" aria-hidden="true" />
+              {pair.on}
+            </span>
+            <span class="off">{pair.off}</span>
+          </li>
+        ))
+      }
+    </ul>
+
+    {/* Les deux nombres, côte à côte. « Never changes the time counted » rendu
+        vérifiable : l'heure à gauche, sa note à droite, un filet entre les deux
+        et rien qui les relie. */}
+    <div class="figures" data-art-pop>
+      <div class="figure">
+        <span class="figure-label">Time counted</span>
+        <span class="figure-value">{COUNTED}</span>
+      </div>
+
+      <span class="figure-sep" aria-hidden="true"></span>
+
+      <div class="figure figure--graded">
+        <span class="figure-label">Record graded</span>
+        <span class="figure-value">{SCORE}</span>
+      </div>
+    </div>
+
+    <footer class="foot" data-art-in>Openable by the person it describes</footer>
+  </section>
 </div>
 
 <style>
-  .measure {
-    border: 1px solid var(--color-rule);
-    border-radius: 8px;
-    background: #fff;
-    padding: 14px 18px 16px;
+  /* Scène transparente — padding SEULEMENT. Une carte seule ne s'assied jamais
+     dans une autre carte ; les deux feuilles derrière elle SONT la profondeur. */
+  .measure-stage {
+    position: relative;
+    padding: 14px 16px 18px;
+  }
+
+  .sheet-backing {
+    position: absolute;
+    inset: 20px 20px 14px;
+    border-radius: var(--radius-paper-card);
+    transition: transform var(--paper-motion-duration) var(--paper-motion-ease);
+  }
+
+  .backing-one {
+    background: var(--color-paper-layer);
+    transform: translate(-7px, 5px) rotate(-2.4deg);
+  }
+
+  .backing-two {
+    background: var(--color-paper-layer-light);
+    transform: translate(6px, 3px) rotate(1.7deg);
+  }
+
+  .measure-card {
+    position: relative;
+    z-index: 2;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+    padding: 15px 18px 16px;
+    transition:
+      transform var(--paper-motion-duration) var(--paper-motion-ease),
+      box-shadow var(--paper-motion-duration) var(--paper-motion-ease);
+    transform: rotate(-0.6deg);
   }
 
   .head {
@@ -60,24 +145,26 @@ const PAIRS = [
 
   .label {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 9px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--color-slate);
+    color: var(--color-paper-label);
   }
 
   .live {
     display: flex;
+    flex: none;
     align-items: center;
     gap: 7px;
     border-radius: 999px;
-    background: var(--color-band-mint);
+    background: var(--color-paper-sage);
     padding: 4px 10px;
     font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--color-live-on-light);
+    font-size: 9px;
+    color: var(--color-paper-sage-text);
   }
 
+  /* Remplissage pur, donc `live` — la règle de `global.css`. */
   .dot {
     height: 7px;
     width: 7px;
@@ -92,47 +179,129 @@ const PAIRS = [
   }
 
   .pairs li {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    border-top: 1px solid var(--color-rule);
-    padding: 10px 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    align-items: baseline;
+    gap: 12px;
+    border-top: 1px solid var(--color-paper-rule);
+    padding: 10px 2px;
   }
 
   .on {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    font-size: 12.5px;
+    display: grid;
+    grid-template-columns: 12px minmax(0, 1fr);
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
     color: var(--color-ink);
   }
 
   .tick {
-    height: 11px;
-    width: 11px;
-    flex: none;
+    height: 9px;
+    width: 9px;
+    align-self: center;
     border-radius: 999px;
-    border: 2px solid var(--color-live-on-light);
+    border: 2px solid var(--color-paper-sage-text);
   }
 
-  /* La contrepartie, en retrait et décalée sous la coche : ce que la mesure ne
-     fait pas compte autant que ce qu'elle fait. */
+  /* ⚠️ La colonne des non-actions. Ton retenu, jamais barré ni rouge : ce ne
+     sont pas des échecs, ce sont des limites que le produit s'impose. */
   .off {
-    margin-left: 20px;
     font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--color-slate);
+    font-size: 11px;
+    color: var(--color-paper-label);
+  }
+
+  .figures {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
+    margin-top: 14px;
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper-chip);
+    padding: 12px 14px;
+  }
+
+  .figure {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+  }
+
+  .figure-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-paper-label);
+  }
+
+  .figure-value {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Le séparateur est un filet, pas une flèche : une flèche dirait que l'un
+     agit sur l'autre, et toute la section dit qu'il n'en fait rien. */
+  .figure-sep {
+    align-self: stretch;
+    background: var(--color-paper-rule);
+  }
+
+  .figure--graded .figure-value {
+    color: var(--color-paper-sage-text);
   }
 
   .foot {
     margin-top: 12px;
-    border-top: 1px solid var(--color-rule);
+    border-top: 1px solid var(--color-paper-rule);
     padding-top: 12px;
     font-family: var(--font-mono);
     font-size: 10px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--color-live-on-light);
+    color: var(--color-paper-label);
+  }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .measure-stage:hover .backing-one {
+      transform: translate(-13px, 8px) rotate(-3.8deg);
+    }
+
+    .measure-stage:hover .backing-two {
+      transform: translate(10px, 5px) rotate(2.8deg);
+    }
+
+    .measure-stage:hover .measure-card {
+      box-shadow: var(--shadow-paper-card-hover);
+      transform: translateY(-5px) rotate(0deg);
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .measure-stage {
+      padding: 10px 11px 14px;
+    }
+
+    .sheet-backing {
+      inset: 15px 15px 10px;
+    }
+
+    .measure-card {
+      padding-inline: 14px;
+    }
+
+    .pairs li {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 4px;
+    }
+
+    .off {
+      padding-left: 20px;
+    }
   }
 </style>
 

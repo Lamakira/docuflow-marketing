@@ -2,54 +2,173 @@
 /**
  * `/solutions/remote-teams` — section « objection » (surveillance).
  *
- * Le relevé vu par LA PERSONNE QU'IL DÉCRIT, pas par un administrateur : c'est
- * la réponse à l'objection, dessinée. Un indicateur visible en haut, les entrées
- * de la journée, et la mention que cette vue est la sienne.
+ * ─── Ce que la section demande ─────────────────────────────────────────────
  *
- * Volontairement PAS un tableau de bord d'admin : un dessin de supervision en
- * face d'une objection sur la surveillance illustrerait l'objection, pas la
- * réponse.
+ * « Monitoring has to be visible or it is not worth having. A running
+ * indicator, active-hours window, blurred screenshots and self-review make the
+ * record inspectable by the person it describes. »
+ *
+ * Donc le dessin n'est pas « un relevé existe » — c'est le relevé VU DEPUIS LA
+ * PLACE DE LA PERSONNE QU'IL DÉCRIT. Volontairement PAS un tableau de bord
+ * d'administration : un dessin de supervision en face d'une objection sur la
+ * surveillance illustrerait l'objection, pas la réponse.
+ *
+ * ─── Ce qui a été corrigé ──────────────────────────────────────────────────
+ *
+ * La version précédente alignait trois tâches et une durée. Reproche reçu, et
+ * le même que sur le héros : c'est abstrait, ça ne ressemble pas au relevé
+ * d'une JOURNÉE. Trois lignes sans heure sont une liste ; elles ne situent
+ * rien, et surtout elles ne montrent aucune des quatre garanties de la section.
+ *
+ * Quatre choses rendent ce relevé sien, et chacune est dessinée plutôt que
+ * légendée :
+ *   1. des HEURES D'HORLOGE — c'est une journée nommée, mardi, pas un extrait ;
+ *   2. l'indicateur visible, en haut, là où il est dans le produit ;
+ *   3. la ligne de ralenti dit « you were prompted » — le produit DEMANDE au
+ *      lieu de déduire, et c'est la personne qu'il interroge ;
+ *   4. la fenêtre d'heures actives est écrite comme ce qui N'EST PAS
+ *      enregistré. Une limite énoncée vaut mieux qu'une garantie promise, et
+ *      c'est la seule ligne de la carte qui parle de ce qui n'existe pas.
+ *
+ * ─── Layered Paper : la recette AUTONOME ───────────────────────────────────
+ *
+ * `DESIGN.md` décrit deux recettes, et celle-ci prend la première — deux
+ * feuilles de calage derrière UNE face, scène transparente, aucun canevas. La
+ * page montre déjà une scène multi-objets (`ThinWeekArt`) ; répéter le canevas
+ * ferait deux fois le même geste, alors que l'argument d'ici n'est pas une
+ * comparaison mais UN document — le sien.
+ *
+ * ⚠️ La scène n'a NI fond, NI filet, NI rayon, NI ombre. Une carte seule ne
+ * s'assied jamais dans une autre carte ; les deux feuilles derrière elle SONT
+ * la profondeur.
+ *
+ * ⚠️ Durées et heure de ralenti reprises des maquettes de la page
+ * (`solutions.ts`, `remote-teams`) : mêmes tâches Atlas que le pilier « the
+ * week », même `14:20`. Si l'une bouge, l'autre ment.
  */
+
+/** Les heures actives du poste. Elles bornent la journée dessinée ET la ligne
+ *  qui dit ce qui n'est pas capturé — une seule source, donc la borne affichée
+ *  ne peut pas contredire les entrées. */
+const WINDOW = { from: "09:00", to: "18:00" };
+
+/** La journée. La première ligne est celle qui tourne : c'est elle qui prend
+ *  `paper-accent`, que la palette réserve à « the current timer row ». */
 const ENTRIES = [
-  { task: "Atlas · Code review", duration: "1:04:22" },
-  { task: "Atlas · Standup", duration: "0:12:00" },
-  { task: "Idle · prompted 14:20", duration: "0:08:10" },
+  {
+    at: "09:12",
+    task: "Atlas · Code review",
+    duration: "1:04:22",
+    running: true,
+    note: "3 screenshots · blurred",
+  },
+  { at: "11:30", task: "Atlas · Standup", duration: "0:12:00", running: false, note: null },
+  {
+    at: "14:20",
+    task: "Idle · you were prompted",
+    duration: "0:08:10",
+    running: false,
+    note: null,
+  },
 ];
 ---
 
-<div class="own" data-art>
-  <header class="head" data-art-in>
-    <span class="who">Your record</span>
-    <span class="live">
-      <span class="dot" aria-hidden="true"></span>
-      Timer running
-    </span>
-  </header>
+{/* THESIS: the monitored record is a document its subject holds, with the hours
+    of an actual day and a stated edge to what is captured. OWN-WORLD: a single
+    warm timesheet lifted off two backing sheets. STORY: see the indicator, read
+    your own Tuesday, find the line saying what was not recorded. FIRST VIEWPORT:
+    one sheet, square to the reader, nothing behind glass. FORM: the standalone
+    Layered Paper card, deliberately not the multi-object desk used by the
+    situation illustration on the same page. */}
+<div class="own-stage" data-art>
+  <span class="sheet-backing backing-one" aria-hidden="true"></span>
+  <span class="sheet-backing backing-two" aria-hidden="true"></span>
 
-  <ul class="entries">
-    {
-      ENTRIES.map((entry) => (
-        <li data-art-in data-use-case-motion-row>
-          <span class="task">{entry.task}</span>
-          <span class="dur">{entry.duration}</span>
-        </li>
-      ))
-    }
-  </ul>
+  <section class="own-card" aria-label="Your own time record for Tuesday">
+    <header class="head" data-art-in>
+      <span class="who">
+        Your record
+        <span class="day">Tuesday</span>
+      </span>
 
-  {/* La ligne qui porte l'argument : la vue appartient à la personne. */}
-  <footer class="foot" data-art-pop>
-    <span class="tick" aria-hidden="true"></span>
-    Visible to you, editable by you
-  </footer>
+      {/* Garantie no 1, dessinée telle quelle : l'indicateur est VISIBLE, et il
+          est en haut de la carte comme il est en haut du produit. Famille sage —
+          la palette papier de l'information confirmée. */}
+      <span class="live">
+        <span class="dot" aria-hidden="true"></span>
+        Timer running
+      </span>
+    </header>
+
+    <ul class="entries">
+      {
+        ENTRIES.map((entry) => (
+          <li class:list={{ current: entry.running }} data-art-in data-use-case-motion-row>
+            {/* L'heure d'horloge — ce qui manquait. Sans elle, trois durées
+                empilées sont une liste ; avec elle, c'est une journée. */}
+            <span class="at">{entry.at}</span>
+            <span class="task">{entry.task}</span>
+            <span class="dur">{entry.duration}</span>
+            {entry.note && <span class="note">{entry.note}</span>}
+          </li>
+        ))
+      }
+    </ul>
+
+    {/* La fenêtre d'heures actives, écrite comme une ABSENCE. C'est la seule
+        ligne qui parle de ce qui n'existe pas, et c'est celle qui répond le
+        plus directement à l'objection. */}
+    <p class="window" data-art-in>
+      Before {WINDOW.from} and after {WINDOW.to} · nothing recorded
+    </p>
+
+    {/* La ligne qui porte l'argument : la vue appartient à la personne, et pas
+        seulement en lecture — « review » et « correct » sont des actions. */}
+    <footer class="foot" data-art-pop>
+      <span class="tick" aria-hidden="true"></span>
+      Yours to open, review and correct
+    </footer>
+  </section>
 </div>
 
 <style>
-  .own {
-    border: 1px solid var(--color-rule);
-    border-radius: 8px;
-    background: #fff;
-    padding: 14px 18px 16px;
+  /* ⚠️ Scène transparente — padding SEULEMENT. Le padding réserve la place que
+     les feuilles de calage occupent en débordant ; sans lui, elles seraient
+     rognées par la colonne. */
+  .own-stage {
+    position: relative;
+    padding: 14px 16px 18px;
+  }
+
+  .sheet-backing {
+    position: absolute;
+    inset: 20px 20px 14px;
+    border-radius: var(--radius-paper-card);
+    transition: transform var(--paper-motion-duration) var(--paper-motion-ease);
+  }
+
+  /* Décalages et rotations de la recette, à la valeur près. */
+  .backing-one {
+    background: var(--color-paper-layer);
+    transform: translate(-7px, 5px) rotate(-2.4deg);
+  }
+
+  .backing-two {
+    background: var(--color-paper-layer-light);
+    transform: translate(6px, 3px) rotate(1.7deg);
+  }
+
+  .own-card {
+    position: relative;
+    z-index: 2;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+    padding: 15px 18px 16px;
+    transition:
+      transform var(--paper-motion-duration) var(--paper-motion-ease),
+      box-shadow var(--paper-motion-duration) var(--paper-motion-ease);
+    transform: rotate(-0.6deg);
   }
 
   .head {
@@ -61,27 +180,42 @@ const ENTRIES = [
   }
 
   .who {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
     font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--color-slate);
+    color: var(--color-paper-label);
   }
 
-  /* L'indicateur visible : la garantie no 1 de la section, dessinée telle
-     quelle. Le point est un remplissage pur, donc `live`. */
+  /* Le jour nommé, en display et non en mono : c'est la seule chose de cette
+     carte qu'un humain a choisie, pas le système. Règle Recorded/Written. */
+  .day {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-transform: none;
+    color: var(--color-ink);
+  }
+
   .live {
     display: flex;
+    flex: none;
     align-items: center;
     gap: 7px;
     border-radius: 999px;
-    background: var(--color-band-mint);
+    background: var(--color-paper-sage);
     padding: 4px 10px;
     font-family: var(--font-mono);
     font-size: 10px;
-    color: var(--color-live-on-light);
+    color: var(--color-paper-sage-text);
   }
 
+  /* Remplissage pur, donc `live` — la règle de `global.css` : `live-on-light`
+     porte le texte, `live` porte la forme. */
   .dot {
     height: 7px;
     width: 7px;
@@ -96,18 +230,44 @@ const ENTRIES = [
   }
 
   .entries li {
-    display: flex;
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
     align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-    border-top: 1px solid var(--color-rule);
-    padding: 9px 0;
+    gap: 10px;
+    border-top: 1px solid var(--color-paper-rule);
+    padding: 10px 2px;
+  }
+
+  /* La ligne en cours : `paper-accent`, que la palette réserve exactement à ça.
+     Le filet du haut disparaît — un creux ne se sépare pas de la ligne du
+     dessus, il la remplace. */
+  .entries li.current {
+    border-top-color: transparent;
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper-accent);
+    box-shadow: var(--shadow-paper-inset);
+    padding: 11px 12px;
+  }
+
+  .at {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-paper-label);
+    font-variant-numeric: tabular-nums;
   }
 
   .task {
+    overflow: hidden;
     font-family: var(--font-mono);
     font-size: 11px;
-    color: var(--color-slate);
+    color: var(--color-paper-label);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .entries li.current .task {
+    font-weight: 600;
+    color: var(--color-ink);
   }
 
   .dur {
@@ -117,12 +277,35 @@ const ENTRIES = [
     font-variant-numeric: tabular-nums;
   }
 
+  /* La note de capture pend sous sa ligne, dans la colonne du libellé : elle
+     appartient à CETTE entrée, ce qu'une rangée séparée ne dirait pas. */
+  .note {
+    grid-column: 2 / -1;
+    margin-top: 4px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    /* ⚠️ Jamais `paper-connector` en TEXTE : c'est une couleur de TRACÉ
+       (« lineage paths », DESIGN.md), et elle tombe à 2,6:1 sur papier.
+       Relevé par la passe polish du 30 juillet 2026. */
+    color: var(--color-paper-label);
+  }
+
+  .window {
+    margin: 10px 0 0;
+    border-top: 1px dashed var(--color-paper-rule);
+    padding-top: 10px;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    color: var(--color-paper-label);
+  }
+
   .foot {
     display: flex;
     align-items: center;
     gap: 9px;
-    margin-top: 12px;
-    border-top: 1px solid var(--color-rule);
+    margin-top: 10px;
+    border-top: 1px solid var(--color-paper-rule);
     padding-top: 12px;
     font-size: 12.5px;
     color: var(--color-ink);
@@ -133,7 +316,42 @@ const ENTRIES = [
     width: 12px;
     flex: none;
     border-radius: 999px;
-    border: 2px solid var(--color-live-on-light);
+    border: 2px solid var(--color-paper-sage-text);
+  }
+
+  /* Séparation des plans au survol, plafonnée à 5 px de levée par la recette. */
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .own-stage:hover .backing-one {
+      transform: translate(-13px, 8px) rotate(-3.8deg);
+    }
+
+    .own-stage:hover .backing-two {
+      transform: translate(10px, 5px) rotate(2.8deg);
+    }
+
+    .own-stage:hover .own-card {
+      box-shadow: var(--shadow-paper-card-hover);
+      transform: translateY(-5px) rotate(0deg);
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .own-stage {
+      padding: 10px 11px 14px;
+    }
+
+    .sheet-backing {
+      inset: 15px 15px 10px;
+    }
+
+    .own-card {
+      padding-inline: 14px;
+    }
+
+    .entries li {
+      grid-template-columns: 38px minmax(0, 1fr) auto;
+      gap: 8px;
+    }
   }
 </style>
 

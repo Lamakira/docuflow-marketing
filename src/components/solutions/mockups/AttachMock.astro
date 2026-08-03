@@ -1,0 +1,221 @@
+---
+/** Ce qui s'attache au dossier — heures, tâches, notes, documents.
+ *
+ * ─── Ce que la section demande ─────────────────────────────────────────────
+ *
+ * Le pilier « The line » de `/solutions/client-billing` dit : « Hours, tasks,
+ * notes and documents ATTACH TO THE CLIENT PROJECT as work happens. At month
+ * end, the invoice becomes A VIEW OF THAT RECORD instead of something rebuilt
+ * by one person. »
+ *
+ * Quatre natures sont nommées. La carte y rendait la fiche `record` du héros —
+ * même titre, même puce, même jauge, mêmes valeurs — donc elle ne montrait
+ * aucune des quatre.
+ *
+ * ─── Ce qui rend « one record » vérifiable ─────────────────────────────────
+ *
+ * Le total est DÉRIVÉ. « Tout est sur un seul dossier » est une phrase creuse
+ * tant qu'on ne peut pas compter ce qu'il y a dessus : le lecteur additionne
+ * les quatre lignes et retrouve le total, ce qui transforme une figure de style
+ * en fait.
+ *
+ * ⚠️ Elle ne double pas `QueryMock`, la maquette du scénario. Là-bas c'est UNE
+ * ligne et les trois tâches qui la composent — la traçabilité d'un montant.
+ * Ici c'est l'inventaire de tout ce que porte le dossier, avant qu'aucune
+ * facture n'existe. L'un descend, l'autre recense.
+ */
+interface Props {
+  title: string;
+  note: string;
+  rows: { label: string; count: number; unit: string }[];
+  foot: string;
+  /** Traitement Layered Paper — voir `DESIGN.md`, « Layered Paper Card ». */
+  warm?: boolean;
+  /** Bande sombre : seule l'ombre change, la feuille reste claire. */
+  onDark?: boolean;
+}
+
+const { title, note, rows, foot, warm = false, onDark = false } = Astro.props;
+
+if (rows.length < 3) {
+  throw new Error(
+    `[solutions] AttachMock attend au moins 3 natures de contenu, ${rows.length} reçues. ` +
+      `La section en nomme quatre — heures, tâches, notes, documents — et c'est leur variété qui fait l'argument.`
+  );
+}
+
+const total = rows.reduce((sum, row) => sum + row.count, 0);
+const widest = Math.max(...rows.map((row) => row.count));
+---
+
+<div
+  class:list={[
+    "attach-mock rounded-[8px] border border-rule bg-white p-[18px]",
+    { "attach-mock--warm": warm, "attach-mock--dark": warm && onDark },
+  ]}
+>
+  <header class="head">
+    <p class="title">{title}</p>
+    <span class="note">{note}</span>
+  </header>
+
+  <dl class="rows">
+    {
+      rows.map((row) => (
+        <div class="row" data-use-case-motion-row>
+          <dt>{row.label}</dt>
+          <dd>
+            <span class="count">{row.count}</span>
+            <span class="unit">{row.unit}</span>
+          </dd>
+          <span class="bar-track" aria-hidden="true">
+            <span class="bar" style={`width:${(row.count / widest) * 100}%`} />
+          </span>
+        </div>
+      ))
+    }
+  </dl>
+
+  {/* Le total, dérivé. « One record » cesse d'être une formule dès qu'on peut
+      additionner ce qu'il y a dessus. */}
+  <footer class="foot">
+    <span class="total">{total} items</span>
+    <span class="foot-note">{foot}</span>
+  </footer>
+</div>
+
+<style>
+  .attach-mock--warm {
+    border: 0;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+  }
+
+  .attach-mock--dark {
+    box-shadow: var(--shadow-paper-card-dark);
+  }
+
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .title {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  .note {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  .attach-mock--warm .note,
+  .attach-mock--warm .row dt,
+  .attach-mock--warm .unit,
+  .attach-mock--warm .foot-note {
+    color: var(--color-paper-label);
+  }
+
+  .rows {
+    margin: 14px 0 0;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 4px 12px;
+    border-top: 1px solid var(--color-rule);
+    padding: 11px 2px;
+  }
+
+  .attach-mock--warm .row {
+    border-top-color: var(--color-paper-rule);
+  }
+
+  .row dt {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-slate);
+  }
+
+  .row dd {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin: 0;
+  }
+
+  .count {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .unit {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--color-slate);
+  }
+
+  .bar-track {
+    grid-column: 1 / -1;
+    height: 4px;
+    margin-top: 3px;
+    border-radius: 999px;
+    background: var(--color-rule);
+  }
+
+  .attach-mock--warm .bar-track {
+    background: var(--color-paper-track);
+  }
+
+  /* Vert : ce sont des éléments DÉJÀ au dossier, un fait constaté, pas une
+     cible. « The Two Voices Rule ». */
+  .bar {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--color-live);
+  }
+
+  .foot {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-top: 12px;
+    border-top: 1px solid var(--color-rule);
+    padding-top: 12px;
+  }
+
+  .attach-mock--warm .foot {
+    border-top-color: var(--color-paper-rule);
+  }
+
+  .total {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .foot-note {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-slate);
+  }
+</style>

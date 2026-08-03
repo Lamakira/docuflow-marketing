@@ -1,0 +1,291 @@
+---
+/**
+ * `/solutions/client-billing` — section « the situation ».
+ *
+ * ─── Pourquoi ce dessin REMPLACE `InvoiceArt` ──────────────────────────────
+ *
+ * Deux fautes, dont une grave.
+ *
+ * 1. **Il dessinait le même objet que le scénario.** `InvoiceArt` montrait la
+ *    ligne à 4 200 $ rapprochée de ses trois tâches (14 h / 6,5 h / 3 h) —
+ *    c'est-à-dire, au chiffre près, ce que rend `QueryMock` deux sections plus
+ *    bas. Même sujet, mêmes données, même page.
+ *
+ * 2. **Il dessinait la SOLUTION dans la section du PROBLÈME.** C'est la faute
+ *    grave. La section dit : « The line is assembled by hand, NOT generated from
+ *    the project record. Hours come out of one tool and the work out of another.
+ *    The evening before the invoice goes out, somebody reconciles both into a
+ *    line — a summary of a summary. » Montrer une ligne joliment tracée jusqu'à
+ *    ses tâches au-dessus de ce texte contredisait les trois points de douleur
+ *    juste en dessous.
+ *
+ * ─── Ce que celui-ci montre ────────────────────────────────────────────────
+ *
+ * L'assemblage à la main : deux sources qui ne se parlent pas, et la ligne qui
+ * en sort — avec RIEN derrière elle. Le compte d'éléments attachés est zéro, et
+ * c'est le chiffre qui porte la section : il se lit contre le `57 items` de
+ * `AttachMock`, le pilier 01 de la même page.
+ *
+ * ⚠️ Pas de total d'heures sur les sources. Deux exports qui ne tombent pas
+ * pareil demanderaient au lecteur d'arbitrer une contradiction qui n'est pas le
+ * sujet, et un total unique suggérerait qu'ils se réconcilient — soit l'inverse
+ * de la section.
+ */
+const SOURCES = [
+  { name: "Time tracker export", detail: "csv · pulled Tuesday" },
+  { name: "Task board", detail: "screenshot in a thread" },
+];
+
+/** Le chiffre qui porte la section. Zéro, et c'est volontaire : la ligne existe
+ *  sans rien derrière elle. */
+const ATTACHED = 0;
+---
+
+{/* THESIS: the line is typed by a person on the last evening, out of two things
+    that never met, and nothing is attached to it. OWN-WORLD: a warm desk sheet
+    the night before invoicing. STORY: read two disconnected exports, follow them
+    into one typed line, then find the attachment count is zero. FIRST VIEWPORT:
+    the two sources; the empty count closes it. FORM: standalone Layered Paper —
+    the objection illustration on this page is a two-object desk, so this one
+    stays a single sheet. */}
+<div class="hand-stage" data-art>
+  <span class="sheet-backing backing-one" aria-hidden="true"></span>
+  <span class="sheet-backing backing-two" aria-hidden="true"></span>
+
+  <section class="hand-card" aria-label="An invoice line assembled by hand from two disconnected exports">
+    <header class="head" data-art-in>
+      <span class="label">The night before</span>
+      <span class="when">March invoice</span>
+    </header>
+
+    <ul class="sources">
+      {
+        SOURCES.map((source) => (
+          <li data-art-in data-use-case-motion-row>
+            <span class="dot" aria-hidden="true" />
+            <span class="name">{source.name}</span>
+            <span class="detail">{source.detail}</span>
+          </li>
+        ))
+      }
+    </ul>
+
+    {/* L'étape humaine. C'est elle que la section reproche — « a summary of a
+        summary » — donc elle est nommée, pas sous-entendue. */}
+    <p class="by-hand" data-art-in>reconciled by hand</p>
+
+    <div class="line" data-art-pop data-use-case-motion-row>
+      <span class="line-name">Campaign production</span>
+      <span class="line-total">$4,200</span>
+    </div>
+
+    {/* Le chiffre qui porte la section : la ligne sort sans rien derrière elle.
+        À lire contre le `57 items` du pilier 01, sur la même page. */}
+    <footer class="foot" data-art-pop>
+      <span class="foot-label">Records attached</span>
+      <span class="foot-value">{ATTACHED}</span>
+    </footer>
+  </section>
+</div>
+
+<style>
+  /* Scène transparente — padding SEULEMENT. Une carte seule ne s'assied jamais
+     dans une autre carte ; les deux feuilles derrière elle SONT la profondeur. */
+  .hand-stage {
+    position: relative;
+    padding: 14px 16px 18px;
+  }
+
+  .sheet-backing {
+    position: absolute;
+    inset: 20px 20px 14px;
+    border-radius: var(--radius-paper-card);
+    transition: transform var(--paper-motion-duration) var(--paper-motion-ease);
+  }
+
+  .backing-one {
+    background: var(--color-paper-layer);
+    transform: translate(-7px, 5px) rotate(-2.4deg);
+  }
+
+  .backing-two {
+    background: var(--color-paper-layer-light);
+    transform: translate(6px, 3px) rotate(1.7deg);
+  }
+
+  .hand-card {
+    position: relative;
+    z-index: 2;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+    padding: 15px 18px 16px;
+    transition:
+      transform var(--paper-motion-duration) var(--paper-motion-ease),
+      box-shadow var(--paper-motion-duration) var(--paper-motion-ease);
+    transform: rotate(-0.6deg);
+  }
+
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 4px;
+  }
+
+  .label,
+  .when {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--color-paper-label);
+  }
+
+  .label {
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .sources {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sources li {
+    display: grid;
+    grid-template-columns: 7px minmax(0, 1fr);
+    align-items: baseline;
+    gap: 3px 10px;
+    border-top: 1px solid var(--color-paper-rule);
+    padding: 10px 2px;
+  }
+
+  /* Contours, pas points pleins : ces deux sources ne sont rattachées à rien —
+     ce sont des fichiers, pas des enregistrements. */
+  .dot {
+    align-self: center;
+    height: 6px;
+    width: 6px;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1.5px var(--color-paper-layer);
+  }
+
+  .name {
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-ink);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .detail {
+    grid-column: 2;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    color: var(--color-paper-label);
+  }
+
+  /* L'étape humaine, en italique et en creux : c'est la seule chose de la carte
+     qu'aucun système n'a produite. Contre-emploi assumé de la règle
+     Recorded/Written — ici c'est justement le problème. */
+  .by-hand {
+    margin: 12px 0 0;
+    border-top: 1px dashed var(--color-paper-rule);
+    padding-top: 12px;
+    font-size: 11.5px;
+    font-style: italic;
+    color: var(--color-paper-label);
+  }
+
+  .line {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper-chip);
+    padding: 12px 14px;
+  }
+
+  .line-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .line-total {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 12px;
+    border-top: 1px solid var(--color-paper-rule);
+    padding-top: 12px;
+  }
+
+  .foot-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-paper-label);
+  }
+
+  /* L'ambre unique de l'écran — l'oeil-de-boeuf de cette section est en `ink`,
+     donc elle est disponible. Elle marque le vide, qui EST le problème. */
+  .foot-value {
+    border-radius: 3px;
+    background: var(--color-hour);
+    padding: 3px 12px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .hand-stage:hover .backing-one {
+      transform: translate(-13px, 8px) rotate(-3.8deg);
+    }
+
+    .hand-stage:hover .backing-two {
+      transform: translate(10px, 5px) rotate(2.8deg);
+    }
+
+    .hand-stage:hover .hand-card {
+      box-shadow: var(--shadow-paper-card-hover);
+      transform: translateY(-5px) rotate(0deg);
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .hand-stage {
+      padding: 10px 11px 14px;
+    }
+
+    .sheet-backing {
+      inset: 15px 15px 10px;
+    }
+
+    .hand-card {
+      padding-inline: 14px;
+    }
+  }
+</style>
+
+<script>
+  import "../../scripts/art";
+</script>

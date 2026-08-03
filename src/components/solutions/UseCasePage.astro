@@ -43,7 +43,27 @@ interface Props {
 
 const { page } = Astro.props;
 const { copy, pillars } = page;
-const warmMockups = page.slug === "client-billing";
+
+/** Les pages dont les maquettes sont passées au Layered Paper de `DESIGN.md`.
+ *
+ *  Une LISTE et non un slug en dur : la conversion se fait page par page, et
+ *  chacune demande de vérifier que ses `kind` de maquette ont bien leur variante
+ *  `warm` (`ScoreMock` ne l'avait pas avant `remote-teams`, `SourceMock` ne l'a
+ *  toujours pas). Ajouter un slug ici SANS cette vérification livre une page
+ *  moitié chaude, moitié froide — le défaut ne casse rien et ne se voit qu'à
+ *  l'oeil, donc il se glisse en revue.
+ *
+ *  Restent en froid : `hybrid-teams`, `employee-productivity`,
+ *  `project-profitability`, `onboarding-documentation`. */
+const WARM_MOCKUP_PAGES = new Set([
+  "client-billing",
+  "remote-teams",
+  "hybrid-teams",
+  "employee-productivity",
+  "project-profitability",
+  "onboarding-documentation",
+]);
+const warmMockups = WARM_MOCKUP_PAGES.has(page.slug);
 
 /** Le nom du pilier produit pour le lien de sortie de chaque bloc, lu depuis la
  *  même source que l'ancre visée — « Everything in Clients → » ne peut donc pas

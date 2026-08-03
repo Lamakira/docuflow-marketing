@@ -1,0 +1,312 @@
+---
+/** Budget contre réel, ligne par ligne — et la ligne qui déborde.
+ *
+ * ─── Ce que la section demande ─────────────────────────────────────────────
+ *
+ * Le scénario de `/solutions/project-profitability` s'appelle « How an overrun
+ * gets caught early », et sa phrase centrale est : « The hours are already
+ * attributed, so THE CAUSE IS ON THE SAME SCREEN: coordination 62 h against
+ * 20 h budgeted. »
+ *
+ * La carte rendait une fiche `record` — la même que le héros ET que le pilier
+ * 01, aux mêmes valeurs — dont la jauge affichait `78%`. Un pourcentage ne
+ * montre aucune cause : il montre un résultat. Le seul chiffre qui portait la
+ * cause était noyé dans le pied de la carte, en petit.
+ *
+ * ─── Ce qui rend cette carte vérifiable ────────────────────────────────────
+ *
+ * ⚠️ LES DEUX TOTAUX ET LE POURCENTAGE SONT DÉRIVÉS DES LIGNES.
+ *
+ * Le lecteur peut additionner la colonne et retrouver les `320 h` et `249 h`
+ * que cite le texte, puis vérifier que 249/320 fait bien les `78%` de la copy.
+ * Sur une page dont le H1 est « Every job was profitable until somebody added
+ * it up », une carte dont les lignes ne s'additionnent pas serait la faute la
+ * plus embarrassante possible — et c'est exactement le genre d'écart qu'un
+ * total retapé laisse passer (voir `IdleMock`, où `0:06:20` contredisait
+ * « 6 min » dans la donnée livrée).
+ *
+ * ─── Pourquoi elle ne double pas `MarginDriftArt` ──────────────────────────
+ *
+ * Le dessin de la situation, sur la même page, trace le cumul SEMAINE PAR
+ * SEMAINE : il répond à « quand est-ce parti de travers ». Celle-ci ventile par
+ * POSTE : elle répond à « qu'est-ce qui a dérapé ». Deux axes différents, deux
+ * questions différentes — elles se complètent au lieu de se répéter.
+ */
+interface Props {
+  title: string;
+  period: string;
+  lines: { label: string; budget: number; actual: number }[];
+  foot: string;
+  /** Traitement Layered Paper — voir `DESIGN.md`, « Layered Paper Card ». */
+  warm?: boolean;
+  /** Bande sombre : seule l'ombre change, la feuille reste claire. */
+  onDark?: boolean;
+}
+
+const { title, period, lines, foot, warm = false, onDark = false } = Astro.props;
+
+if (lines.length < 3) {
+  throw new Error(
+    `[solutions] VarianceMock attend au moins 3 lignes, ${lines.length} reçues. ` +
+      `Avec moins, la ligne qui déborde n'a rien contre quoi ressortir et la carte redevient une jauge.`
+  );
+}
+
+const budgetTotal = lines.reduce((sum, line) => sum + line.budget, 0);
+const actualTotal = lines.reduce((sum, line) => sum + line.actual, 0);
+const percent = Math.round((actualTotal / budgetTotal) * 100);
+
+/** La ligne qui déborde le plus, en écart ABSOLU. Une seule est marquée : c'est
+ *  « la cause », au singulier, et deux marques ambre en feraient une liste de
+ *  problèmes au lieu d'un coupable. */
+const overruns = lines.map((line) => line.actual - line.budget);
+const worst = overruns.indexOf(Math.max(...overruns));
+
+/** Largeur de barre relative au plus grand des deux totaux de ligne, pour que
+ *  budget et réel se comparent à la même échelle d'une ligne à l'autre. */
+const widest = Math.max(...lines.map((line) => Math.max(line.budget, line.actual)));
+---
+
+<div
+  class:list={[
+    "variance-mock rounded-[8px] border border-rule bg-white p-[18px]",
+    { "variance-mock--warm": warm, "variance-mock--dark": warm && onDark },
+  ]}
+>
+  <header class="head">
+    <p class="title">{title}</p>
+    <span class="period">{period}</span>
+  </header>
+
+  <ul class="lines">
+    {
+      lines.map((line, index) => (
+        <li class:list={["line", { "line--over": index === worst }]} data-use-case-motion-row>
+          {/* Libellé et chiffres d'abord : ils partagent la première rangée de
+              la grille. Les barres passent dessous, sur toute la largeur. */}
+          <span class="line-label">{line.label}</span>
+
+          <span class="line-figures">
+            <span class="line-budget">{line.budget} h</span>
+            <span class="line-actual">{line.actual} h</span>
+          </span>
+
+          <span class="bars" aria-hidden="true">
+            <span class="bar bar--budget" style={`width:${(line.budget / widest) * 100}%`} />
+            <span class="bar bar--actual" style={`width:${(line.actual / widest) * 100}%`} />
+          </span>
+        </li>
+      ))
+    }
+  </ul>
+
+  {/* Les totaux, dérivés. Ce sont eux qui rendent la carte vérifiable : ils
+      doivent retomber sur les chiffres que cite le texte de la section. */}
+  <footer class="totals">
+    <div class="total">
+      <span class="total-label">Budgeted</span>
+      <span class="total-value">{budgetTotal} h</span>
+    </div>
+    <div class="total">
+      <span class="total-label">Actual</span>
+      <span class="total-value">{actualTotal} h</span>
+    </div>
+    <div class="total total--pct">
+      <span class="total-label">Consumed</span>
+      <span class="total-value">{percent}%</span>
+    </div>
+  </footer>
+
+  <p class="variance-foot">{foot}</p>
+</div>
+
+<style>
+  .variance-mock--warm {
+    border: 0;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+  }
+
+  .variance-mock--dark {
+    box-shadow: var(--shadow-paper-card-dark);
+  }
+
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .title {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  .period {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  .variance-mock--warm .period,
+  .variance-mock--warm .line-label,
+  .variance-mock--warm .line-budget,
+  .variance-mock--warm .total-label,
+  .variance-mock--warm .variance-foot {
+    color: var(--color-paper-label);
+  }
+
+  .lines {
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .line {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 4px 12px;
+    border-top: 1px solid var(--color-rule);
+    padding: 10px 2px;
+  }
+
+  .variance-mock--warm .line {
+    border-top-color: var(--color-paper-rule);
+  }
+
+  .line-label {
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-slate);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .line--over .line-label {
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .line-figures {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .line-budget {
+    color: var(--color-slate);
+  }
+
+  .line-actual {
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+
+  /* Deux barres empilées, même échelle : le réel sous le budget. Quand le réel
+     dépasse, il déborde visiblement de la barre au-dessus — c'est la seule
+     information que ce couple doit porter. */
+  .bars {
+    display: grid;
+    grid-column: 1 / -1;
+    gap: 3px;
+  }
+
+  .bar {
+    display: block;
+    height: 4px;
+    border-radius: 999px;
+  }
+
+  .bar--budget {
+    background: var(--color-rule);
+  }
+
+  .variance-mock--warm .bar--budget {
+    background: var(--color-paper-track);
+  }
+
+  /* Le réel est vert : c'est du temps CONSTATÉ par le système, pas une cible.
+     « The Two Voices Rule ». */
+  .bar--actual {
+    background: var(--color-live);
+  }
+
+  /* La ligne qui déborde, et elle seule. Ambre — l'état présent qui appelle une
+     action, ici une variation à soulever en semaine 2. */
+  .line--over .bar--actual {
+    background: var(--color-hour);
+  }
+
+  .line--over .line-actual {
+    border-radius: 3px;
+    background: var(--color-hour);
+    padding: 2px 6px;
+    color: var(--color-ink);
+  }
+
+  .totals {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper);
+    padding: 12px 14px;
+  }
+
+  .variance-mock--warm .totals {
+    background: var(--color-paper-chip);
+  }
+
+  .total {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+  }
+
+  .total-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  .total-value {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .variance-foot {
+    margin-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-slate);
+  }
+
+  @media (max-width: 560px) {
+    .line-figures {
+      gap: 8px;
+    }
+
+    .totals {
+      gap: 8px;
+      padding: 10px;
+    }
+  }
+</style>

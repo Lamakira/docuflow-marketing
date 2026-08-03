@@ -1,16 +1,16 @@
 ---
-import InvoiceArt from "./InvoiceArt.astro";
+import HandAssembledArt from "./HandAssembledArt.astro";
 import DisclosureArt from "./DisclosureArt.astro";
 import ThinWeekArt from "./ThinWeekArt.astro";
 import OwnRecordArt from "./OwnRecordArt.astro";
-import TwoPlacesArt from "./TwoPlacesArt.astro";
+import DisagreeingTotalsArt from "./DisagreeingTotalsArt.astro";
 import HoursWindowArt from "./HoursWindowArt.astro";
-import IdlePromptArt from "./IdlePromptArt.astro";
+import LoudMetricArt from "./LoudMetricArt.astro";
 import OpenMeasureArt from "./OpenMeasureArt.astro";
 import MarginDriftArt from "./MarginDriftArt.astro";
 import ProjectNotPersonArt from "./ProjectNotPersonArt.astro";
 import PageTreeArt from "./PageTreeArt.astro";
-import CitedAnswerArt from "./CitedAnswerArt.astro";
+import SourceAgeArt from "./SourceAgeArt.astro";
 
 /**
  * Les dessins d'une page cas d'usage, choisis par slug ET par emplacement.
@@ -41,10 +41,16 @@ interface Props {
 
 const { slug, spot } = Astro.props;
 
-const ART: Record<string, Record<Spot, typeof InvoiceArt>> = {
+const ART: Record<string, Record<Spot, typeof DisclosureArt>> = {
   "client-billing": {
-    // La ligne contestée, et les tâches qu'elle recouvre.
-    situation: InvoiceArt,
+    // ⚠️ `InvoiceArt` montrait la ligne à 4 200 $ et ses trois tâches — soit,
+    // au chiffre près, ce que rend `QueryMock` dans le scénario. Il dessinait
+    // en plus la SOLUTION dans la section du PROBLÈME, au-dessus de trois
+    // points de douleur qui disent l'inverse. Supprimé.
+    // La situation parle d'une ligne tapée à la main la veille, à partir de
+    // deux exports qui ne se parlent pas : c'est `HandAssembledArt`, et son
+    // `0 attached` se lit contre le `57 items` du pilier 01.
+    situation: HandAssembledArt,
     // Ce qu'on garde contre ce qu'on envoie.
     objection: DisclosureArt,
   },
@@ -55,14 +61,25 @@ const ART: Record<string, Record<Spot, typeof InvoiceArt>> = {
     objection: OwnRecordArt,
   },
   "hybrid-teams": {
-    // Une feuille de temps, deux lieux, une coupure qui se recolle.
-    situation: TwoPlacesArt,
-    // La fenêtre d'heures actives, et 21:00 en dehors.
+    // ⚠️ La coupure qui se recolle appartient désormais à `ReconcileMock`, la
+    // maquette du scénario. `TwoPlacesArt` la dessinait aux MÊMES valeurs
+    // (13:40 → 14:02, 22 min) : supprimé. La situation parle en fait de sources
+    // qui ne tombent pas pareil (« the hours arrive from whatever tool happened
+    // to be open »), et c'est ce que montre `DisagreeingTotalsArt`.
+    situation: DisagreeingTotalsArt,
+    // La fenêtre d'heures actives, et 21:00 en dehors. Elle est le SEUL endroit
+    // de la page où cette limite est énoncée — la ligne « Active hours » a été
+    // retirée de la maquette du poste pour ça.
     objection: HoursWindowArt,
   },
   "employee-productivity": {
-    // Les fenêtres d'activité, et le prompt au lieu d'une déduction.
-    situation: IdlePromptArt,
+    // ⚠️ Les fenêtres d'activité et le prompt appartiennent désormais aux
+    // MAQUETTES de la page — `WindowsMock` en héros, `IdleMock` en scénario.
+    // `IdlePromptArt` dessinait les deux une troisième fois : supprimé.
+    // La situation parle en fait de métriques de vanité (« whatever gets
+    // counted is what the team starts producing »), et c'est ce que montre
+    // `LoudMetricArt`. Une maquette qui change oblige à relire les dessins.
+    situation: LoudMetricArt,
     // Ce qui est enregistré, et ce qui ne l'est pas, ligne à ligne.
     objection: OpenMeasureArt,
   },
@@ -75,8 +92,13 @@ const ART: Record<string, Record<Spot, typeof InvoiceArt>> = {
   "onboarding-documentation": {
     // L'arborescence, et la page que la personne neuve ne trouvait pas.
     situation: PageTreeArt,
-    // Une réponse, ses sources, et leurs dates.
-    objection: CitedAnswerArt,
+    // ⚠️ La RÉPONSE citée appartient au héros (`SourceMock`). `CitedAnswerArt`
+    // la redessinait — bulle de question et paragraphe compris — et n'avait donc
+    // de place que pour un rappel du héros, pas pour le sujet de sa propre
+    // section. Supprimé.
+    // L'objection porte sur la PÉREMPTION : `SourceAgeArt` ne montre plus que la
+    // provenance et l'âge, dont une source de six mois qui l'affiche.
+    objection: SourceAgeArt,
   },
 };
 

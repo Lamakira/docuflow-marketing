@@ -1,0 +1,221 @@
+---
+/** La bibliothèque — ce qui est écrit, ce qui est dit, et un seul index.
+ *
+ * ─── Ce que la section demande ─────────────────────────────────────────────
+ *
+ * Le pilier « The library » d'`/solutions/onboarding-documentation` dit :
+ * « Write procedures in nested pages and templates; record walkthroughs and
+ * have them transcribed automatically. Search covers WHAT WAS SAID AND TYPED. »
+ *
+ * Cette dernière phrase est la seule promesse de la page qu'aucune autre
+ * surface ne porte. Et la carte y rendait une TROISIÈME copie de la réponse
+ * citée — même question, même réponse, mêmes sources que le héros ET que le
+ * scénario. Trois exemplaires du même dessin sur une page dont le sujet est
+ * qu'on ne retrouve rien.
+ *
+ * ─── L'axe ─────────────────────────────────────────────────────────────────
+ *
+ * `spoken` sépare ce qui a été DIT de ce qui a été TAPÉ. C'est l'axe entier de
+ * la carte : sans lui, ce n'est qu'un inventaire, et un inventaire ne dit pas
+ * ce que la section promet. Le total indexé est DÉRIVÉ — deux natures de
+ * contenu, un seul index, et le lecteur peut faire l'addition.
+ *
+ * ⚠️ Elle ne dessine PAS d'arborescence. `PageTreeArt`, sur la même page, en
+ * montre une : là-bas c'est la NAVIGATION (la page existe, on ne la trouve pas),
+ * ici c'est l'INVENTAIRE (voilà ce qu'il y a, et tout est cherchable). Deux
+ * questions, deux formes.
+ */
+interface Props {
+  label: string;
+  shelves: { name: string; note: string; count: number; spoken?: boolean }[];
+  foot: string;
+  /** Traitement Layered Paper — voir `DESIGN.md`, « Layered Paper Card ». */
+  warm?: boolean;
+  /** Bande sombre : seule l'ombre change, la feuille reste claire. */
+  onDark?: boolean;
+}
+
+const { label, shelves, foot, warm = false, onDark = false } = Astro.props;
+
+if (!shelves.some((shelf) => shelf.spoken) || !shelves.some((shelf) => !shelf.spoken)) {
+  throw new Error(
+    `[solutions] LibraryMock attend au moins un rayon écrit ET un rayon parlé. ` +
+      `Sans les deux, la carte ne montre pas « search covers what was said and typed », qui est sa seule raison d'être.`
+  );
+}
+
+const indexed = shelves.reduce((sum, shelf) => sum + shelf.count, 0);
+const widest = Math.max(...shelves.map((shelf) => shelf.count));
+---
+
+<div
+  class:list={[
+    "library-mock rounded-[8px] border border-rule bg-white p-[18px]",
+    { "library-mock--warm": warm, "library-mock--dark": warm && onDark },
+  ]}
+>
+  <p class="label label-mono text-[10px] text-slate">{label}</p>
+
+  <ul class="shelves">
+    {
+      shelves.map((shelf) => (
+        <li class:list={["shelf", { "shelf--spoken": shelf.spoken }]} data-use-case-motion-row>
+          {/* La nature du contenu, dite en toutes lettres : c'est l'axe. */}
+          <span class="kind">{shelf.spoken ? "spoken" : "typed"}</span>
+          <span class="name">{shelf.name}</span>
+          <span class="count">{shelf.count}</span>
+          <span class="note">{shelf.note}</span>
+          <span class="bar-track" aria-hidden="true">
+            <span class="bar" style={`width:${(shelf.count / widest) * 100}%`} />
+          </span>
+        </li>
+      ))
+    }
+  </ul>
+
+  {/* Le total, dérivé. Un seul index pour les deux natures — c'est la phrase de
+      la section, rendue vérifiable par une addition. */}
+  <footer class="foot">
+    <span class="indexed">{indexed} indexed</span>
+    <span class="note-foot">{foot}</span>
+  </footer>
+</div>
+
+<style>
+  .library-mock--warm {
+    border: 0;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+  }
+
+  .library-mock--dark {
+    box-shadow: var(--shadow-paper-card-dark);
+  }
+
+  .library-mock--warm .label,
+  .library-mock--warm .note,
+  .library-mock--warm .note-foot {
+    color: var(--color-paper-label);
+  }
+
+  .shelves {
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .shelf {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 4px 10px;
+    border-top: 1px solid var(--color-rule);
+    padding: 11px 2px;
+  }
+
+  .library-mock--warm .shelf {
+    border-top-color: var(--color-paper-rule);
+  }
+
+  /* Écrit ou dit. Deux capsules de même forme et de même poids : ni l'une ni
+     l'autre n'est l'exception, elles sont les deux moitiés de l'index. */
+  .kind {
+    justify-self: start;
+    border-radius: 3px;
+    background: var(--color-paper);
+    padding: 2px 6px;
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    letter-spacing: 0.06em;
+    color: var(--color-slate);
+  }
+
+  .library-mock--warm .kind {
+    background: var(--color-paper-chip);
+    color: var(--color-paper-label);
+  }
+
+  .shelf--spoken .kind {
+    background: var(--color-band-mint);
+    color: var(--color-live-on-light);
+  }
+
+  .library-mock--warm .shelf--spoken .kind {
+    background: var(--color-paper-sage);
+    color: var(--color-paper-sage-text);
+  }
+
+  .name {
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-ink);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .count {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .note {
+    grid-column: 2 / -1;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    color: var(--color-slate);
+  }
+
+  .bar-track {
+    grid-column: 1 / -1;
+    height: 4px;
+    margin-top: 3px;
+    border-radius: 999px;
+    background: var(--color-rule);
+  }
+
+  .library-mock--warm .bar-track {
+    background: var(--color-paper-track);
+  }
+
+  /* Vert : ces contenus sont INDEXÉS, c'est-à-dire un fait constaté par le
+     système. « The Two Voices Rule ». */
+  .bar {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--color-live);
+  }
+
+  .foot {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-top: 12px;
+    border-top: 1px solid var(--color-rule);
+    padding-top: 12px;
+  }
+
+  .library-mock--warm .foot {
+    border-top-color: var(--color-paper-rule);
+  }
+
+  .indexed {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .note-foot {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-slate);
+  }
+</style>

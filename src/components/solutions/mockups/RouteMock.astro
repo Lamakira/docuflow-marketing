@@ -1,0 +1,232 @@
+---
+/** Deux routes pour une même question — celle qui bloque, celle qui répond.
+ *
+ * ─── Ce que la section demande ─────────────────────────────────────────────
+ *
+ * Le scénario d'`/solutions/onboarding-documentation` s'appelle « How a question
+ * stops being an interruption », et son arc est un CONTRASTE :
+ *
+ *   « The old route is to ask the team lead, WHO IS ON A CALL. »
+ *   « The question took 20 seconds and COST NOBODY ELSE THEIR MORNING. »
+ *
+ * La carte y rendait la réponse citée — la même que le héros ET que le pilier
+ * 01, question et sources comprises. Une carte de réponse ne peut montrer que
+ * la route qui aboutit ; elle est structurellement incapable de montrer celle
+ * qu'on évite, qui est pourtant la moitié de l'argument.
+ *
+ * ─── Aucun chiffre inventé ─────────────────────────────────────────────────
+ *
+ * ⚠️ `20 seconds`, `$740` et `March 6` sont dans la copy de la section. Rien
+ * ici ne chiffre un gain de productivité que le texte n'écrit pas : une durée
+ * inventée sur une page marketing n'est pas une maquette, c'est une allégation,
+ * et au Canada elle relève de la Loi sur la concurrence. La route bloquée ne
+ * porte donc AUCUNE durée — elle porte un état, « on a call », qui est ce que
+ * le texte dit.
+ */
+interface Props {
+  label: string;
+  routes: { name: string; steps: string[]; outcome: string; blocked?: boolean }[];
+  foot: string;
+  /** Traitement Layered Paper — voir `DESIGN.md`, « Layered Paper Card ». */
+  warm?: boolean;
+  /** Bande sombre : seule l'ombre change, la feuille reste claire. */
+  onDark?: boolean;
+}
+
+const { label, routes, foot, warm = false, onDark = false } = Astro.props;
+
+if (routes.length !== 2) {
+  throw new Error(
+    `[solutions] RouteMock attend exactement 2 routes, ${routes.length} reçues. ` +
+      `La carte est un contraste : avec une seule route il n'y a rien à comparer, avec trois il n'y a plus d'opposition.`
+  );
+}
+
+if (!routes.some((route) => route.blocked)) {
+  throw new Error(
+    `[solutions] RouteMock : aucune route \`blocked\`. ` +
+      `Sans route qui bute, la carte montre deux chemins qui marchent — soit l'inverse de « how a question stops being an interruption ».`
+  );
+}
+---
+
+<div
+  class:list={[
+    "route-mock rounded-[8px] border border-rule bg-white p-[18px]",
+    { "route-mock--warm": warm, "route-mock--dark": warm && onDark },
+  ]}
+>
+  <p class="label label-mono text-[10px] text-slate">{label}</p>
+
+  <div class="routes">
+    {
+      routes.map((route) => (
+        <section
+          class:list={["route", { "route--blocked": route.blocked }]}
+          data-use-case-motion-row
+        >
+          <header class="route-head">
+            <span class="route-name">{route.name}</span>
+          </header>
+
+          <ol class="steps">
+            {route.steps.map((step) => (
+              <li>
+                <span class="dot" aria-hidden="true" />
+                {step}
+              </li>
+            ))}
+          </ol>
+
+          {/* Le bout de la route. L'une bute, l'autre livre — et c'est la seule
+              différence que la carte doit faire voir. */}
+          <p class="outcome">{route.outcome}</p>
+        </section>
+      ))
+    }
+  </div>
+
+  <p class="route-foot">{foot}</p>
+</div>
+
+<style>
+  .route-mock--warm {
+    border: 0;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+  }
+
+  .route-mock--dark {
+    box-shadow: var(--shadow-paper-card-dark);
+  }
+
+  .route-mock--warm .label,
+  .route-mock--warm .route-foot {
+    color: var(--color-paper-label);
+  }
+
+  .routes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .route {
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper);
+    padding: 12px 13px;
+  }
+
+  .route-mock--warm .route {
+    background: var(--color-paper-chip);
+  }
+
+  .route-name {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  .route-mock--warm .route-name {
+    color: var(--color-paper-label);
+  }
+
+  .steps {
+    display: grid;
+    gap: 7px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .steps li {
+    display: grid;
+    grid-template-columns: 8px minmax(0, 1fr);
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--color-ink);
+  }
+
+  .dot {
+    align-self: center;
+    height: 5px;
+    width: 5px;
+    border-radius: 999px;
+    background: var(--color-live);
+  }
+
+  /* La route qui bute : ses jalons sont des contours, pas des points pleins.
+     Rien n'y a abouti. */
+  .route--blocked .dot {
+    background: none;
+    box-shadow: inset 0 0 0 1.5px var(--color-slate);
+  }
+
+  .route-mock--warm .route--blocked .dot {
+    box-shadow: inset 0 0 0 1.5px var(--color-paper-label);
+  }
+
+  .route--blocked .steps li {
+    color: var(--color-slate);
+  }
+
+  .route-mock--warm .route--blocked .steps li {
+    color: var(--color-paper-label);
+  }
+
+  .outcome {
+    margin: 0;
+    border-top: 1px solid var(--color-rule);
+    padding-top: 9px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-live-on-light);
+  }
+
+  .route-mock--warm .outcome {
+    border-top-color: var(--color-paper-rule);
+    color: var(--color-paper-sage-text);
+  }
+
+  /* L'issue bloquée prend l'ambre : c'est l'état présent qui coûte quelque
+     chose à quelqu'un, donc celui qui appelle une action. */
+  .route--blocked .outcome {
+    color: var(--color-ink);
+  }
+
+  .route--blocked .outcome::before {
+    content: "";
+    display: inline-block;
+    height: 8px;
+    width: 8px;
+    margin-right: 7px;
+    border-radius: 2px;
+    background: var(--color-hour);
+    vertical-align: baseline;
+  }
+
+  .route-foot {
+    margin-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-slate);
+  }
+
+  /* Sous 560px deux colonnes de jalons deviennent illisibles : les routes
+     s'empilent, et le contraste tient à l'ordre plutôt qu'à la juxtaposition. */
+  @media (max-width: 560px) {
+    .routes {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

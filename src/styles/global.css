@@ -41,7 +41,14 @@
   --color-paper-rule: #eadfd4;
   --color-paper-chip: #f0e5d9;
   --color-paper-track: #eee1d3;
-  --color-paper-label: #75685a;
+  /* ⚠️ Assombri de #75685A à #6E6154 par la passe polish du 30 juillet 2026.
+     L'ancienne valeur tombait à 4,35:1 sur `paper-chip` — sous AA, et sur les
+     libellés qui portent les vraies informations produit des maquettes (jours,
+     unités, contextes). Mesuré après correction : 4,83 sur `paper-chip`,
+     5,13 sur `paper-canvas`, 5,78 sur `paper-surface`.
+     C'est la même règle que les deux teintes corrigées sur `/pricing` : un
+     libellé qui porte de l'information ne reste pas sous AA. */
+  --color-paper-label: #6e6154;
   --color-paper-connector: #bc9063;
   --color-paper-callout: #f0c987;
   --color-paper-callout-text: #5f4528;

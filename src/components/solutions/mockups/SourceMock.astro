@@ -8,28 +8,72 @@
  *
  *  La question est en mono : elle a été TAPÉE dans le produit, pas rédigée pour
  *  cette page (« The Recorded/Written Rule »). Les puces de source sont cerclées
- *  de vert : c'est le filet qui fait qu'une réponse a l'air redevable. */
+ *  de vert : c'est le filet qui fait qu'une réponse a l'air redevable.
+ *
+ * ⚠️ La variante `warm` a été ajoutée le 30 juillet 2026. C'était la dernière
+ * maquette sans elle, et c'est ce qui bloquait le passage de
+ * `/solutions/onboarding-documentation` au Layered Paper : une page dont le
+ * héros reste blanc et plat pendant que le reste est en papier chaud se voit
+ * immédiatement. Voir `WARM_MOCKUP_PAGES` dans `UseCasePage.astro`. */
 interface Props {
   question: string;
   answer: string;
   sources: string[];
+  /** Traitement Layered Paper — voir `DESIGN.md`, « Layered Paper Card ». */
+  warm?: boolean;
+  /** Bande sombre : seule l'ombre change, la feuille reste claire. */
+  onDark?: boolean;
 }
 
-const { question, answer, sources } = Astro.props;
+const { question, answer, sources, warm = false, onDark = false } = Astro.props;
 ---
 
-<div class="rounded-[8px] border border-rule bg-white p-5">
-  <p class="rounded-[6px] bg-paper px-[14px] py-3 font-mono text-[13px]">{question}</p>
+<div
+  class:list={[
+    "source-mock rounded-[8px] border border-rule bg-white p-5",
+    { "source-mock--warm": warm, "source-mock--dark": warm && onDark },
+  ]}
+>
+  <p class="question rounded-[6px] bg-paper px-[14px] py-3 font-mono text-[13px]">{question}</p>
 
-  <p class="mt-4 text-[15px] leading-[1.6]">{answer}</p>
+  <p class="answer mt-4 text-[15px] leading-[1.6]">{answer}</p>
 
   <div class="mt-4 flex flex-wrap gap-2">
     {
       sources.map((source) => (
-        <span class="rounded-[3px] border border-live-on-light px-[9px] py-[4px] font-mono text-[11px] text-live-on-light">
+        <span class="chip rounded-[3px] border border-live-on-light px-[9px] py-[4px] font-mono text-[11px] text-live-on-light">
           {source}
         </span>
       ))
     }
   </div>
 </div>
+
+<style>
+  .source-mock--warm {
+    border: 0;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+  }
+
+  .source-mock--dark {
+    box-shadow: var(--shadow-paper-card-dark);
+  }
+
+  /* La question reste en creux dans la feuille — c'est ce qui a été tapé, donc
+     une surface enfoncée plutôt qu'une ligne posée dessus. */
+  .source-mock--warm .question {
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper-chip);
+    box-shadow: var(--shadow-paper-inset);
+  }
+
+  /* Les puces de source gardent le vert : elles marquent l'information
+     CONFIRMÉE, ce que la palette papier assigne à la famille sage. */
+  .source-mock--warm .chip {
+    border-color: var(--color-paper-sage-rule);
+    background: var(--color-paper-sage);
+    color: var(--color-paper-sage-text);
+  }
+</style>

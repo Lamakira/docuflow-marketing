@@ -2,9 +2,20 @@
 import type { Mockup } from "../../../data/solutions";
 import RecordMock from "./RecordMock.astro";
 import TimerMock from "./TimerMock.astro";
+import ProjectMock from "./ProjectMock.astro";
 import QueryMock from "./QueryMock.astro";
+import ReconcileMock from "./ReconcileMock.astro";
+import VarianceMock from "./VarianceMock.astro";
+import AttachMock from "./AttachMock.astro";
+import DeviceMock from "./DeviceMock.astro";
+import IdleMock from "./IdleMock.astro";
+import LibraryMock from "./LibraryMock.astro";
+import RouteMock from "./RouteMock.astro";
 import ScoreMock from "./ScoreMock.astro";
+import SilenceMock from "./SilenceMock.astro";
 import SourceMock from "./SourceMock.astro";
+import WeekMock from "./WeekMock.astro";
+import WindowsMock from "./WindowsMock.astro";
 
 /** Aiguillage des quatre maquettes. Le `kind` de l'union discriminée choisit le
  *  dessin, donc `solutions.ts` décrit un visuel en données et aucune page n'a à
@@ -16,11 +27,16 @@ import SourceMock from "./SourceMock.astro";
  *  la rend vérifiable par le compilateur : une clé manquante y échoue au build. */
 interface Props {
   mock: Mockup;
-  /** Warm, layered paper treatment used by the client-billing visual pilot. */
+  /** Traitement Layered Paper — voir `DESIGN.md`, « Layered Paper Card ». */
   warm?: boolean;
+  /** La maquette est posée sur une bande sombre. Seule l'OMBRE change : une
+   *  feuille de papier reste claire sur `ink`. Porté ici plutôt que déduit dans
+   *  chaque maquette — l'étage qui connaît la bande est la SECTION, pas le
+   *  dessin, et `ScenarioBand` est la seule à être toujours `ink`. */
+  onDark?: boolean;
 }
 
-const { mock, warm = false } = Astro.props;
+const { mock, warm = false, onDark = false } = Astro.props;
 
 /** Miroir typé des branches rendues plus bas. Il ne sert qu'à une chose :
  *  `Record<Mockup["kind"], …>` exige LES QUATRE clés, donc une variante ajoutée
@@ -31,6 +47,17 @@ const kinds: Record<Mockup["kind"], true> = {
   timer: true,
   query: true,
   score: true,
+  week: true,
+  device: true,
+  silence: true,
+  reconcile: true,
+  windows: true,
+  idle: true,
+  project: true,
+  variance: true,
+  library: true,
+  route: true,
+  attach: true,
   source: true,
 };
 void kinds;
@@ -44,8 +71,19 @@ void kinds;
     {mock.kind === "record" && <RecordMock {...mock} warm={warm} />}
     {mock.kind === "timer" && <TimerMock {...mock} warm={warm} />}
     {mock.kind === "query" && <QueryMock {...mock} warm={warm} />}
-    {mock.kind === "score" && <ScoreMock {...mock} />}
-    {mock.kind === "source" && <SourceMock {...mock} />}
+    {mock.kind === "score" && <ScoreMock {...mock} warm={warm} onDark={onDark} />}
+    {mock.kind === "week" && <WeekMock {...mock} warm={warm} onDark={onDark} />}
+    {mock.kind === "device" && <DeviceMock {...mock} warm={warm} onDark={onDark} />}
+    {mock.kind === "silence" && <SilenceMock {...mock} warm={warm} onDark={onDark} />}
+    {mock.kind === "reconcile" && <ReconcileMock {...mock} warm={warm} onDark={onDark} />}
+    {mock.kind === "windows" && <WindowsMock {...mock} warm={warm} onDark={onDark} />}
+    {mock.kind === "idle" && <IdleMock {...mock} warm={warm} onDark={onDark} />}
+    {mock.kind === "project" && <ProjectMock {...mock} warm={warm} onDark={onDark} />}
+    {mock.kind === "variance" && <VarianceMock {...mock} warm={warm} onDark={onDark} />}
+    {mock.kind === "attach" && <AttachMock {...mock} warm={warm} onDark={onDark} />}
+    {mock.kind === "library" && <LibraryMock {...mock} warm={warm} onDark={onDark} />}
+    {mock.kind === "route" && <RouteMock {...mock} warm={warm} onDark={onDark} />}
+    {mock.kind === "source" && <SourceMock {...mock} warm={warm} onDark={onDark} />}
   </div>
 </div>
 

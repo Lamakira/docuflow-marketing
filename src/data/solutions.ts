@@ -104,7 +104,257 @@ export type Mockup =
       foot: string;
     }
   /** Le score de qualité de la preuve. Note le RELEVÉ, jamais la personne. */
-  | { kind: "score"; label: string; score: number; grade: string; foot: string }
+  | {
+      kind: "score";
+      label: string;
+      score: number;
+      grade: string;
+      /** CE QUE LE SCORE A NOTÉ. Obligatoire, et c'est le point.
+       *
+       *  La carte affichait le chiffre au-dessus de huit vignettes rayées
+       *  vides : un score asséné, appuyé sur des rectangles de gabarit. C'est
+       *  la définition du wireframe abstrait que la revue refuse.
+       *
+       *  Un score de complétude se justifie par ce qu'il a compté. Ces lignes
+       *  sont donc des faits produit — captures, fenêtres, prompts, postes —
+       *  et elles se lisent, se comptent et se vérifient. */
+      coverage: { label: string; value: string }[];
+      foot: string;
+    }
+  /** LA SEMAINE ENREGISTRÉE, jour par jour — le relevé qu'on peut compter.
+   *
+   *  Distinct de `score`, qui montre le même chiffre au-dessus de vingt-quatre
+   *  fenêtres anonymes et de huit vignettes identiques. C'était le reproche, et
+   *  il était juste : rien là-dedans ne ressemble au relevé DE JOURNÉES. Un
+   *  histogramme sans axe est une texture ; on ne peut ni le compter, ni s'y
+   *  reconnaître, et un opérateur méfiant ne croit pas une texture.
+   *
+   *  Ici les jours sont nommés, chacun porte ses heures, son activité et ses
+   *  captures, et le total se DÉDUIT des journées. Le score cesse d'être un
+   *  chiffre posé sur un décor : il note une semaine que le lecteur vient de
+   *  compter lui-même. */
+  | {
+      kind: "week";
+      label: string;
+      score: number;
+      grade: string;
+      /** `hours` en `H:MM`. Le total de la semaine en est dérivé — il ne
+       *  s'écrit nulle part, donc il ne peut pas mentir.
+       *
+       *  `tag` est optionnel et porte le LIEU de la journée (`OFFICE`, `HOME`).
+       *  Il n'existe que pour `/solutions/hybrid-teams`, dont le H1 — « The desk
+       *  and the kitchen table on one timesheet » — tient entièrement dans le
+       *  fait qu'une seule feuille couvre deux endroits. Une page qui ne parle
+       *  pas de lieu ne le passe pas, et la colonne disparaît. */
+      days: { day: string; hours: string; activity: number; shots: number; tag?: string }[];
+      foot: string;
+    }
+  /** CE QUI S'ATTACHE AU DOSSIER — heures, tâches, notes, documents.
+   *
+   *  Le pilier « The line » de `client-billing` dit : « Hours, tasks, notes and
+   *  documents ATTACH TO THE CLIENT PROJECT as work happens. At month end, the
+   *  invoice becomes A VIEW OF THAT RECORD. » Quatre natures nommées, et la
+   *  carte y rendait la fiche `record` du héros, aux mêmes valeurs.
+   *
+   *  Le total est dérivé : c'est ce qui rend « one record » vérifiable au lieu
+   *  d'être une figure de style. */
+  | {
+      kind: "attach";
+      title: string;
+      note: string;
+      rows: { label: string; count: number; unit: string }[];
+      foot: string;
+    }
+  /** LA BIBLIOTHÈQUE — ce qui est écrit, ce qui est dit, et le fait que les deux
+   *  se cherchent.
+   *
+   *  Le pilier « The library » d'`onboarding-documentation` dit :
+   *  « Search covers WHAT WAS SAID AND TYPED. » C'est la seule promesse de la
+   *  page qu'aucune autre surface ne porte — et la carte y rendait une TROISIÈME
+   *  copie de la réponse citée, identique au héros et au scénario, question et
+   *  sources comprises.
+   *
+   *  Le total indexé est dérivé : deux natures de contenu, un seul index. */
+  | {
+      kind: "library";
+      label: string;
+      /** `spoken` distingue ce qui a été DIT de ce qui a été TAPÉ. C'est l'axe
+       *  entier de la carte. */
+      shelves: { name: string; note: string; count: number; spoken?: boolean }[];
+      foot: string;
+    }
+  /** DEUX ROUTES POUR UNE MÊME QUESTION — celle qui bloque, celle qui répond.
+   *
+   *  Le scénario s'appelle « How a question stops being an interruption », et
+   *  son arc est un CONTRASTE : l'ancienne route passe par une personne
+   *  occupée, la nouvelle par la recherche. Une carte de réponse citée ne
+   *  montre que la seconde — elle ne peut pas montrer ce qu'on évite.
+   *
+   *  ⚠️ Aucune durée inventée : `20 seconds` et `$740` sont dans la copy de la
+   *  section, `March 6` aussi. Une carte qui chiffrerait un gain de
+   *  productivité non écrit serait une allégation, pas une maquette. */
+  | {
+      kind: "route";
+      label: string;
+      routes: { name: string; steps: string[]; outcome: string; blocked?: boolean }[];
+      foot: string;
+    }
+  /** LE PROJET COMME OBJET — étapes, tâches, mises à jour.
+   *
+   *  Le pilier « The project » de `/solutions/project-profitability` décrit un
+   *  CONTENANT : « Every project carries its budget, stages and tasks. » La
+   *  carte `record` y montrait la même jauge que le héros, aux mêmes valeurs —
+   *  le budget consommé, pas la structure qui le porte.
+   *
+   *  Les étapes sont celles du produit (`LEAD → COMPLETED`), c'est-à-dire le
+   *  rail de l'accueil : la page secteur et l'accueil décrivent le même cycle,
+   *  ils ne peuvent pas le nommer différemment. */
+  | {
+      kind: "project";
+      title: string;
+      chip: string;
+      /** Le cycle de vie, dans l'ordre. `at` marque l'étape courante. */
+      stages: string[];
+      at: number;
+      /** Comptes par état de tâche. Le total est dérivé. */
+      tasks: { state: string; count: number }[];
+      foot: string;
+    }
+  /** BUDGET CONTRE RÉEL, LIGNE PAR LIGNE — et la ligne qui déborde.
+   *
+   *  Le scénario dit « the hours are already attributed, so THE CAUSE IS ON THE
+   *  SAME SCREEN ». Une jauge à 78 % ne montre aucune cause : elle montre un
+   *  pourcentage. Il faut les lignes, et il faut qu'elles s'additionnent.
+   *
+   *  ⚠️ Les deux totaux et le pourcentage sont DÉRIVÉS des lignes. C'est ce qui
+   *  rend la carte vérifiable : le lecteur peut additionner la colonne et
+   *  retrouver les `320 h` et `249 h` que cite le texte. Un total retapé
+   *  au-dessus de lignes qui ne tombent pas juste, sur une page dont le H1 est
+   *  « Every job was profitable until somebody added it up », serait la faute la
+   *  plus embarrassante du site. */
+  | {
+      kind: "variance";
+      title: string;
+      period: string;
+      /** `budget` et `actual` en heures entières. */
+      lines: { label: string; budget: number; actual: number }[];
+      foot: string;
+    }
+  /** LES FENÊTRES DE 60 SECONDES — l'atome de la mesure, comptable.
+   *
+   *  Le lede d'`employee-productivity` ouvre sur « activity is measured in
+   *  60-second windows ». La grille montre donc UNE HEURE, soit soixante
+   *  fenêtres qu'on peut littéralement compter à l'écran. C'est la réponse la
+   *  plus directe au reproche fait aux cartes de score : un histogramme de
+   *  vingt-quatre barres anonymes ne se compte pas, soixante carrés si.
+   *
+   *  L'indicateur visible est SUR la carte, pas en légende : sur une page dont
+   *  le H1 est « Measure openly », la visibilité de la mesure doit être une
+   *  chose qu'on voit, pas une chose qu'on lit. */
+  | {
+      kind: "windows";
+      label: string;
+      /** Le libellé de l'indicateur visible — « Recording », jamais un verbe
+       *  passif. C'est la garantie no 1 de la page. */
+      indicator: string;
+      /** Une valeur d'activité par fenêtre. `null` = fenêtre au ralenti, qui a
+       *  déclenché un prompt. Leur nombre est affiché et DÉRIVÉ. */
+      cells: (number | null)[];
+      foot: string;
+    }
+  /** UN RALENTI, PAS À PAS — l'événement que le produit ne déduit jamais.
+   *
+   *  Le scénario d'`employee-productivity` s'appelle « How an idle stretch is
+   *  handled » : c'est un ENCHAÎNEMENT, pas un état. Chaque étape porte son
+   *  heure, et la durée non comptée se DÉDUIT de la première et de la dernière
+   *  — le chiffre qui rassure ne peut donc pas être arrondi en faveur du
+   *  produit.
+   *
+   *  Distinct de `windows`, qui montre la mesure en continu : ici on est zoomé
+   *  sur un seul événement. Même écart de focale qu'entre `week` et `silence`
+   *  sur `remote-teams`, et c'est ce qui empêche les deux cartes d'une même
+   *  page de se ressembler. */
+  | {
+      kind: "idle";
+      label: string;
+      steps: { at: string; event: string; note?: string }[];
+      /** Ce qu'il advient du temps. Le libellé est écrit, la durée du ralenti
+       *  est dérivée des étapes — donc elle ne peut pas flatter le produit. */
+      outcome: string;
+      foot: string;
+    }
+  /** LA JOURNÉE COUPÉE EN DEUX QUI SE RECOLLE — deux lieux, une feuille.
+   *
+   *  Le miroir de `silence`, et c'est voulu : là-bas une coupure qui ne se
+   *  referme jamais, ici une coupure qui se referme. Les deux pages parlent
+   *  d'un trou dans un relevé, mais elles n'en disent pas la même chose —
+   *  `remote-teams` dit « le trou s'annonce », `hybrid-teams` dit « le trou se
+   *  comble sans compter deux fois ». Un même dessin sur les deux mentirait sur
+   *  l'une des deux.
+   *
+   *  Le total est DÉRIVÉ des segments : c'est ce qui prouve à l'oeil qu'aucune
+   *  heure n'a été comptée deux fois, ce qui est l'objection exacte du
+   *  scénario. */
+  | {
+      kind: "reconcile";
+      label: string;
+      /** Les blocs de la journée, dans l'ordre. `offline` marque ceux qui ont
+       *  été mis en file au lieu d'être envoyés tout de suite. */
+      blocks: { at: string; place: string; task: string; hours: string; offline?: boolean }[];
+      /** L'heure de reconnexion. La bascule du dessin tombe dessus. */
+      reconnected: string;
+      foot: string;
+    }
+  /** LE POSTE qui produit le relevé — enregistré, vivant, révocable.
+   *
+   *  Distinct de `score`, qui montre le RÉSULTAT. Les deux se disputaient la
+   *  même page : le héros de `/solutions/remote-teams` et son premier pilier
+   *  rendaient la même carte de score, aux mêmes valeurs, à un écran d'écart.
+   *  Deux dessins identiques ne disent rien deux fois — ils disent au lecteur
+   *  qu'il a déjà vu cette page.
+   *
+   *  Le partage est net : le héros porte le chiffre qu'on LIT (« you can read
+   *  the record »), le pilier porte la MACHINE qui le fabrique, ce qui est
+   *  exactement ce que son corps énumère — agent de bureau, fenêtres de 60 s,
+   *  file hors ligne, registre révocable. Et c'est ce poste-là que le scénario
+   *  fait taire deux sections plus bas : le lecteur l'a vu battre avant de le
+   *  voir s'arrêter. */
+  | {
+      kind: "device";
+      label: string;
+      name: string;
+      platform: string;
+      status: string;
+      /** Les trois plateformes de l'agent. `active` marque celle du poste. */
+      platforms: { short: string; active?: boolean }[];
+      rows: { label: string; value: string }[];
+      foot: string;
+    }
+  /** La semaine QUI S'ARRÊTE — un relevé coupé net, et la suite retenue.
+   *
+   *  Variante distincte de `score` et non un réglage de celle-ci. Un relevé
+   *  interrompu n'est pas un relevé pâle : baisser l'opacité d'un histogramme
+   *  donne « la page charge », pas « le poste s'est tu mardi ». Il faut trois
+   *  choses qu'un graphique de score ne porte pas — un AXE DE TEMPS pour que
+   *  « mardi » existe à l'écran, une COUPURE nette, et les jours manquants
+   *  dessinés comme RETENUS plutôt que comme vides. */
+  | {
+      kind: "silence";
+      label: string;
+      score: number;
+      grade: string;
+      /** Les jours de la semaine, dans l'ordre. Ils portent l'axe. */
+      days: string[];
+      /** Position de la coupure en pourcentage de la semaine. Elle DOIT tomber
+       *  dans le jour que nomme `lastEvent` — c'est ce qui rend le dessin
+       *  vérifiable : à 34 % sur cinq jours, la coupure est dans le deuxième
+       *  jour, donc mardi. Le nombre de jours retenus en est DÉRIVÉ, jamais
+       *  écrit à la main : déplacer la coupure ne peut pas faire mentir
+       *  l'étiquette. */
+      cut: number;
+      lastEvent: string;
+      foot: string;
+    }
   /** La réponse de l'assistant, avec ses sources citées. */
   | { kind: "source"; question: string; answer: string; sources: string[] };
 
@@ -562,7 +812,13 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
         label: "Evidence quality",
         score: 84,
         grade: "STRONG",
-        foot: "Meridian · week 32 · advisory",
+        coverage: [
+  { label: "Screenshots", value: "38 captured" },
+  { label: "Activity windows", value: "1,914 of 2,010" },
+  { label: "Idle prompts", value: "3 · all answered" },
+  { label: "Devices reporting", value: "2 of 2" },
+],
+foot: "Meridian · week 32 · advisory",
       },
       problem: {
         heading: "The invoice is a claim. The record is the proof.",
@@ -600,7 +856,13 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             label: "Evidence quality",
             score: 84,
             grade: "STRONG",
-            foot: "Meridian · week 32 · advisory",
+            coverage: [
+  { label: "Screenshots", value: "38 captured" },
+  { label: "Activity windows", value: "1,914 of 2,010" },
+  { label: "Idle prompts", value: "3 · all answered" },
+  { label: "Devices reporting", value: "2 of 2" },
+],
+foot: "Meridian · week 32 · advisory",
           },
         },
         {
@@ -698,7 +960,13 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
           label: "Evidence quality",
           score: 84,
           grade: "STRONG",
-          foot: "Meridian · week 32 · 40 h",
+          coverage: [
+  { label: "Screenshots", value: "38 captured" },
+  { label: "Activity windows", value: "1,914 of 2,010" },
+  { label: "Idle prompts", value: "3 · all answered" },
+  { label: "Hours on the record", value: "40:00" },
+],
+foot: "Meridian · week 32 · 40 h",
         },
       },
       objection: {
@@ -798,7 +1066,13 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             label: "Evidence quality",
             score: 79,
             grade: "STRONG",
-            foot: "Busy season · week of March 10",
+            coverage: [
+  { label: "Screenshots", value: "52 captured" },
+  { label: "Activity windows", value: "2,140 of 2,400" },
+  { label: "Idle prompts", value: "6 · all answered" },
+  { label: "Devices reporting", value: "4 of 4" },
+],
+foot: "Busy season · week of March 10",
           },
         },
         {
@@ -1036,7 +1310,13 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
         label: "Evidence quality",
         score: 88,
         grade: "STRONG",
-        foot: "Night shift · 42 agents · admin analytics",
+        coverage: [
+  { label: "Screenshots", value: "1,204 captured" },
+  { label: "Activity windows", value: "19,880 of 20,160" },
+  { label: "Idle prompts", value: "31 · all answered" },
+  { label: "Devices reporting", value: "41 of 42" },
+],
+foot: "Night shift · 42 agents · admin analytics",
       },
       problem: {
         heading: "The client isn't buying hours. They are buying coverage.",
@@ -1077,7 +1357,13 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             label: "Evidence quality",
             score: 88,
             grade: "STRONG",
-            foot: "Night shift · 42 agents · admin analytics",
+            coverage: [
+  { label: "Screenshots", value: "1,204 captured" },
+  { label: "Activity windows", value: "19,880 of 20,160" },
+  { label: "Idle prompts", value: "31 · all answered" },
+  { label: "Devices reporting", value: "41 of 42" },
+],
+foot: "Night shift · 42 agents · admin analytics",
           },
         },
         {
@@ -1174,7 +1460,13 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
           label: "Evidence quality",
           score: 88,
           grade: "STRONG",
-          foot: "41 of 42 devices reporting · 02:00",
+          coverage: [
+  { label: "Screenshots", value: "1,204 captured" },
+  { label: "Activity windows", value: "19,880 of 20,160" },
+  { label: "Idle prompts", value: "31 · all answered" },
+  { label: "Devices reporting", value: "41 of 42" },
+],
+foot: "41 of 42 devices reporting · 02:00",
         },
       },
       objection: {
@@ -1808,13 +2100,26 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "Notes with @mentions that notify",
             "Custom modules and fields - 12 field types",
           ]),
+          /* ⚠️ `attach` et non `record` — le héros de cette page rendait DÉJÀ
+             cette fiche, au titre, à la puce, à la jauge et aux valeurs
+             identiques.
+             Ce bloc s'appelle « The line » et son corps nomme quatre natures :
+             « hours, tasks, notes and documents ATTACH TO THE CLIENT PROJECT ».
+             Aucune n'était montrée. Le total `57 items` est dérivé — c'est ce
+             qui rend « one record » vérifiable au lieu d'être une formule, et
+             c'est le chiffre que le dessin de la situation contredit avec son
+             `0 attached`. */
           mock: {
-            kind: "record",
+            kind: "attach",
             title: "Halcyon Retail · March",
-            chip: "In review",
-            people: true,
-            meter: { label: "Billed", value: "$18,400", percent: 76, read: "76% of budget" },
-            tags: ["invoice", "March"],
+            note: "one record",
+            rows: [
+              { label: "Hours", count: 42, unit: "entries" },
+              { label: "Tasks", count: 3, unit: "on the project" },
+              { label: "Notes", count: 7, unit: "with mentions" },
+              { label: "Documents", count: 5, unit: "produced" },
+            ],
+            foot: "the invoice is a view of this",
           },
         },
         {
@@ -1910,11 +2215,28 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
       eyebrow: "Remote teams",
       h1: "You cannot see the work. You can read the record.",
       lede: "Hours, activity and daily updates land on the client project as the week happens. When the record is thin, its evidence quality score says so - before a gap in the data is mistaken for a gap in the work.",
+      /* ⚠️ `week` et non `score`. Le H1 promet quelque chose à LIRE — « You
+         cannot see the work. You can read the record. » — et `ScoreMock` posait
+         le chiffre au-dessus de vingt-quatre fenêtres anonymes et de huit
+         vignettes identiques : une texture, pas un relevé de journées. Rien
+         là-dedans ne se compte ni ne se reconnaît.
+         Ici les cinq journées sont nommées et chacune porte ses heures, son
+         activité et ses captures. Le total `38 h` est DÉRIVÉ des journées et
+         tombe sur le chiffre du scénario (« 11 h against 38 h the week
+         before ») : c'est la même semaine, vue entière avant d'être vue
+         cassée. */
       hero: {
-        kind: "score",
+        kind: "week",
         label: "Evidence quality",
         score: 84,
         grade: "STRONG",
+        days: [
+          { day: "MON", hours: "7:40", activity: 78, shots: 3 },
+          { day: "TUE", hours: "8:10", activity: 86, shots: 3 },
+          { day: "WED", hours: "6:55", activity: 64, shots: 2 },
+          { day: "THU", hours: "8:25", activity: 91, shots: 3 },
+          { day: "FRI", hours: "6:50", activity: 61, shots: 2 },
+        ],
         foot: "Week 31 · remote · one person",
       },
       situation: {
@@ -1963,12 +2285,31 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "Admin analytics - coverage, quality, devices, alerts",
             "Device registry with remote revocation",
           ]),
+          /* ⚠️ `device` et non `score` — le héros de cette page porte DÉJÀ la
+             carte de score, aux mêmes valeurs. Les deux se suivaient à un écran
+             d'écart, ce qui ne se voyait pas tant qu'elles étaient blanches et
+             plates, et saute aux yeux depuis qu'elles sont deux feuilles
+             chaudes jumelles.
+             Le héros garde le chiffre qu'on LIT — c'est la promesse du H1. Ce
+             bloc-ci montre la MACHINE, ce que son corps décrit mot pour mot, et
+             c'est ce poste que le scénario fait taire plus bas.
+             Toutes les valeurs viennent de `product.ts` (pilier `activity`) :
+             3 plateformes, captures 3–15 min, fenêtres de 60 s, file hors
+             ligne, registre révocable. Rien d'inventé sauf l'identifiant de
+             parc, qui est une étiquette de maquette comme « Atlas · Sprint 14 ». */
           mock: {
-            kind: "score",
-            label: "Evidence quality",
-            score: 84,
-            grade: "STRONG",
-            foot: "Week 31 · remote · one person",
+            kind: "device",
+            label: "Device registry",
+            name: "WS-2291",
+            platform: "macOS · reporting since Monday",
+            status: "Live",
+            platforms: [{ short: "WIN" }, { short: "MAC", active: true }, { short: "LNX" }],
+            rows: [
+              { label: "Screenshots", value: "randomised · 3–15 min" },
+              { label: "Activity", value: "60-second windows" },
+              { label: "Offline queue", value: "0 events" },
+            ],
+            foot: "Revocable from admin · one device, one person",
           },
         },
         {
@@ -2014,11 +2355,21 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "The device shows in admin analytics with an alert against it. The conversation is with IT, not with the person.",
           ],
         ],
+        /* `silence` et non `score` : le paragraphe nomme un JOUR, un ARRÊT et
+           des événements RETENUS. Une carte de score ne porte aucun des trois —
+           elle dessinerait une semaine dense sous une note « WEAK », donc un
+           visuel qui contredit sa propre légende.
+           `cut: 34` sur cinq jours tombe dans le deuxième, mardi : la coupure
+           est à l'endroit que la phrase nomme, et le nombre de jours retenus
+           s'en déduit (4) au lieu d'être retapé. */
         mock: {
-          kind: "score",
+          kind: "silence",
           label: "Evidence quality",
           score: 38,
           grade: "WEAK",
+          days: ["MON", "TUE", "WED", "THU", "FRI"],
+          cut: 34,
+          lastEvent: "Last event · Tue 14:38",
           foot: "Week 32 · device silent since Tuesday",
         },
       },
@@ -2053,14 +2404,29 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
       eyebrow: "Hybrid teams",
       h1: "The desk and the kitchen table on one timesheet.",
       lede: "One timesheet follows the week from office to home. Offline events reconcile once the connection returns, and active hours stop capture when the working day ends.",
+      /* ⚠️ `week` et non `timer`. Cette page rendait TROIS chronomètres
+         identiques — héros, pilier 01, scénario — aux mêmes valeurs, ce qui
+         disait au lecteur qu'il avait déjà vu la page.
+         Le héros porte la promesse du H1, « one timesheet », donc il montre la
+         SEMAINE ENTIÈRE : c'est la seule surface d'où l'on voit qu'une feuille
+         couvre deux endroits. Le pilier 01 garde le chronomètre — c'est LA
+         feuille de temps, en cours.
+         Les lieux passent par `tag`, et le total `37 h` est dérivé des cinq
+         journées : sur une page dont la situation dit « a timesheet that has to
+         add up », le total ne peut pas être une décoration. */
       hero: {
-        kind: "timer",
-        running: { project: "Meridian · Operating model", task: "Board pack revisions", elapsed: "1:32:07" },
-        entries: [
-          { task: "Office · Workshop prep", duration: "2:10:00" },
-          { task: "Home · Stakeholder calls", duration: "1:45:30" },
+        kind: "week",
+        label: "Evidence quality",
+        score: 79,
+        grade: "STRONG",
+        days: [
+          { day: "MON", hours: "7:30", activity: 74, shots: 2, tag: "OFFICE" },
+          { day: "TUE", hours: "8:05", activity: 83, shots: 3, tag: "OFFICE" },
+          { day: "WED", hours: "6:45", activity: 66, shots: 2, tag: "HOME" },
+          { day: "THU", hours: "7:50", activity: 88, shots: 3, tag: "HOME" },
+          { day: "FRI", hours: "6:50", activity: 62, shots: 2, tag: "HOME" },
         ],
-        foot: "Timesheet · Thursday · two locations",
+        foot: "Week 14 · one timesheet, two places",
       },
       situation: {
         heading: "Two places, one week, and a timesheet that has to add up.",
@@ -2130,12 +2496,29 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "Idle detection with prompt and countdown",
             "Device registry with remote revocation",
           ]),
+          /* Ce bloc s'appelle « The agent » et son corps décrit l'AGENT — file
+             locale, reconnexion, fenêtre d'heures actives, révocation. Une
+             carte de score n'en montre rien : elle note le relevé, pas la
+             machine. `device` porte exactement les lignes que le corps
+             énumère, et le score reste sur le héros où il note la semaine. */
           mock: {
-            kind: "score",
-            label: "Evidence quality",
-            score: 79,
-            grade: "STRONG",
-            foot: "Thursday · reconnected 14:02",
+            kind: "device",
+            label: "Device registry",
+            name: "MBP-0417",
+            platform: "macOS · home network",
+            status: "Live",
+            platforms: [{ short: "WIN" }, { short: "MAC", active: true }, { short: "LNX" }],
+            /* ⚠️ Pas de ligne « Active hours » ici : la fenêtre d'heures
+               actives est le SUJET ENTIER du dessin de l'objection
+               (`HoursWindowArt`), deux sections plus bas. Un fait, un seul
+               endroit — sinon la page l'énonce deux fois et le dessin de
+               l'objection ne fait que répéter une ligne déjà lue. */
+            rows: [
+              { label: "Offline queue", value: "reconciled 14:02" },
+              { label: "Capture", value: "randomised · 3–15 min" },
+              { label: "Screenshots", value: "blurred by default" },
+            ],
+            foot: "Revocable from admin · one device, one person",
           },
         },
       ],
@@ -2161,13 +2544,26 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             " the laptop is open again and nothing is captured, because the active-hours window closed at six.",
           ],
         ],
+        /* ⚠️ `reconcile` et non `timer` — c'était le TROISIÈME chronomètre
+           identique de la page.
+           L'objection du scénario est une addition : « the block appears once,
+           not twice ». Un chronomètre ne s'additionne pas ; ces quatre blocs si,
+           et leur total (7 h) est dérivé. C'est le total qui prouve à l'oeil
+           qu'aucune heure n'a été comptée deux fois.
+           Les heures de début S'ENCHAÎNENT sur les durées, et la chaîne tombe
+           sur les chiffres du texte : 09:05 + 2:38 = 11:43, + 1:57 = 13:40 (la
+           coupure), + 0:22 = 14:02 (la reconnexion). Déplacer une durée casse
+           la chaîne visiblement, ce qui est le but. */
         mock: {
-          kind: "timer",
-          running: { project: "Meridian · Operating model", task: "Board pack revisions", elapsed: "1:32:07" },
-          entries: [
-            { task: "Home · reconnected 14:02", duration: "0:22:00" },
-            { task: "Office · Workshop prep", duration: "2:10:00" },
+          kind: "reconcile",
+          label: "Thursday · one timesheet",
+          blocks: [
+            { at: "09:05", place: "OFFICE", task: "Workshop prep", hours: "2:38" },
+            { at: "11:43", place: "OFFICE", task: "Board pack revisions", hours: "1:57" },
+            { at: "13:40", place: "HOME", task: "Stakeholder calls", hours: "0:22", offline: true },
+            { at: "14:02", place: "HOME", task: "Board pack revisions", hours: "2:03" },
           ],
+          reconnected: "14:02",
           foot: "Thursday · queued and reconciled",
         },
       },
@@ -2202,12 +2598,26 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
       eyebrow: "Employee productivity",
       h1: "Measure openly, or the team will work around the measure.",
       lede: "Activity is measured in 60-second windows and idle time is flagged with a prompt, never deduced quietly. A visible indicator shows when the timer is running, and anyone can open the data recorded about them.",
+      /* ⚠️ `windows` et non `score` — le pilier 01 rendait la MÊME carte de
+         score, aux mêmes valeurs, un écran plus bas.
+         Le score reste au pilier 01, dont le corps dit « an evidence quality
+         score rates the completeness of the record ». Le héros prend la
+         première phrase du lede, « activity is measured in 60-second
+         windows » : soixante carrés font une heure, et le lecteur peut les
+         compter. C'est ce qu'une carte de score ne permettait pas.
+         Les cinq fenêtres au ralenti tombent sur le ralenti du scénario
+         (11:04 → 11:09), et leur compte est dérivé de la grille. */
       hero: {
-        kind: "score",
-        label: "Evidence quality",
-        score: 88,
-        grade: "STRONG",
-        foot: "Measured openly · reviewable by the person",
+        kind: "windows",
+        label: "Activity · one hour",
+        indicator: "Recording",
+        cells: [
+          72, 85, 64, 91, 78, 58, 88, 70, 95, 66, 82, 74, 60, 89, 77,
+          68, 93, 71, 84, 62, 90, 75, 57, 86, null, null, null, null, null, 65,
+          88, 76, 59, 92, 70, 83, 61, 87, 74, 96, 63, 80, 69, 90, 72,
+          85, 58, 91, 77, 64, 66, 89, 75, 82, 60, 93, 71, 84, 68, 79,
+        ],
+        foot: "one hour · visible to the person measured",
       },
       situation: {
         heading: "Productivity gets measured by whoever is loudest about it.",
@@ -2260,7 +2670,13 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             label: "Evidence quality",
             score: 88,
             grade: "STRONG",
-            foot: "60-second windows · idle prompted",
+            coverage: [
+  { label: "Screenshots", value: "34 captured" },
+  { label: "Activity windows", value: "412 of 420" },
+  { label: "Idle prompts", value: "2 · both answered" },
+  { label: "Device uptime", value: "7:40:00" },
+],
+foot: "60-second windows · idle prompted",
           },
         },
         {
@@ -2304,13 +2720,24 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "Nothing was subtracted quietly, and nothing has to be argued about at review time. The record and the person agree.",
           ],
         ],
+        /* ⚠️ `idle` et non `timer` — c'était la même carte que le pilier 02,
+           aux mêmes valeurs.
+           La section décrit un ENCHAÎNEMENT (« How an idle stretch is
+           handled »), et un chronomètre montre un instant : il ne pouvait pas
+           montrer ce qui est raconté. Les trois étapes portent leurs heures et
+           la durée du ralenti est DÉRIVÉE — 11:04 → 11:10 fait les « 6 min » du
+           texte, et le seuil de 3 min tombe visiblement à 11:07.
+           L'ancienne valeur `0:06:20` contredisait déjà « 6 min » : c'est
+           exactement le genre d'écart qu'un chiffre dérivé rend impossible. */
         mock: {
-          kind: "timer",
-          running: { project: "Ridgeline · Tier 1", task: "Inbound queue", elapsed: "4:12:55" },
-          entries: [
-            { task: "Idle · prompted, annotated", duration: "0:06:20" },
-            { task: "Ridgeline · Escalations", duration: "1:18:40" },
+          kind: "idle",
+          label: "Idle · Tuesday",
+          steps: [
+            { at: "11:04", event: "Input stops" },
+            { at: "11:07", event: "Threshold reached", note: "3 min · prompt shown with countdown" },
+            { at: "11:10", event: "Marked: call away from desk", note: "annotated, history kept" },
           ],
+          outcome: "Prompted, not deduced",
           foot: "3 min threshold · prompt and countdown",
         },
       },
@@ -2401,13 +2828,29 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "Daily updates with status, blockers and KPIs",
             "Team assignment per project",
           ]),
+          /* ⚠️ `project` et non `record` — le héros de cette page rendait DÉJÀ
+             cette fiche, à la jauge et aux valeurs identiques, et le scénario
+             une troisième fois.
+             Ce bloc s'appelle « The project » et son corps décrit un CONTENANT :
+             « every project carries its budget, stages and tasks ». Le héros
+             garde la jauge (le budget consommé, qui est sa promesse) ; ici on
+             montre la structure qui la porte.
+             Les étapes sont celles de `crmProjects`, donc celles du rail de
+             l'accueil : deux pages qui décrivent le même objet ne peuvent pas
+             le nommer autrement. */
           mock: {
-            kind: "record",
+            kind: "project",
             title: "Fairview · Phase 2 fit-out",
             chip: "In progress",
-            people: true,
-            meter: { label: "Budgeted", value: "320 h", percent: 78, read: "249 h actual" },
-            tags: ["fixed price", "phase 2"],
+            stages: ["LEAD", "WON", "IN PROGRESS", "IN REVIEW", "COMPLETED"],
+            at: 2,
+            tasks: [
+              { state: "Open", count: 12 },
+              { state: "Active", count: 5 },
+              { state: "Done", count: 31 },
+              { state: "Archived", count: 4 },
+            ],
+            foot: "week 2 of 6 · 4 assigned",
           },
         },
         {
@@ -2457,12 +2900,27 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "That is a variation you raise in week two, with the figures open - not a margin you explain at handover.",
           ],
         ],
+        /* ⚠️ `variance` et non `record` — troisième rendu de la même fiche sur
+           la page, et surtout : la phrase centrale du scénario est « the hours
+           are already attributed, so THE CAUSE IS ON THE SAME SCREEN ». Une
+           jauge à 78 % ne montre aucune cause, et le seul chiffre qui la portait
+           (`coordination 62 h / 20 h`) était noyé dans le pied.
+           Les quatre lignes ci-dessous S'ADDITIONNENT sur les chiffres du
+           texte : 20+90+60+150 = 320 h budgétées, 62+71+54+62 = 249 h réelles,
+           soit 78 %. Les trois totaux sont dérivés, donc le lecteur peut faire
+           l'addition et vérifier — sur une page dont le H1 est « Every job was
+           profitable until somebody added it up », c'est le minimum. */
         mock: {
-          kind: "record",
-          title: "Fairview · Phase 2 fit-out",
-          chip: "In progress",
-          meter: { label: "Budgeted", value: "320 h", percent: 78, read: "249 h actual" },
-          foot: "Week 2 of 6 · coordination 62 h / 20 h",
+          kind: "variance",
+          title: "Fairview · Phase 2",
+          period: "Week 2 of 6",
+          lines: [
+            { label: "Coordination", budget: 20, actual: 62 },
+            { label: "Submittals", budget: 90, actual: 71 },
+            { label: "Site meetings", budget: 60, actual: 54 },
+            { label: "Fit-out", budget: 150, actual: 62 },
+          ],
+          foot: "logged against tasks on the project",
         },
       },
       objection: {
@@ -2549,11 +3007,22 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "AI assistant over semantic search, cited",
             "Re-indexing skips unchanged content",
           ]),
+          /* ⚠️ `library` et non `source` — le héros ET le scénario rendaient
+             déjà cette réponse citée, à la question, à la réponse et aux sources
+             identiques. Trois exemplaires du même dessin sur une page dont le
+             sujet est justement qu'on ne retrouve rien.
+             Ce bloc s'appelle « The library » et sa phrase distinctive est
+             « search covers WHAT WAS SAID AND TYPED » — la seule promesse de la
+             page qu'aucune autre surface ne porte. D'où deux natures de contenu
+             et un total indexé dérivé. */
           mock: {
-            kind: "source",
-            question: "how do we handle a refund over $500?",
-            answer: "Tier 2 approves anything above $500, and the reason goes on the client record. Walked through in the March onboarding session.",
-            sources: ["doc · Refunds policy", "call · Onboarding Mar 6"],
+            kind: "library",
+            label: "The library · one index",
+            shelves: [
+              { name: "Pages", note: "nested, from templates", count: 48 },
+              { name: "Recorded walkthroughs", note: "transcribed on upload", count: 12, spoken: true },
+            ],
+            foot: "re-indexed as they are edited",
           },
         },
         {
@@ -2599,11 +3068,33 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             " and cost nobody else their morning. The page it came from is the same one the next agent will find.",
           ],
         ],
+        /* ⚠️ `route` et non `source` — troisième rendu de la réponse citée sur
+           la page, et surtout : l'arc de la section est un CONTRASTE. « The old
+           route is to ask the team lead, WHO IS ON A CALL » contre « the
+           question took 20 seconds and COST NOBODY ELSE THEIR MORNING ». Une
+           carte de réponse ne peut montrer que la route qui aboutit ; elle est
+           incapable de montrer celle qu'on évite, qui est la moitié de
+           l'argument.
+           Tous les chiffres viennent de la copy ci-dessus (`$740`, `20 seconds`,
+           `March 6`). La route bloquée ne porte AUCUNE durée : chiffrer le temps
+           perdu serait une allégation que le texte n'écrit pas. */
         mock: {
-          kind: "source",
-          question: "how do we handle a refund over $500?",
-          answer: "Tier 2 approves anything above $500, and the reason goes on the client record. Walked through in the March onboarding session.",
-          sources: ["doc · Refunds policy", "call · Onboarding Mar 6"],
+          kind: "route",
+          label: "Day 3 · refund of $740",
+          routes: [
+            {
+              name: "The old route",
+              steps: ["Ask the team lead", "Team lead is on a call", "Wait, or guess"],
+              outcome: "Two people stopped",
+              blocked: true,
+            },
+            {
+              name: "The new route",
+              steps: ["Search the library", "Answer with 2 sources", "Open either one"],
+              outcome: "20 seconds",
+            },
+          ],
+          foot: "same page the next agent will find",
         },
       },
       objection: {

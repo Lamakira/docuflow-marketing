@@ -1,0 +1,348 @@
+---
+/**
+ * `/solutions/hybrid-teams` — section « the situation ».
+ *
+ * ─── Pourquoi ce dessin REMPLACE `TwoPlacesArt` ────────────────────────────
+ *
+ * `TwoPlacesArt` montrait une feuille de temps, deux lieux, et la coupure de
+ * connexion qui se recolle — aux valeurs exactes du scénario (13:40 → 14:02,
+ * 22 min). C'est devenu, mot pour mot, le sujet de `ReconcileMock`, la maquette
+ * du scénario. La page racontait donc la reconnexion deux fois, à deux sections
+ * d'écart.
+ *
+ * ⚠️ Deuxième occurrence du même mécanisme de dérive après
+ * `employee-productivity` : le dessin n'a pas bougé, c'est la maquette voisine
+ * qui a pris son sujet. **Changer une maquette oblige à relire les dessins de
+ * la même page** — c'est écrit dans `docs/mockup-corrections.md`, et ça vient
+ * de se vérifier deux fois.
+ *
+ * ─── Ce que la section dit vraiment ────────────────────────────────────────
+ *
+ * « Two places, one week, and a timesheet that has to add up. » Et son premier
+ * point : « Two days in the office, three at home, and the hours arrive FROM
+ * WHATEVER TOOL HAPPENED TO BE OPEN. Reconciling them is somebody's Friday. »
+ *
+ * Le sujet n'est donc pas la coupure : c'est que la semaine existe en PLUSIEURS
+ * EXEMPLAIRES QUI NE TOMBENT PAS PAREIL. Trois sources, trois totaux, et
+ * personne pour dire lequel est juste. L'écart EST l'argument, donc il se
+ * calcule : le dessin affiche la fourchette entre le plus haut et le plus bas.
+ *
+ * ⚠️ Ces totaux décrivent le PROBLÈME — trois outils du quotidien qui ne se
+ * parlent pas. Aucun n'est une donnée DocuFlow. Le contraste se lit contre le
+ * héros de la même page, qui porte UN total dérivé de ses journées (37 h).
+ */
+
+/** Trois sources ordinaires d'une semaine hybride. Les durées sont en `H:MM` et
+ *  l'écart est DÉRIVÉ — retaper un écart qui ne tombe pas juste sur une page
+ *  dont la section s'appelle « a timesheet that has to add up » serait la faute
+ *  la plus visible possible. */
+const SOURCES = [
+  { name: "Shared spreadsheet", hint: "filled in on Friday", total: "36:30" },
+  { name: "Calendar export", hint: "meetings only", total: "31:45" },
+  { name: "Chat standups", hint: "what people remembered", total: "28:20" },
+];
+
+const toMinutes = (value: string) => {
+  const match = /^(\d+):([0-5]\d)$/.exec(value);
+  if (!match) {
+    throw new Error(
+      `[solutions] DisagreeingTotalsArt : durée « ${value} » illisible, format attendu \`H:MM\`. ` +
+        `L'écart entre les sources en est dérivé et serait faux en silence.`
+    );
+  }
+  return Number(match[1]) * 60 + Number(match[2]);
+};
+
+const minutes = SOURCES.map((source) => toMinutes(source.total));
+const lowest = Math.min(...minutes);
+const highest = Math.max(...minutes);
+const spread = highest - lowest;
+const gap = `${Math.floor(spread / 60)}:${String(spread % 60).padStart(2, "0")}`;
+
+/** ⚠️ UNE ÉCHELLE COMMUNE, PAS TROIS BARRES.
+ *
+ *  La première version donnait à chaque source une barre proportionnelle au
+ *  plus grand total. Trois barres de 78 %, 87 % et 100 % se ressemblent — le
+ *  dessin faisait donc paraître les sources D'ACCORD, alors que la section
+ *  entière dit qu'elles ne le sont pas. Un graphique qui contredit sa légende
+ *  est la faute que `docs/mockup-corrections.md` interdit en premier.
+ *
+ *  Sur un axe commun, les trois marques tombent à des endroits visiblement
+ *  différents : la dispersion EST l'argument. Et le segment ambre qui les relie
+ *  a exactement la longueur de l'écart, donc le `8:10` affiché se mesure à
+ *  l'écran au lieu de s'annoncer.
+ *
+ *  L'axe se déduit des données avec une heure de marge de chaque côté : figé à
+ *  la main, il pourrait un jour exclure une valeur sans que rien ne le signale. */
+const MARGIN = 60;
+const axisFrom = lowest - MARGIN;
+const axisSpan = highest + MARGIN - axisFrom;
+const at = (value: number) => ((value - axisFrom) / axisSpan) * 100;
+---
+
+{/* THESIS: the same week exists in three tools and none of them agree. OWN-WORLD:
+    three warm slips pinned side by side on a desk, none authoritative. STORY:
+    read three totals, notice they differ, reach the gap. FIRST VIEWPORT: the
+    three rows; the spread closes it. FORM: standalone Layered Paper — the
+    page's objection illustration is a day strip, so this one is a tally. */}
+<div class="totals-stage" data-art>
+  <span class="sheet-backing backing-one" aria-hidden="true"></span>
+  <span class="sheet-backing backing-two" aria-hidden="true"></span>
+
+  <section class="totals-card" aria-label="Three sources for the same week, three different totals">
+    <header class="head" data-art-in>
+      <span class="label">Same week, three answers</span>
+      <span class="period">week 14</span>
+    </header>
+
+    <ul class="sources">
+      {
+        SOURCES.map((source) => (
+          <li data-art-in data-use-case-motion-row>
+            {/* Nom et total d'abord : ils partagent la première rangée de la
+                grille. La provenance passe dessous, sur toute la largeur. */}
+            <span class="source-name">{source.name}</span>
+            <span class="source-total">{source.total}</span>
+            <span class="source-hint">{source.hint}</span>
+          </li>
+        ))
+      }
+    </ul>
+
+    {/* L'axe commun. Les trois marques ne s'alignent pas, et le segment ambre
+        entre les deux extrêmes a la longueur exacte de l'écart annoncé. */}
+    <div class="axis" data-art-in>
+      <span class="axis-track" aria-hidden="true">
+        <span
+          class="axis-gap"
+          style={`left:${at(lowest)}%;width:${at(highest) - at(lowest)}%`}
+          data-art-fill
+        ></span>
+        {
+          minutes.map((value) => (
+            <span class="axis-mark" style={`left:${at(value)}%`} />
+          ))
+        }
+      </span>
+    </div>
+
+    {/* L'écart, dérivé. C'est lui l'argument : trois outils, une semaine, et
+        huit heures d'écart que quelqu'un doit trancher le vendredi. */}
+    <footer class="spread" data-art-pop>
+      <span class="spread-label">Gap to reconcile</span>
+      <span class="spread-value">{gap}</span>
+    </footer>
+  </section>
+</div>
+
+<style>
+  /* Scène transparente — padding SEULEMENT. Une carte seule ne s'assied jamais
+     dans une autre carte ; les deux feuilles derrière elle SONT la profondeur. */
+  .totals-stage {
+    position: relative;
+    padding: 14px 16px 18px;
+  }
+
+  .sheet-backing {
+    position: absolute;
+    inset: 20px 20px 14px;
+    border-radius: var(--radius-paper-card);
+    transition: transform var(--paper-motion-duration) var(--paper-motion-ease);
+  }
+
+  .backing-one {
+    background: var(--color-paper-layer);
+    transform: translate(-7px, 5px) rotate(-2.4deg);
+  }
+
+  .backing-two {
+    background: var(--color-paper-layer-light);
+    transform: translate(6px, 3px) rotate(1.7deg);
+  }
+
+  .totals-card {
+    position: relative;
+    z-index: 2;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+    padding: 15px 18px 16px;
+    transition:
+      transform var(--paper-motion-duration) var(--paper-motion-ease),
+      box-shadow var(--paper-motion-duration) var(--paper-motion-ease);
+    transform: rotate(-0.6deg);
+  }
+
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 4px;
+  }
+
+  .label,
+  .period {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--color-paper-label);
+  }
+
+  .label {
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .sources {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sources li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 3px 12px;
+    border-top: 1px solid var(--color-paper-rule);
+    padding: 10px 2px;
+  }
+
+  .source-name {
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-ink);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .source-total {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* La provenance de chaque total. C'est elle qui rend l'écart évident sans
+     l'expliquer : un export d'agenda ne compte pas ce qu'un tableur compte. */
+  .source-hint {
+    grid-column: 1 / -1;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    color: var(--color-paper-label);
+  }
+
+  /* ⚠️ L'axe, et le pourquoi des couleurs.
+     La piste est `paper-track`, que la palette réserve exactement aux pistes de
+     jauge. Le segment est ambre parce qu'il n'est pas une quantité : c'est LA
+     CHOSE À TRANCHER, ce que « The Two Voices Rule » assigne à l'ambre. Les
+     marques sont en `ink` — trois relevés bruts, ni confirmés ni actionnables.
+     ⚠️ La première version peignait les barres en `paper-layer`, qui est la
+     couleur des FEUILLES DE CALAGE derrière une carte : un ton de substrat
+     employé comme donnée. Invisible sur la piste, et faux dans le système. */
+  .axis {
+    margin-top: 16px;
+    padding: 0 5px;
+  }
+
+  .axis-track {
+    position: relative;
+    display: block;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--color-paper-track);
+  }
+
+  .axis-gap {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-radius: 999px;
+    background: var(--color-hour);
+    transform-origin: 0% 50%;
+  }
+
+  /* Les relevés eux-mêmes. Posés SUR le segment, ils montrent que l'écart n'est
+     pas une plage continue mais trois réponses isolées. */
+  .axis-mark {
+    position: absolute;
+    top: 50%;
+    height: 11px;
+    width: 11px;
+    border-radius: 999px;
+    border: 2px solid var(--color-paper-surface);
+    background: var(--color-ink);
+    transform: translate(-50%, -50%);
+  }
+
+  .spread {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 14px;
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper-chip);
+    padding: 12px 14px;
+  }
+
+  .spread-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-paper-label);
+  }
+
+  /* Le chiffre reprend l'ambre du segment au-dessus — même couleur, même fait :
+     le nombre EST la longueur qu'on vient de voir. Une seconde teinte ici
+     casserait le lien.
+     L'ambre reste unique à l'écran : l'oeil-de-boeuf de cette section est en
+     `ink`, donc la « One Amber Rule » la laisse disponible. */
+  .spread-value {
+    border-radius: 3px;
+    background: var(--color-hour);
+    padding: 3px 9px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .totals-stage:hover .backing-one {
+      transform: translate(-13px, 8px) rotate(-3.8deg);
+    }
+
+    .totals-stage:hover .backing-two {
+      transform: translate(10px, 5px) rotate(2.8deg);
+    }
+
+    .totals-stage:hover .totals-card {
+      box-shadow: var(--shadow-paper-card-hover);
+      transform: translateY(-5px) rotate(0deg);
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .totals-stage {
+      padding: 10px 11px 14px;
+    }
+
+    .sheet-backing {
+      inset: 15px 15px 10px;
+    }
+
+    .totals-card {
+      padding-inline: 14px;
+    }
+  }
+</style>
+
+<script>
+  import "../../scripts/art";
+</script>

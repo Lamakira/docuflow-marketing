@@ -1,0 +1,328 @@
+---
+/** Le poste qui produit le relevé — enregistré, vivant, révocable.
+ *
+ * ─── Pourquoi elle existe ──────────────────────────────────────────────────
+ *
+ * Le héros de `/solutions/remote-teams` et son premier pilier rendaient la MÊME
+ * carte de score, aux mêmes valeurs (`84 · STRONG · Week 31 · remote · one
+ * person`), à un écran d'écart. Le défaut était invisible tant que les deux
+ * étaient des cartes blanches plates ; passées en Layered Paper, ce sont deux
+ * feuilles chaudes jumelles, et la répétition saute aux yeux.
+ *
+ * Le partage se fait sur ce que chaque section DIT :
+ *   - le héros promet un chiffre qu'on lit — « You can read the record » — donc
+ *     il garde le score ;
+ *   - le pilier 01 explique la MACHINE — « The desktop agent records
+ *     screenshots, activity levels and idle time, then scores the record's
+ *     coverage » — donc il montre le poste.
+ *
+ * ─── Ce qu'elle ne fait pas ────────────────────────────────────────────────
+ *
+ * ⚠️ Elle ne recopie pas la liste de capacités affichée à côté d'elle. Un
+ * dessin qui répète les puces de sa propre colonne n'ajoute rien et double la
+ * longueur de la section. Elle montre un OBJET — un poste nommé, sur une des
+ * trois plateformes, dont le pouls bat — pas un inventaire.
+ *
+ * ⚠️ Pas de nom de personne, pas d'avatar. Même règle que `ScoreMock` : ce que
+ * l'outil enregistre, ce sont des postes et des relevés. Un poste porte un
+ * identifiant de parc, jamais quelqu'un.
+ *
+ * ─── Ce qu'elle prépare ────────────────────────────────────────────────────
+ *
+ * Le pouls régulier ici EST ce que `SilenceMock` interrompt deux sections plus
+ * bas. Le lecteur voit le poste battre avant de le voir se taire, et la phrase
+ * du scénario — « the conversation is with IT, not with the person » — tombe
+ * sur un objet qu'il a déjà rencontré.
+ */
+interface Props {
+  label: string;
+  name: string;
+  platform: string;
+  status: string;
+  platforms: { short: string; active?: boolean }[];
+  rows: { label: string; value: string }[];
+  foot: string;
+  /** Traitement Layered Paper — voir `DESIGN.md`, « Layered Paper Card ». */
+  warm?: boolean;
+  /** Bande sombre : seule l'ombre change, la feuille reste claire. */
+  onDark?: boolean;
+}
+
+const { label, name, platform, status, platforms, rows, foot, warm = false, onDark = false } =
+  Astro.props;
+
+/** Le pouls. Vingt-quatre battements RÉGULIERS — la question n'est pas
+ *  « combien de travail » mais « le poste parle-t-il encore ». Une pulsation
+ *  égale se lit comme un signe de vie ; un tracé irrégulier se lirait comme une
+ *  mesure, c'est-à-dire comme la carte d'à côté.
+ *
+ *  Valeurs figées, jamais tirées au hasard : un `Math.random()` au build
+ *  donnerait un dessin différent à chaque déploiement, donc une capture de
+ *  recette jamais reproductible. */
+/** Ligne de base BASSE et battements francs, six en tout. Une modulation douce
+ *  autour du milieu ne se lisait pas comme un pouls — juste comme une ligne qui
+ *  ondule, donc comme un graphique de plus. C'est l'amplitude qui fait le
+ *  signal, pas la présence du trait. */
+const PULSE = [
+  14, 12, 100, 16, 13, 12, 100, 15, 12, 14, 100, 13, 12, 15, 100, 14, 12, 13, 100, 16, 12, 14, 100,
+  13,
+];
+
+/** ⚠️ UN TRACÉ, PAS DES BARRES.
+ *
+ *  La première version dessinait le pouls en barres vertes. Sur cette page il y
+ *  en a déjà trois rangées — l'histogramme du héros, les jours de `ThinWeekArt`,
+ *  les fenêtres de `SilenceMock` — et une quatrième ne se distinguait d'aucune :
+ *  le lecteur voyait « encore un graphique », donc encore la même carte, ce que
+ *  ce composant existe précisément pour arrêter.
+ *
+ *  Un trait continu dit autre chose et le dit seul : un signal. Il rend aussi la
+ *  paire avec `SilenceMock` évidente — ce trait-là est ce qui, deux sections
+ *  plus bas, s'arrête. */
+const TRACE_W = 240;
+const TRACE_H = 34;
+const step = TRACE_W / (PULSE.length - 1);
+const PULSE_PATH = PULSE.map(
+  (value, i) => `${i === 0 ? "M" : "L"}${(i * step).toFixed(1)} ${(TRACE_H - (value / 100) * (TRACE_H - 3) - 1.5).toFixed(1)}`
+).join(" ");
+---
+
+<div
+  class:list={[
+    "device-mock rounded-[8px] border border-rule bg-white p-[18px]",
+    { "device-mock--warm": warm, "device-mock--dark": warm && onDark },
+  ]}
+>
+  <header class="head">
+    <div class="min-w-0">
+      <p class="device-label label-mono text-[10px] text-slate">{label}</p>
+      <p class="device-name">{name}</p>
+      <p class="device-platform">{platform}</p>
+    </div>
+
+    {/* L'indicateur de vie. Vert : c'est un état que le système CONSTATE, pas
+        une action à prendre — « The Two Voices Rule ». */}
+    <span class="status">
+      <span class="status-dot" aria-hidden="true"></span>
+      {status}
+    </span>
+  </header>
+
+  {/* Les trois plateformes de l'agent, dont celle de ce poste. C'est la spec
+      « 3 platforms » rendue comme un objet plutôt que recopiée en chiffre. */}
+  <div class="platforms" aria-hidden="true">
+    {
+      platforms.map((entry) => (
+        <span class:list={["platform", { "platform--active": entry.active }]}>{entry.short}</span>
+      ))
+    }
+  </div>
+
+  <svg
+    class="pulse"
+    viewBox={`0 0 ${TRACE_W} ${TRACE_H}`}
+    preserveAspectRatio="none"
+    aria-hidden="true"
+    role="presentation"
+  >
+    <path d={PULSE_PATH} />
+  </svg>
+
+  <dl class="rows">
+    {
+      rows.map((row) => (
+        <div class="row" data-use-case-motion-row>
+          <dt>{row.label}</dt>
+          <dd>{row.value}</dd>
+        </div>
+      ))
+    }
+  </dl>
+
+  <p class="device-foot">{foot}</p>
+</div>
+
+<style>
+  .device-mock--warm {
+    border: 0;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+  }
+
+  .device-mock--dark {
+    box-shadow: var(--shadow-paper-card-dark);
+  }
+
+  .head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .device-name {
+    margin-top: 6px;
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--color-ink);
+  }
+
+  .device-platform {
+    margin-top: 5px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-slate);
+  }
+
+  .device-mock--warm .device-label,
+  .device-mock--warm .device-platform,
+  .device-mock--warm .device-foot {
+    color: var(--color-paper-label);
+  }
+
+  .status {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 7px;
+    border-radius: 999px;
+    background: var(--color-band-mint);
+    padding: 4px 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-live-on-light);
+  }
+
+  .device-mock--warm .status {
+    background: var(--color-paper-sage);
+    color: var(--color-paper-sage-text);
+  }
+
+  /* Remplissage pur, donc `live` — la règle de `global.css` : `live-on-light`
+     porte le texte, `live` porte la forme. */
+  .status-dot {
+    height: 7px;
+    width: 7px;
+    border-radius: 999px;
+    background: var(--color-live);
+  }
+
+  .platforms {
+    display: flex;
+    gap: 5px;
+    margin-top: 16px;
+  }
+
+  .platform {
+    border: 1px solid var(--color-rule);
+    border-radius: 3px;
+    padding: 3px 8px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    color: var(--color-slate);
+  }
+
+  .device-mock--warm .platform {
+    border-color: var(--color-paper-rule);
+    color: var(--color-paper-label);
+  }
+
+  /* La plateforme du poste : remplie, pas cerclée. Un contour de plus ferait
+     trois pastilles qui se ressemblent. */
+  .platform--active {
+    border-color: var(--color-ink);
+    background: var(--color-ink);
+    color: #fff;
+  }
+
+  .device-mock--warm .platform--active {
+    border-color: var(--color-ink);
+    color: #fff;
+  }
+
+  /* ⚠️ Un POULS, pas un histogramme d'activité — et un TRAIT, pas des barres.
+     Cette page porte déjà trois rangées de barres vertes ; une quatrième ne se
+     distinguerait d'aucune. Un signal continu se lit « le poste parle », jamais
+     « voici combien de travail ». La carte d'à côté mesure le travail ;
+     celle-ci ne mesure que la vie du poste. */
+  .pulse {
+    display: block;
+    height: 30px;
+    width: 100%;
+    margin-top: 14px;
+  }
+
+  .pulse path {
+    fill: none;
+    stroke: var(--color-live);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    /* Le viewBox est étiré en largeur (`preserveAspectRatio: none`) : sans ça,
+       le trait s'épaissirait avec lui et paraîtrait plus gras sur une colonne
+       large que sur une étroite. */
+    vector-effect: non-scaling-stroke;
+  }
+
+  .rows {
+    margin: 14px 0 0;
+  }
+
+  .row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    border-top: 1px solid var(--color-rule);
+    padding: 9px 2px;
+  }
+
+  .device-mock--warm .row {
+    border-top-color: var(--color-paper-rule);
+  }
+
+  .row dt {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  .device-mock--warm .row dt {
+    color: var(--color-paper-label);
+  }
+
+  .row dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .device-foot {
+    margin-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-slate);
+  }
+
+  .device-mock--warm .device-foot {
+    display: inline-block;
+    border-radius: 999px;
+    background: var(--color-paper-chip);
+    padding: 6px 10px;
+  }
+
+  @media (max-width: 560px) {
+    .row dd {
+      text-align: right;
+    }
+  }
+</style>

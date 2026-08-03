@@ -2,18 +2,38 @@
 /**
  * `/solutions/project-profitability` — section « the situation ».
  *
- * Le budget et le réel semaine par semaine. Les deux courbes partent ensemble et
- * se séparent en semaine 2 — c'est le moment que la page défend : on le voit
+ * Le budget et le réel semaine par semaine. Les deux partent ensemble et se
+ * séparent en semaine 2 — c'est le moment que la page défend : on le voit
  * quand on peut encore agir, pas au mois suivant.
  *
- * ⚠️ La marque ambre est sur la SEMAINE 2, pas sur la fin. Le sujet de la page
- * est le délai de connaissance, pas le dépassement lui-même.
+ * ⚠️ La marque est sur la SEMAINE 2, pas sur la fin. Le sujet de la page est le
+ * DÉLAI DE CONNAISSANCE, pas le dépassement lui-même.
  *
- * Valeurs du scénario : 320 h budgétées, 249 h réelles à la fin de la semaine 2.
+ * ─── Ce qui a changé le 30 juillet 2026 ────────────────────────────────────
+ *
+ * 1. **Layered Paper**, comme le reste de la page.
+ * 2. **L'écart est dérivé.** Le pied annonçait « 249 h actual against 107 h
+ *    planned » sans jamais nommer la différence — le lecteur devait la calculer
+ *    pour en mesurer l'ampleur. Elle est maintenant affichée, et calculée
+ *    depuis les deux séries : impossible qu'elle contredise les barres.
+ * 3. **Les semaines sans réel restent VIDES**, pas à zéro. La semaine 3 n'a pas
+ *    consommé zéro heure : elle n'a pas encore eu lieu. Même distinction que les
+ *    emplacements vides de `ThinWeekArt`.
+ *
+ * ─── Pourquoi elle ne double pas `VarianceMock` ────────────────────────────
+ *
+ * La maquette du scénario, sur la même page, ventile le budget PAR POSTE : elle
+ * répond à « qu'est-ce qui a dérapé ». Celle-ci suit le cumul SEMAINE PAR
+ * SEMAINE : elle répond à « quand l'a-t-on su ». Deux axes, deux questions.
+ *
+ * ⚠️ Les valeurs sont celles du scénario (320 h budgétées, 249 h réelles en
+ * semaine 2) et de `VarianceMock`, dont les lignes s'additionnent aux mêmes
+ * totaux. Trois surfaces, une seule vérité.
  */
 const BUDGET = 320;
+
 /** Consommation prévue et réelle, en heures cumulées, semaine par semaine.
- *  Le réel s'arrête à la semaine 2 — la suite n'a pas eu lieu. */
+ *  `actual: null` = la semaine n'a pas eu lieu — ce n'est pas un zéro. */
 const WEEKS = [
   { label: "W1", planned: 53, actual: 96 },
   { label: "W2", planned: 107, actual: 249 },
@@ -23,48 +43,106 @@ const WEEKS = [
   { label: "W6", planned: 320, actual: null },
 ];
 
+/** La dernière semaine relevée : celle qui porte le constat. */
+const last = [...WEEKS].reverse().find((week) => week.actual !== null)!;
+/** L'écart, DÉRIVÉ. C'est le chiffre que la section rend actionnable. */
+const overrun = last.actual! - last.planned;
+
 const pct = (value: number) => `${Math.round((value / BUDGET) * 100)}%`;
 ---
 
-<div class="drift" data-art>
-  <header class="head" data-art-in>
-    <span class="label">Fairview · phase 2</span>
-    <span class="budget">{BUDGET} h budgeted</span>
-  </header>
+{/* THESIS: the overrun is visible in week two, while there is still something to
+    change. OWN-WORLD: a warm project sheet with two readings per week. STORY:
+    watch planned and actual leave together, separate at W2, then stop — because
+    the rest has not happened yet. FIRST VIEWPORT: the two bars at W2; the gap
+    figure closes it. FORM: standalone Layered Paper — the objection illustration
+    on this page is a record with people, so this one is a chart. */}
+<div class="drift-stage" data-art>
+  <span class="sheet-backing backing-one" aria-hidden="true"></span>
+  <span class="sheet-backing backing-two" aria-hidden="true"></span>
 
-  <div class="chart" aria-hidden="true">
-    {
-      WEEKS.map((week) => (
-        <div class="col">
-          <span class="track">
-            <span class="planned" style={`height:${pct(week.planned)}`} data-art-grow />
-            {week.actual !== null && (
-              <span
-                class:list={["actual", { over: week.actual > week.planned }]}
-                style={`height:${pct(week.actual)}`}
-                data-art-grow
-              />
-            )}
-          </span>
-          <span class="tick">{week.label}</span>
-        </div>
-      ))
-    }
-  </div>
+  <section class="drift-card" aria-label="Planned against actual hours, week by week">
+    <header class="head" data-art-in>
+      <span class="label">Fairview · phase 2</span>
+      <span class="budget">{BUDGET} h budgeted</span>
+    </header>
 
-  {/* Le constat, à la semaine où il devient actionnable. */}
-  <footer class="foot" data-art-pop data-use-case-motion-row>
-    <span class="mark"></span>
-    Week 2 · 249 h actual against 107 h planned
-  </footer>
+    <div class="chart" aria-hidden="true">
+      {
+        WEEKS.map((week) => (
+          <div class="col">
+            <span class="track">
+              <span class="planned" style={`height:${pct(week.planned)}`} data-art-grow />
+              {week.actual !== null && (
+                <span
+                  class:list={["actual", { over: week.actual > week.planned }]}
+                  style={`height:${pct(week.actual)}`}
+                  data-art-grow
+                />
+              )}
+            </span>
+            <span class="tick">{week.label}</span>
+          </div>
+        ))
+      }
+    </div>
+
+    <dl class="legend" data-art-in>
+      <div class="legend-row">
+        <dt><span class="swatch swatch--planned" aria-hidden="true" />Planned to {last.label}</dt>
+        <dd>{last.planned} h</dd>
+      </div>
+      <div class="legend-row">
+        <dt><span class="swatch swatch--actual" aria-hidden="true" />Actual</dt>
+        <dd>{last.actual} h</dd>
+      </div>
+    </dl>
+
+    {/* Le constat, à la semaine où il devient actionnable. L'écart est calculé
+        depuis les deux séries, donc il ne peut pas contredire les barres. */}
+    <footer class="foot" data-art-pop data-use-case-motion-row>
+      <span class="foot-label">{last.label} · over by</span>
+      <span class="foot-value">{overrun} h</span>
+    </footer>
+  </section>
 </div>
 
 <style>
-  .drift {
-    border: 1px solid var(--color-rule);
-    border-radius: 8px;
-    background: #fff;
-    padding: 14px 18px 16px;
+  /* Scène transparente — padding SEULEMENT. Une carte seule ne s'assied jamais
+     dans une autre carte ; les deux feuilles derrière elle SONT la profondeur. */
+  .drift-stage {
+    position: relative;
+    padding: 14px 16px 18px;
+  }
+
+  .sheet-backing {
+    position: absolute;
+    inset: 20px 20px 14px;
+    border-radius: var(--radius-paper-card);
+    transition: transform var(--paper-motion-duration) var(--paper-motion-ease);
+  }
+
+  .backing-one {
+    background: var(--color-paper-layer);
+    transform: translate(-7px, 5px) rotate(-2.4deg);
+  }
+
+  .backing-two {
+    background: var(--color-paper-layer-light);
+    transform: translate(6px, 3px) rotate(1.7deg);
+  }
+
+  .drift-card {
+    position: relative;
+    z-index: 2;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+    padding: 15px 18px 16px;
+    transition:
+      transform var(--paper-motion-duration) var(--paper-motion-ease),
+      box-shadow var(--paper-motion-duration) var(--paper-motion-ease);
+    transform: rotate(-0.6deg);
   }
 
   .head {
@@ -76,66 +154,60 @@ const pct = (value: number) => `${Math.round((value / BUDGET) * 100)}%`;
 
   .label {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 9px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--color-slate);
+    color: var(--color-paper-label);
   }
 
   .budget {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 11px;
     color: var(--color-ink);
     font-variant-numeric: tabular-nums;
   }
 
   .chart {
-    display: flex;
-    align-items: flex-end;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
     margin-top: 16px;
   }
 
   .col {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    align-items: center;
+    display: grid;
     gap: 6px;
   }
 
-  /* Deux barres dans la même piste : le prévu en fond, le réel devant. Leur
-     écart EST le sujet — deux graphiques séparés l'auraient caché. */
   .track {
     position: relative;
     display: block;
-    height: 62px;
-    width: 100%;
+    height: 84px;
   }
 
   .planned,
   .actual {
     position: absolute;
     bottom: 0;
-    display: block;
     border-radius: 2px;
     transform-origin: 50% 100%;
   }
 
+  /* Le prévu : une piste discrète. C'est une cible, pas une mesure. */
   .planned {
     left: 0;
-    width: 100%;
-    background: var(--color-rule);
+    width: 58%;
+    background: var(--color-paper-track);
   }
 
-  /* Le réel, plus étroit et centré : il se lit PAR-DESSUS le prévu. */
+  /* Le réel : vert, parce que c'est du temps CONSTATÉ. « The Two Voices Rule ». */
   .actual {
-    left: 25%;
-    width: 50%;
-    background: var(--color-live-on-light);
+    right: 0;
+    width: 58%;
+    background: var(--color-live);
   }
 
-  /* Au-delà du prévu, la barre passe à l'ambre : l'état qui demande une action. */
+  /* Sauf quand il dépasse le prévu : ambre, l'état qui appelle une action. */
   .actual.over {
     background: var(--color-hour);
   }
@@ -143,26 +215,118 @@ const pct = (value: number) => `${Math.round((value / BUDGET) * 100)}%`;
   .tick {
     font-family: var(--font-mono);
     font-size: 9px;
-    color: var(--color-slate);
+    text-align: center;
+    color: var(--color-paper-label);
+  }
+
+  /* ⚠️ PLUS D'OPACITÉ SUR LES ÉTIQUETTES — passe polish du 30 juillet 2026.
+     `opacity: 0.45` mettait W3–W6 à 1,95:1 en contraste effectif, très en
+     dessous d'AA, sur les repères qui portent l'axe. L'absence de barre dans
+     ces colonnes dit déjà que la semaine n'a pas eu lieu : la forme suffit, et
+     l'étiquette reste lisible. */
+
+  .legend {
+    display: grid;
+    gap: 6px;
+    margin: 14px 0 0;
+  }
+
+  .legend-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .legend dt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-paper-label);
+  }
+
+  .legend dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .swatch {
+    height: 9px;
+    width: 9px;
+    flex: none;
+    border-radius: 2px;
+  }
+
+  .swatch--planned {
+    background: var(--color-paper-track);
+  }
+
+  .swatch--actual {
+    background: var(--color-hour);
   }
 
   .foot {
     display: flex;
     align-items: center;
-    gap: 9px;
-    margin-top: 14px;
-    border-top: 1px solid var(--color-rule);
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 12px;
+    border-top: 1px solid var(--color-paper-rule);
     padding-top: 12px;
-    font-size: 12.5px;
-    color: var(--color-ink);
   }
 
-  .mark {
-    height: 10px;
-    width: 10px;
-    flex: none;
-    border-radius: 2px;
+  .foot-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-paper-label);
+  }
+
+  .foot-value {
+    border-radius: 3px;
     background: var(--color-hour);
+    padding: 3px 9px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .drift-stage:hover .backing-one {
+      transform: translate(-13px, 8px) rotate(-3.8deg);
+    }
+
+    .drift-stage:hover .backing-two {
+      transform: translate(10px, 5px) rotate(2.8deg);
+    }
+
+    .drift-stage:hover .drift-card {
+      box-shadow: var(--shadow-paper-card-hover);
+      transform: translateY(-5px) rotate(0deg);
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .drift-stage {
+      padding: 10px 11px 14px;
+    }
+
+    .sheet-backing {
+      inset: 15px 15px 10px;
+    }
+
+    .drift-card {
+      padding-inline: 14px;
+    }
   }
 </style>
 

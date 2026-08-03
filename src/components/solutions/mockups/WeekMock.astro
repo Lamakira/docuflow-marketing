@@ -1,0 +1,340 @@
+---
+/** La semaine enregistrée, jour par jour — le relevé qu'on peut compter.
+ *
+ * ─── Pourquoi elle remplace `ScoreMock` sur le héros ───────────────────────
+ *
+ * `ScoreMock` posait `84/100` au-dessus de huit vignettes identiques et de
+ * vingt-quatre fenêtres d'activité anonymes. Reproche reçu, et fondé : ça ne
+ * ressemble pas au relevé DE JOURNÉES, ça ressemble à une texture. Un
+ * histogramme sans axe ne se compte pas et ne se reconnaît pas — or le lecteur
+ * de cette page est un opérateur méfiant à qui on a déjà vendu des tableaux de
+ * bord, et le H1 lui promet précisément quelque chose à LIRE :
+ * « You cannot see the work. You can read the record. »
+ *
+ * Un relevé se lit s'il a des jours, des heures et un total. Les trois sont là,
+ * et le total se déduit des journées plutôt que de s'écrire à côté d'elles.
+ *
+ * ─── Pourquoi elle ne double pas `SilenceMock` ─────────────────────────────
+ *
+ * Les deux parlent d'une semaine, et c'est voulu — le scénario montre CETTE
+ * semaine-là cassée. Mais la forme diffère, et c'est ce qui les sépare à l'oeil :
+ *
+ *   héros     rangées — un registre de cinq journées, chacune avec son compte
+ *   scénario  une frise — une ligne de temps qui s'interrompt
+ *
+ * Le registre se compte, la frise se parcourt. Voir la semaine entière ici rend
+ * la coupure du scénario lisible : le lecteur sait à quoi elle ressemblait
+ * avant.
+ *
+ * ⚠️ Le total est DÉRIVÉ (`38 h`) et tombe sur le chiffre du scénario — « one
+ * person's week reads 11 h against 38 h the week before ». Trois endroits, une
+ * seule vérité. Changer une journée change le total ; retaper le total à côté
+ * de journées qui ne l'atteignent pas est exactement la faute que ce calcul
+ * rend impossible.
+ */
+interface Props {
+  label: string;
+  score: number;
+  grade: string;
+  days: { day: string; hours: string; activity: number; shots: number; tag?: string }[];
+  foot: string;
+  /** Traitement Layered Paper — voir `DESIGN.md`, « Layered Paper Card ». */
+  warm?: boolean;
+  /** Bande sombre : seule l'ombre change, la feuille reste claire. */
+  onDark?: boolean;
+}
+
+const { label, score, grade, days, foot, warm = false, onDark = false } = Astro.props;
+
+/** `H:MM` → minutes. Lève plutôt que de rendre `NaN h` : un total muet dans une
+ *  maquette de relevé est pire qu'un build cassé. */
+const toMinutes = (value: string) => {
+  const match = /^(\d+):([0-5]\d)$/.exec(value);
+  if (!match) {
+    throw new Error(
+      `[solutions] WeekMock : durée « ${value} » illisible, format attendu \`H:MM\`. ` +
+        `Le total de la semaine en est dérivé, donc une valeur hors format le rendrait faux en silence.`
+    );
+  }
+  return Number(match[1]) * 60 + Number(match[2]);
+};
+
+const totalMinutes = days.reduce((sum, entry) => sum + toMinutes(entry.hours), 0);
+const hours = Math.floor(totalMinutes / 60);
+const minutes = totalMinutes % 60;
+/** `38 h` quand la semaine tombe juste, `37:45` sinon — jamais « 37.75 h ». */
+const total = minutes === 0 ? `${hours} h` : `${hours}:${String(minutes).padStart(2, "0")}`;
+
+/** Le seuil de `ScoreMock`, repris tel quel : vert confirme, ambre avertit. */
+const confirmed = score >= 70;
+
+/** La colonne de lieu n'existe que si les journées en portent un. Une colonne
+ *  vide réservée « au cas où » décale la grille de toutes les autres pages pour
+ *  rien — et une grille qui bouge sans raison est la première chose qu'on
+ *  remarque en comparant deux pages côte à côte. */
+const hasTags = days.some((entry) => entry.tag);
+
+/** La texture « image retenue » du système — rayure 45°, 4 px. */
+const SHOT_TEXTURE = warm
+  ? "repeating-linear-gradient(45deg,var(--color-paper-chip) 0 4px,var(--color-paper-surface) 4px 8px)"
+  : "repeating-linear-gradient(45deg,#F3F5F7 0 4px,#fff 4px 8px)";
+---
+
+<div
+  class:list={[
+    "week-mock rounded-[8px] border border-rule bg-white p-[18px]",
+    { "week-mock--warm": warm, "week-mock--dark": warm && onDark },
+  ]}
+>
+  <div
+    class:list={[
+      "score-panel flex items-start justify-between gap-4 rounded-[6px] border px-4 py-[14px]",
+      confirmed ? "border-live-on-light bg-band-mint" : "score-panel--weak border-rule bg-paper",
+    ]}
+  >
+    <div>
+      <p
+        class:list={[
+          "score-label label-mono text-[10px]",
+          confirmed ? "text-live-on-light" : "text-slate",
+        ]}
+      >
+        {label}
+      </p>
+      <p class="mt-[6px] font-mono text-[36px] font-bold leading-none tracking-[-0.02em]">
+        {score}<span class="score-total font-mono text-[14px] font-medium text-slate">/100</span>
+      </p>
+    </div>
+
+    <span
+      class:list={[
+        "score-grade shrink-0 rounded-[3px] px-[10px] py-[5px] font-mono text-[11px] font-bold",
+        confirmed ? "bg-live-on-light text-white" : "bg-hour text-ink",
+      ]}
+    >
+      {grade}
+    </span>
+  </div>
+
+  {/* Le registre. Une rangée par journée : c'est ce qui manquait — des jours
+      qu'on peut nommer et des heures qu'on peut additionner. */}
+  <ul class:list={["days", { "days--tagged": hasTags }]}>
+    {
+      days.map((entry) => (
+        <li class="day" data-use-case-motion-row>
+          <span class="day-name">{entry.day}</span>
+          {hasTags && <span class="day-tag">{entry.tag}</span>}
+          <span class="day-hours">{entry.hours}</span>
+
+          <span class="day-activity" aria-hidden="true">
+            <span class="day-fill" style={`width:${entry.activity}%`} />
+          </span>
+
+          {/* Les captures de la journée, une par une. Un compte se vérifie ;
+              huit vignettes identiques posées en grille ne se rattachent à
+              aucun jour et ne se vérifient donc pas. */}
+          <span class="day-shots" aria-hidden="true">
+            {Array.from({ length: entry.shots }).map(() => (
+              <span class="shot" style={`background:${SHOT_TEXTURE}`} />
+            ))}
+          </span>
+        </li>
+      ))
+    }
+  </ul>
+
+  <footer class="week-foot">
+    <span class="week-total">{total}</span>
+    <span class="week-note">{foot}</span>
+  </footer>
+</div>
+
+<style>
+  .week-mock--warm {
+    border: 0;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+  }
+
+  .week-mock--dark {
+    box-shadow: var(--shadow-paper-card-dark);
+  }
+
+  .week-mock--warm .score-panel {
+    border: 0;
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper-sage);
+    box-shadow: var(--shadow-paper-inset);
+  }
+
+  .week-mock--warm .score-label {
+    color: var(--color-paper-sage-text);
+  }
+
+  .week-mock--warm .score-grade {
+    background: var(--color-paper-sage-text);
+  }
+
+  .week-mock--warm .score-panel--weak {
+    background: var(--color-paper-chip);
+  }
+
+  .week-mock--warm .score-panel--weak .score-label,
+  .week-mock--warm .score-total,
+  .week-mock--warm .week-note {
+    color: var(--color-paper-label);
+  }
+
+  .days {
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .day {
+    display: grid;
+    grid-template-columns: 34px 46px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid var(--color-rule);
+    padding: 9px 2px;
+  }
+
+  /* Une piste de plus quand les journées portent un lieu. Déclarée ici et non
+     par un `auto` implicite : une piste implicite se dimensionne sur son
+     min-content, ce qui ferait varier la largeur de la colonne d'un jour à
+     l'autre selon la longueur du mot. */
+  .days--tagged .day {
+    grid-template-columns: 34px 52px 46px minmax(0, 1fr) auto;
+  }
+
+  /* Le lieu est une annotation collée sur la journée, pas une mesure : capsule
+     `paper-chip`, jamais une couleur. `OFFICE` et `HOME` sont deux faits
+     également neutres — en teinter un ferait de l'autre une exception. */
+  .day-tag {
+    justify-self: start;
+    border-radius: 3px;
+    background: var(--color-paper);
+    padding: 2px 6px;
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    letter-spacing: 0.06em;
+    color: var(--color-slate);
+  }
+
+  .week-mock--warm .day-tag {
+    background: var(--color-paper-chip);
+    color: var(--color-paper-label);
+  }
+
+  .week-mock--warm .day {
+    border-top-color: var(--color-paper-rule);
+  }
+
+  .day-name {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.07em;
+    color: var(--color-slate);
+  }
+
+  .week-mock--warm .day-name {
+    color: var(--color-paper-label);
+  }
+
+  .day-hours {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Plafonnée, et fine. Pleine largeur et à 6px, cinq de ces jauges se lisent
+     comme des barres de progression — « ça charge » plutôt que « voilà la
+     journée ». Le plafond laisse aussi respirer la rangée entre l'activité et
+     les captures. */
+  .day-activity {
+    display: block;
+    height: 5px;
+    min-width: 0;
+    max-width: 150px;
+    border-radius: 999px;
+    background: var(--color-rule);
+  }
+
+  .week-mock--warm .day-activity {
+    background: var(--color-paper-track);
+  }
+
+  .day-fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--color-live);
+  }
+
+  .day-shots {
+    display: flex;
+    flex: none;
+    gap: 3px;
+  }
+
+  .shot {
+    height: 14px;
+    width: 18px;
+    border: 1px solid var(--color-rule);
+    border-radius: 2px;
+  }
+
+  .week-mock--warm .shot {
+    border-color: var(--color-paper-rule);
+  }
+
+  .week-foot {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    border-top: 1px solid var(--color-rule);
+    margin-top: 2px;
+    padding-top: 12px;
+  }
+
+  .week-mock--warm .week-foot {
+    border-top-color: var(--color-paper-rule);
+  }
+
+  /* Le total est un relevé du système, donc mono, et il est la seule chose de
+     ce pied qui compte : c'est lui qui prouve que les cinq journées font bien
+     une semaine. */
+  .week-total {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .week-note {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-slate);
+  }
+
+  /* Sous 560px les vignettes passent avant les heures : le compte de captures
+     est secondaire, l'heure de la journée ne l'est pas. */
+  @media (max-width: 560px) {
+    .day {
+      grid-template-columns: 30px 44px minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .days--tagged .day {
+      grid-template-columns: 30px 48px 44px minmax(0, 1fr);
+    }
+
+    .day-shots {
+      display: none;
+    }
+  }
+</style>

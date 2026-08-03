@@ -1,0 +1,254 @@
+---
+/**
+ * `/solutions/employee-productivity` — section « the situation ».
+ *
+ * ─── Pourquoi ce dessin REMPLACE `IdlePromptArt` ───────────────────────────
+ *
+ * `IdlePromptArt` montrait les fenêtres d'activité d'une minute et le prompt au
+ * moment où elles retombent. C'était juste quand le héros de la page était une
+ * carte de score — ça ne l'est plus : depuis la revue du 30 juillet 2026, le
+ * héros EST la grille des fenêtres de 60 secondes (`WindowsMock`) et le scénario
+ * EST la séquence du prompt (`IdleMock`). Le dessin de la situation racontait
+ * donc une troisième fois la même chose, sur la même page.
+ *
+ * ⚠️ C'est la faute que `docs/mockup-corrections.md` nomme en premier, et elle
+ * est ici arrivée par DÉRIVE : le dessin n'a pas bougé, ce sont les cartes
+ * autour de lui qui ont pris son sujet. **Changer une maquette oblige à relire
+ * les dessins de la même page.**
+ *
+ * ─── Ce que la section dit vraiment ────────────────────────────────────────
+ *
+ * « Productivity gets measured by whoever is loudest about it. » Et son premier
+ * point : « Whatever gets counted — messages, hours logged, tickets closed — is
+ * what the team starts producing. THE NUMBER GOES UP AND NOTHING ELSE DOES. »
+ *
+ * Le sujet n'est donc pas la mesure de DocuFlow : c'est la mesure d'à côté,
+ * celle qui compte ce qui est facile à compter. Trois compteurs qui montent, et
+ * la seule ligne qui compterait vraiment, vide. La dernière ligne EST
+ * l'argument — c'est elle qui porte l'unique ambre de l'écran.
+ *
+ * ⚠️ Ces chiffres décrivent le PROBLÈME, pas le produit : ce sont des métriques
+ * de vanité génériques, aucune n'est une donnée DocuFlow ni un résultat client.
+ * Rien ici ne doit jamais devenir une statistique attribuée au produit.
+ */
+
+/** Les trois métriques que le premier point nomme, dans son ordre. Si la copy
+ *  change, ces trois-là changent avec elle — sinon le dessin illustre une autre
+ *  phrase que la sienne. */
+const COUNTERS = [
+  { label: "Messages sent", value: "1,240" },
+  { label: "Tickets closed", value: "318" },
+  { label: "Hours logged", value: "412" },
+];
+---
+
+{/* THESIS: the easy numbers all climb while the one that matters stays blank.
+    OWN-WORLD: a warm paper scoreboard, the kind pinned up at a quarterly review.
+    STORY: read three rising counters, then reach the empty line. FIRST VIEWPORT:
+    the counters dominate; the blank line sits under them and does the work.
+    FORM: a standalone Layered Paper card — the page's objection illustration is
+    a two-column ledger, so this one stays a single tally sheet. */}
+<div class="loud-stage" data-art>
+  <span class="sheet-backing backing-one" aria-hidden="true"></span>
+  <span class="sheet-backing backing-two" aria-hidden="true"></span>
+
+  <section class="loud-card" aria-label="Three easily counted metrics, and the one that stayed blank">
+    <header class="head" data-art-in>
+      <span class="label">The loudest numbers</span>
+      <span class="period">this quarter</span>
+    </header>
+
+    <ul class="counters">
+      {
+        COUNTERS.map((counter) => (
+          <li data-art-in data-use-case-motion-row>
+            <span class="counter-label">{counter.label}</span>
+            <span class="rise" aria-hidden="true" />
+            <span class="counter-value">{counter.value}</span>
+          </li>
+        ))
+      }
+    </ul>
+
+    {/* La ligne qui porte l'argument. Elle arrive en dernier, et elle est vide :
+        c'est « nothing else does » dessiné. L'ambre marque ce qu'il faudrait
+        regarder, ce qui est exactement son rôle dans le système. */}
+    <footer class="outcome" data-art-pop>
+      <span class="outcome-label">What moved for the client</span>
+      <span class="outcome-blank" aria-hidden="true"></span>
+    </footer>
+  </section>
+</div>
+
+<style>
+  /* Scène transparente — padding SEULEMENT. Une carte seule ne s'assied jamais
+     dans une autre carte ; les deux feuilles derrière elle SONT la profondeur. */
+  .loud-stage {
+    position: relative;
+    padding: 14px 16px 18px;
+  }
+
+  .sheet-backing {
+    position: absolute;
+    inset: 20px 20px 14px;
+    border-radius: var(--radius-paper-card);
+    transition: transform var(--paper-motion-duration) var(--paper-motion-ease);
+  }
+
+  .backing-one {
+    background: var(--color-paper-layer);
+    transform: translate(-7px, 5px) rotate(-2.4deg);
+  }
+
+  .backing-two {
+    background: var(--color-paper-layer-light);
+    transform: translate(6px, 3px) rotate(1.7deg);
+  }
+
+  .loud-card {
+    position: relative;
+    z-index: 2;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+    padding: 15px 18px 16px;
+    transition:
+      transform var(--paper-motion-duration) var(--paper-motion-ease),
+      box-shadow var(--paper-motion-duration) var(--paper-motion-ease);
+    transform: rotate(-0.6deg);
+  }
+
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 4px;
+  }
+
+  /* `Annotation` (9px, 0.06em, capitales) et `Data` (11px) — les pas documentés
+     de `DESIGN.md`. Aucune valeur hors gamme n'entre ici : le compteur tire sa
+     force de sa graisse et de la répétition des trois rangées, pas d'une taille
+     inventée pour l'occasion. */
+  .label,
+  .period {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--color-paper-label);
+  }
+
+  .label {
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .counters {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .counters li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 10px auto;
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid var(--color-paper-rule);
+    padding: 11px 2px;
+  }
+
+  .counter-label {
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-paper-label);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Une flèche montante, dessinée plutôt qu'écrite : un glyphe `↑` serait du
+     texte à retraduire en phase FR, et les icônes du site sont des Lucide
+     déclarées. Un triangle CSS n'est ni l'un ni l'autre.
+     Volontairement NEUTRE : trois flèches ambre feraient trois marques pour un
+     seul argument, et l'argument est plus bas. */
+  .rise {
+    height: 0;
+    width: 0;
+    justify-self: center;
+    border-right: 4px solid transparent;
+    border-bottom: 6px solid var(--color-paper-label);
+    border-left: 4px solid transparent;
+  }
+
+  /* 13px — `Meta`, le plus grand pas mono documenté. Une taille de 16px avait
+     été posée d'instinct pour rendre le compteur « fort » : c'est une valeur
+     hors gamme, donc un one-off de plus, ce que `DESIGN.md` interdit
+     explicitement (« not license to add a size »). La force vient de la graisse,
+     du contraste avec le libellé à 11px et de la répétition des trois rangées. */
+  .counter-value {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .outcome {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+    border-top: 1px solid var(--color-paper-rule);
+    padding: 13px 2px 0;
+  }
+
+  .outcome-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  /* Le vide, dessiné. Un tiret plein en ambre : il y a une case, et il n'y a
+     rien dedans. C'est la seule marque ambre de l'écran — l'oeil-de-boeuf de
+     cette section est en `ink`, donc elle est disponible. */
+  .outcome-blank {
+    height: 3px;
+    width: 34px;
+    border-radius: 999px;
+    background: var(--color-hour);
+  }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .loud-stage:hover .backing-one {
+      transform: translate(-13px, 8px) rotate(-3.8deg);
+    }
+
+    .loud-stage:hover .backing-two {
+      transform: translate(10px, 5px) rotate(2.8deg);
+    }
+
+    .loud-stage:hover .loud-card {
+      box-shadow: var(--shadow-paper-card-hover);
+      transform: translateY(-5px) rotate(0deg);
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .loud-stage {
+      padding: 10px 11px 14px;
+    }
+
+    .sheet-backing {
+      inset: 15px 15px 10px;
+    }
+
+    .loud-card {
+      padding-inline: 14px;
+    }
+  }
+</style>
+
+<script>
+  import "../../scripts/art";
+</script>

@@ -1,0 +1,531 @@
+---
+/** La semaine qui s'arrête — le relevé coupé net, et la suite retenue.
+ *
+ * ─── Pourquoi elle n'est pas un réglage de `ScoreMock` ──────────────────────
+ *
+ * Le scénario de `/solutions/remote-teams` dit trois choses, et une carte de
+ * score n'en porte aucune :
+ *
+ *   1. « The agent stopped reporting ON TUESDAY. » — un histogramme de vingt-
+ *      quatre fenêtres anonymes n'a pas d'axe de temps : mardi n'existe nulle
+ *      part à l'écran, donc le lecteur ne peut pas trouver ce que la phrase
+ *      nomme.
+ *   2. L'arrêt est un INSTANT, pas une pente. Un graphique qui s'éteint
+ *      progressivement raconte « de moins en moins de travail » — soit
+ *      exactement la lecture que la section existe pour empêcher.
+ *   3. « …and queued four days of events IT NEVER SENT. » — c'est le fait le
+ *      plus rassurant du paragraphe, et le plus propre au produit. Les jours
+ *      manquants ne sont pas vides : ils sont RETENUS quelque part.
+ *
+ * D'où un axe de cinq jours, une coupure franche dedans, et une pile de feuilles
+ * posée SUR les jours manquants. Les trois faits sont dessinés, pas suggérés.
+ *
+ * ⚠️ Une tentative précédente amincissait la grille et l'histogramme de
+ * `ScoreMock` à mesure que le score baissait. Le diagnostic était juste, le
+ * remède non : des vignettes en tireté et des barres qui s'éteignent en filet
+ * donnent le squelette de chargement contre lequel `AGENTS.md` met en garde.
+ * Un relevé interrompu n'est pas un relevé pâle.
+ *
+ * ─── Ce qui est dérivé ─────────────────────────────────────────────────────
+ *
+ * Le nombre de jours retenus se CALCULE depuis `cut` et `days`. Déplacer la
+ * coupure ne peut donc pas laisser une étiquette « 4 days queued » en face de
+ * trois jours vides — la faute classique d'un dessin dont les chiffres sont
+ * retapés. Même principe que le total de `InvoiceArt`.
+ */
+interface Props {
+  label: string;
+  score: number;
+  grade: string;
+  days: string[];
+  cut: number;
+  lastEvent: string;
+  foot: string;
+  /** Traitement Layered Paper — voir `DESIGN.md`, « Layered Paper Card ». */
+  warm?: boolean;
+  /** Bande `ink` : seule l'ombre change, la feuille reste claire. */
+  onDark?: boolean;
+}
+
+const { label, score, grade, days, cut, lastEvent, foot, warm = false, onDark = false } =
+  Astro.props;
+
+if (days.length < 3) {
+  throw new Error(
+    `[solutions] SilenceMock attend au moins 3 jours, ${days.length} reçus. ` +
+      `L'axe doit montrer des jours ENREGISTRÉS et des jours RETENUS de part et d'autre de la coupure.`
+  );
+}
+
+if (cut <= 0 || cut >= 100) {
+  throw new Error(
+    `[solutions] SilenceMock : \`cut\` vaut ${cut}, attendu strictement entre 0 et 100. ` +
+      `Une coupure au bord dessine une semaine entièrement enregistrée ou entièrement muette, ` +
+      `et la carte ne dit plus rien.`
+  );
+}
+
+const dayWidth = 100 / days.length;
+
+/** ⚠️ RÈGLE DE COMPTAGE — le jour de la coupure compte comme RETENU.
+ *
+ *  Le poste se tait au milieu de mardi : la fin de mardi n'est jamais arrivée,
+ *  donc mardi est un jour incomplet, pas un jour enregistré. `MON TUE WED THU
+ *  FRI` coupé dans mardi fait donc QUATRE jours retenus — c'est le compte du
+ *  scénario, « queued four days of events it never sent ».
+ *
+ *  Ça se relit comme une faute d'un cran, et ça l'était à l'écran : mardi était
+ *  peint comme un jour plein à côté de lundi, donc le dessin montrait trois
+ *  jours manquants sous une étiquette qui en annonçait quatre. Deux corrections
+ *  s'ensuivent, et elles vont ensemble :
+ *    1. le jour de la coupure a son propre état visuel — ni enregistré, ni muet ;
+ *    2. la feuille nomme l'INTERVALLE (`TUE – FRI`) en plus du compte, pour que
+ *       le chiffre se vérifie sur l'axe au lieu de se croire.
+ *  Sans la seconde, le lecteur qui compte les jours pâles trouve toujours trois. */
+const cutDay = Math.floor(cut / dayWidth);
+const queuedDays = days.length - cutDay;
+const queuedFrom = days[cutDay];
+const queuedTo = days[days.length - 1];
+
+/** Fenêtres d'activité de la partie enregistrée. Valeurs figées, jamais tirées
+ *  au hasard : un `Math.random()` au build donnerait un dessin différent à
+ *  chaque déploiement, donc une capture de recette jamais reproductible.
+ *  Volontairement NORMALES — la partie enregistrée d'une semaine interrompue
+ *  n'est pas une mauvaise semaine, c'est une semaine ordinaire qui s'arrête. */
+const ACTIVITY = [64, 82, 71, 88, 59, 76, 91, 68, 84, 73, 62, 79];
+
+/** ⚠️ TOUTES LES MARQUES SONT VERTES, sans échelle de tons.
+ *
+ *  `ScoreMock` module ses barres en trois tons parce que sa question est « quel
+ *  niveau d'activité ». Ici la question est autre : « est-ce enregistré, oui ou
+ *  non ». Une alternance pâle/vive n'y répond pas et se lit comme un damier —
+ *  du bruit qui affaiblit la seule opposition qui compte, celle des deux côtés
+ *  de la coupure. Un seul vert, des hauteurs qui varient : « il s'est passé des
+ *  choses, elles sont toutes au dossier ».
+ *
+ *  L'ambre ne sort jamais de cette carte : la bande `ink` du scénario dépense
+ *  déjà le sien sur l'oeil-de-boeuf « Tuesday ». */
+
+/** Vignettes de capture par jour enregistré, pour que la rangée suive le même
+ *  axe que les marques au lieu de faire deux dalles rayées en travers — deux
+ *  grands rectangles rayés, c'est le squelette de chargement, encore. */
+const SHOTS_PER_DAY = 2;
+const recordedDays = Math.max(1, cutDay + 1);
+const shots = recordedDays * SHOTS_PER_DAY;
+
+/** La texture « image retenue » du système — rayure 45°, 4 px. */
+const SHOT_TEXTURE = warm
+  ? "repeating-linear-gradient(45deg,var(--color-paper-chip) 0 4px,var(--color-paper-surface) 4px 8px)"
+  : "repeating-linear-gradient(45deg,#F3F5F7 0 4px,#fff 4px 8px)";
+---
+
+<div
+  class:list={[
+    "silence-mock rounded-[8px] border border-rule bg-white p-[18px]",
+    { "silence-mock--warm": warm, "silence-mock--dark": warm && onDark },
+  ]}
+  style={`--cut:${cut}%;--day-w:${dayWidth}%`}
+>
+  {/* Le bandeau de score est identique à celui de `ScoreMock` : c'est le MÊME
+      chiffre produit que le héros de la page, et le lecteur doit le reconnaître.
+      Le PANNEAU reste neutre — une seule marque d'alerte par carte, sinon le
+      badge ne ressort plus de son propre fond. */}
+  <div class="score-panel flex items-start justify-between gap-4 rounded-[6px] border border-rule bg-paper px-4 py-[14px]">
+    <div>
+      <p class="score-label label-mono text-[10px] text-slate">{label}</p>
+      <p class="mt-[6px] font-mono text-[36px] font-bold leading-none tracking-[-0.02em]">
+        {score}<span class="score-total font-mono text-[14px] font-medium text-slate">/100</span>
+      </p>
+    </div>
+
+    {/* ⚠️ LE VERDICT FAIBLE EST AMBRE, et ce n'est pas un détail de goût.
+        Il était en `ink` : un badge noir se lit comme du chrome, pas comme un
+        avertissement, et rien à l'écran ne disait que 38/100 demandait une
+        action. Arbitré le 30 juillet 2026, sur demande.
+
+        Ambre et non un rouge neuf : `DESIGN.md` tient exactement DEUX voix
+        chromatiques — ambre pour l'état présent qui appelle une action, vert
+        pour le résultat confirmé. Un rouge en serait une troisième, donc un
+        jeton de plus et une décision de site. L'ambre dit déjà ce qu'il faut,
+        et surtout c'est DÉJÀ le badge WEAK de `ThinWeekArt` : les deux cartes
+        de cette page portent le même 38/100, elles doivent porter la même
+        couleur.
+
+        ⚠️ Coût assumé : l'oeil-de-boeuf « Tuesday » de `ScenarioBand` est
+        amber lui aussi, donc ce viewport en contient deux — la « One Amber
+        Rule » est entamée ici. Le badge est le signal, l'oeil-de-boeuf n'est
+        qu'une étiquette de section : si l'un des deux doit céder, c'est lui.
+        À trancher avec Saïd. */}
+    <span
+      class="score-grade shrink-0 rounded-[3px] bg-hour px-[10px] py-[5px] font-mono text-[11px] font-bold text-ink"
+    >
+      {grade}
+    </span>
+  </div>
+
+  {/* L'AXE. C'est lui qui fait exister « mardi » à l'écran. */}
+  <div class="days" aria-hidden="true">
+    {
+      days.map((day) => <span class="day">{day}</span>)
+    }
+  </div>
+
+  <div class="track">
+    <div class="recorded">
+      <div class="marks" aria-hidden="true">
+        {ACTIVITY.map((value) => <span class="mark" style={`height:${value}%`} />)}
+      </div>
+
+      <div class="shots" style={`--shots:${shots}`} aria-hidden="true">
+        {
+          Array.from({ length: shots }).map(() => (
+            <span class="shot" style={`background:${SHOT_TEXTURE}`} />
+          ))
+        }
+      </div>
+    </div>
+
+    {/* Les jours retenus : une PILE, pas un vide. Deux feuilles de calage et une
+        face — la même grammaire que les cartes Layered Paper, ce qui fait lire
+        les événements comme des documents mis de côté plutôt que perdus. */}
+    <div class="held">
+      <span class="held-sheet held-sheet--one" aria-hidden="true"></span>
+      <span class="held-sheet held-sheet--two" aria-hidden="true"></span>
+
+      {/* Le compte ET l'intervalle. Les deux sont dérivés de la coupure, donc
+          ils ne peuvent pas se contredire — et surtout l'intervalle rend le
+          compte VÉRIFIABLE sur l'axe juste au-dessus, ce qu'un chiffre seul ne
+          fait pas. C'est ce qui manquait quand mardi passait pour un jour
+          plein. */}
+      <div class="held-face">
+        <span class="held-count">{queuedDays} days queued</span>
+        <span class="held-range">{queuedFrom} – {queuedTo}</span>
+        <span class="held-note">never sent</span>
+      </div>
+    </div>
+
+    {/* La coupure. Elle déborde du cadre en haut et en bas pour se lire comme un
+        trait porté SUR la feuille, pas comme une bordure de cellule. */}
+    <span class="cut" aria-hidden="true"></span>
+  </div>
+
+  <p class="last-event">{lastEvent}</p>
+
+  <p class="silence-foot mt-2 font-mono text-[10px] text-slate">{foot}</p>
+</div>
+
+<style>
+  .silence-mock {
+    position: relative;
+  }
+
+  .silence-mock--warm {
+    border: 0;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+  }
+
+  .silence-mock--dark {
+    box-shadow: var(--shadow-paper-card-dark);
+  }
+
+  .silence-mock--warm .score-panel {
+    border: 0;
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper-chip);
+    box-shadow: var(--shadow-paper-inset);
+  }
+
+  .silence-mock--warm .score-label,
+  .silence-mock--warm .score-total,
+  .silence-mock--warm .silence-foot {
+    color: var(--color-paper-label);
+  }
+
+  /* ── L'axe ─────────────────────────────────────────────────────────────── */
+
+  .days {
+    display: grid;
+    grid-auto-columns: 1fr;
+    grid-auto-flow: column;
+    margin-top: 16px;
+    border-bottom: 1px solid var(--color-rule);
+    padding-bottom: 7px;
+  }
+
+  .silence-mock--warm .days {
+    border-bottom-color: var(--color-paper-rule);
+  }
+
+  /* ⚠️ Centrés dans leur journée, pas calés à gauche.
+     Calés à gauche, l'étiquette `TUE` se pose au DÉBUT de mardi (20 %) tandis
+     que la coupure tombe à 34 % : à l'oeil le trait paraît alors coller à la
+     frontière de mercredi, et le lecteur compte trois jours manquants. Centrées,
+     `TUE` est à 30 % et la coupure passe juste après — elle est visiblement
+     DANS mardi, ce qui est la seule lecture qui rend le compte de quatre juste.
+     Les filets, eux, restent aux frontières : ce sont elles qu'ils marquent. */
+  .day {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.07em;
+    text-align: center;
+    color: var(--color-slate);
+  }
+
+  .silence-mock--warm .day {
+    color: var(--color-paper-label);
+  }
+
+  /* ⚠️ PLUS D'OPACITÉ SUR LES ÉTIQUETTES — passe polish du 30 juillet 2026.
+     Les trois états étaient rendus par `opacity: 0.72` et `0.4`. Mesuré :
+     3,6:1 et 1,9:1 en contraste EFFECTIF, très en dessous d'AA, sur des
+     étiquettes qui portent l'axe entier de la carte. Et il n'existe pas de
+     réglage qui sauve l'idée — à 0,9 le texte passe (4,6:1) mais ne se
+     distingue plus de rien.
+     L'opacité était le mauvais levier. Les jours retenus sont déjà signalés
+     par trois choses non textuelles : la coupure tombe dans mardi, la pile est
+     posée sur eux, et la feuille nomme l'intervalle `TUE – FRI`. L'état est
+     donc porté par la forme, pas par une couleur affaiblie — ce qui vaut aussi
+     mieux au regard de « don't rely on colour alone ».
+     Les étiquettes restent toutes lisibles. */
+
+  /* ── La piste ──────────────────────────────────────────────────────────── */
+
+  .track {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--cut) minmax(0, 1fr);
+    height: 84px;
+    margin-top: 10px;
+  }
+
+  /* ⚠️ La grille des jours court sur TOUTE la piste, y compris du côté muet.
+     Sans elle, la moitié droite est du vide, et du vide ne se compte pas : le
+     lecteur voit « rien » au lieu de voir « trois jours pendant lesquels rien
+     n'est arrivé ». Ce sont ces traits qui rendent l'absence dénombrable, et
+     qui donnent à la pile une surface sur laquelle être posée. */
+  .track::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to right,
+      var(--color-rule) 0 1px,
+      transparent 1px var(--day-w)
+    );
+  }
+
+  .silence-mock--warm .track::before {
+    background: repeating-linear-gradient(
+      to right,
+      var(--color-paper-rule) 0 1px,
+      transparent 1px var(--day-w)
+    );
+  }
+
+  .recorded,
+  .held {
+    position: relative;
+    z-index: 1;
+  }
+
+  .recorded {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 6px;
+    padding-right: 10px;
+  }
+
+  .marks {
+    display: flex;
+    height: 40px;
+    align-items: flex-end;
+    gap: 3px;
+  }
+
+  .mark {
+    flex: 1;
+    min-width: 0;
+    border-radius: 1px;
+    background: var(--color-live);
+  }
+
+  /* Une colonne par vignette, donc deux vignettes par jour enregistré : la
+     rangée suit l'axe au lieu de le traverser. */
+  .shots {
+    display: grid;
+    height: 30px;
+    grid-template-columns: repeat(var(--shots), minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .shot {
+    border: 1px solid var(--color-rule);
+    border-radius: 3px;
+  }
+
+  .silence-mock--warm .shot {
+    border-color: var(--color-paper-rule);
+  }
+
+  /* ── La coupure ────────────────────────────────────────────────────────── */
+
+  .cut {
+    position: absolute;
+    top: -24px;
+    bottom: -13px;
+    left: var(--cut);
+    border-left: 1.5px dashed var(--color-paper-connector);
+  }
+
+  /* Alignée sur la coupure et non centrée sous elle : l'étiquette annote le
+     trait depuis le côté muet, là où il y a la place. Même variable que la
+     coupure, donc les deux ne peuvent pas se désynchroniser. */
+  .last-event {
+    margin: 8px 0 0;
+    padding-left: calc(var(--cut) + 8px);
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    letter-spacing: 0.04em;
+    /* ⚠️ Jamais `paper-connector` en TEXTE : c'est une couleur de TRACÉ
+       (« lineage paths », DESIGN.md), et elle tombe à 2,6:1 sur papier.
+       Relevé par la passe polish du 30 juillet 2026. */
+    color: var(--color-paper-label);
+  }
+
+  /* ── Les jours retenus ─────────────────────────────────────────────────── */
+
+  /* ⚠️ Une PILE, pas une boîte pleine largeur.
+     La première version étalait une face bordée sur toute la zone muette : ça
+     donnait un grand rectangle vide avec deux mots au milieu, c'est-à-dire le
+     conteneur générique que ce dessin existe pour éviter. Une pile décalée dit
+     « plusieurs jours, mis de côté, encore là » — et elle le dit par sa forme,
+     avant qu'on lise le compte. */
+  .held {
+    display: grid;
+    min-width: 0;
+    align-self: center;
+    place-items: center;
+    height: 74px;
+    margin-left: 16px;
+  }
+
+  .held-sheet,
+  .held-face {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 21%;
+    right: 21%;
+    border-radius: var(--radius-paper-inset);
+    transition: transform var(--paper-motion-duration) var(--paper-motion-ease);
+  }
+
+  .held-sheet--one {
+    background: var(--color-paper-layer);
+    transform: translate(-9px, 9px) rotate(-4.2deg);
+  }
+
+  .held-sheet--two {
+    background: var(--color-paper-layer-light);
+    transform: translate(5px, 5px) rotate(2.4deg);
+  }
+
+  /* Pas de filet sur la face : les deux feuilles derrière portent déjà le bord,
+     et un contour la ferait lire comme un panneau d'interface posé sur du
+     papier. */
+  .held-face {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+  }
+
+  .held-count {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .held-range {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    /* ⚠️ Jamais `paper-connector` en TEXTE : c'est une couleur de TRACÉ
+       (« lineage paths », DESIGN.md), et elle tombe à 2,6:1 sur papier.
+       Relevé par la passe polish du 30 juillet 2026. */
+    color: var(--color-paper-label);
+  }
+
+  .held-note {
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-paper-label);
+  }
+
+  .silence-mock--warm .silence-foot {
+    display: inline-block;
+    border-radius: 999px;
+    background: var(--color-paper-chip);
+    padding: 6px 10px;
+  }
+
+  /* La pile se sépare au survol, comme les feuilles de calage d'une carte
+     Layered Paper — le geste dit « ces documents existent, on peut les
+     reprendre ». */
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .silence-mock:hover .held-sheet--one {
+      transform: translate(-10px, 8px) rotate(-4.4deg);
+    }
+
+    .silence-mock:hover .held-sheet--two {
+      transform: translate(8px, 5px) rotate(3.2deg);
+    }
+  }
+
+  /* La colonne se resserre avant la carte : sous 1100px, la retenue latérale de
+     21 % laisse « 4 days queued » bord à bord dans sa feuille. La feuille cède,
+     jamais le libellé — même arbitrage que la gouttière de la nav. */
+  @media (max-width: 1100px) {
+    .held-sheet,
+    .held-face {
+      left: 7%;
+      right: 7%;
+    }
+  }
+
+  /* Sous 560px la partie enregistrée n'a plus la place de porter des vignettes
+     de capture : les barres seules gardent l'axe lisible, et c'est l'axe qui
+     porte l'argument. */
+  @media (max-width: 560px) {
+    .shots {
+      display: none;
+    }
+
+    .track {
+      height: 62px;
+    }
+
+    .held {
+      height: 56px;
+      margin-left: 9px;
+    }
+
+    /* Trois lignes ne tiennent plus dans la feuille. C'est « never sent » qui
+       part : le compte et l'intervalle portent l'argument, la mention ne fait
+       que le redire. */
+    .held-note {
+      display: none;
+    }
+  }
+</style>

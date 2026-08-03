@@ -51,7 +51,10 @@ const { eyebrow, heading, lines, mock, warmMockup = false } = Astro.props;
       </div>
 
       <div class="min-[901px]:self-center" data-reveal>
-        <SectorMockup mock={mock} warm={warmMockup} />
+        {/* `onDark` est posé en dur : cette section EST la bande `ink`, elle ne
+            se paramètre pas. La feuille reste claire, seule son ombre change —
+            une ombre calibrée pour du blanc disparaît sur `ink`. */}
+        <SectorMockup mock={mock} warm={warmMockup} onDark />
       </div>
     </div>
   </div>

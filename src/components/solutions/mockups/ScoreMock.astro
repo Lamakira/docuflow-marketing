@@ -1,5 +1,5 @@
 ---
-/** Le score de qualité de la preuve, paramétré.
+/** Le score de qualité de la preuve, et CE QU'IL A NOTÉ.
  *
  *  ⚠️ Le score note la QUALITÉ DU RELEVÉ, jamais la personne, et il ne modifie
  *  jamais le temps compté. Rien dans le dessin ne doit suggérer le contraire :
@@ -9,6 +9,30 @@
  *  autant que sur la fiche technique, sinon davantage : c'est ici qu'un lecteur
  *  cherche à savoir ce que l'outil surveille.
  *
+ * ─── Ce qui a été retiré le 30 juillet 2026 ────────────────────────────────
+ *
+ * **Huit vignettes rayées et vingt-quatre barres anonymes.** La carte posait
+ * `88/100` au-dessus d'une grille de grands rectangles vides, c'est-à-dire d'un
+ * GABARIT. Reproche reçu deux fois en revue, et fondé les deux fois : un
+ * rectangle rayé de cette taille ne se lit pas « une capture existe », il se lit
+ * « le contenu n'est pas encore là ».
+ *
+ * La texture 45° reste légitime — elle est dans `DESIGN.md` — mais à petite
+ * échelle et RATTACHÉE À QUELQUE CHOSE : deux vignettes sous un jour nommé dans
+ * `WeekMock`, pas huit dalles flottant au milieu d'une carte.
+ *
+ * ─── Ce qui les remplace ───────────────────────────────────────────────────
+ *
+ * La couverture, en clair. Un score de complétude qui n'affiche pas ce qu'il a
+ * compté demande au lecteur de le croire sur parole — et le lecteur de ces
+ * pages est un opérateur méfiant. Les lignes sont des faits produit, elles se
+ * comptent, et elles répondent à la seule question que pose un score :
+ * « d'où sort ce chiffre ? »
+ *
+ * ⚠️ Elles ne PROUVENT pas le score arithmétiquement, et ne doivent pas
+ * prétendre le faire : la formule est celle du produit, pas une règle de trois
+ * inventée ici. Elles montrent la matière notée, ce qui est vrai et suffisant.
+ *
  *  `foot` porte le contexte du secteur (une semaine d'engagement, un quart de
  *  nuit, une semaine de haute saison). Le score lui-même reste ce qu'il est
  *  dans le produit : 0–100, par personne. */
@@ -16,68 +40,191 @@ interface Props {
   label: string;
   score: number;
   grade: string;
+  coverage: { label: string; value: string }[];
   foot: string;
+  /** Traitement Layered Paper — voir `DESIGN.md`, « Layered Paper Card ». */
+  warm?: boolean;
+  /** Bande `ink` : seule l'OMBRE change, la feuille reste claire. Une feuille de
+   *  papier posée sur une bande sombre reste une feuille de papier — c'est déjà
+   *  l'arbitrage rendu sur `QueryMock`, qui la code en dur parce qu'il ne sert
+   *  que là. Celui-ci sert sur plusieurs bandes, donc il la reçoit. */
+  onDark?: boolean;
 }
 
-const { label, score, grade, foot } = Astro.props;
+const { label, score, grade, coverage, foot, warm = false, onDark = false } = Astro.props;
 
-/** Vingt-quatre fenêtres d'activité d'une minute. Valeurs figées, pas tirées au
- *  hasard : un `Math.random()` au build donnerait un dessin différent à chaque
- *  déploiement, donc une capture de recette jamais reproductible. */
-const ACTIVITY = [
-  52, 78, 84, 61, 47, 73, 91, 22, 58, 66, 44, 55, 81, 88, 39, 72, 95, 63, 49, 77, 85, 31, 68, 74,
-];
+if (coverage.length < 3) {
+  throw new Error(
+    `[solutions] ScoreMock attend au moins 3 lignes de couverture, ${coverage.length} reçues. ` +
+      `Un score sans ce qu'il a noté est un chiffre asséné — c'est précisément ce que ces lignes remplacent.`
+  );
+}
 
-/** Trois seuils, trois tons : le vert confirme, l'ambre est l'état présent, le
- *  gris est le reste. Remplissages purs — aucune barre ne porte de signe. */
-const tone = (value: number) =>
-  value > 70 ? "var(--color-live)" : value > 40 ? "var(--color-hour)" : "var(--color-rule)";
-
-const THUMBS = 8;
+/** ⚠️ Le verdict se colore, et il ne se colore pas toujours en vert.
+ *
+ *  Le badge était `live-on-light` quel que soit le score : `38/100 · WEAK`
+ *  sortait donc en vert, c'est-à-dire dans la couleur que `DESIGN.md` réserve à
+ *  « le système a confirmé » (« The Two Voices Rule »). Un relevé incomplet
+ *  n'est justement rien de confirmé.
+ *
+ *  Le verdict faible prend l'AMBRE — la voix que `DESIGN.md` réserve à l'état
+ *  présent qui appelle une action. Un badge neutre se lit comme du chrome et ne
+ *  prévient de rien ; c'est le reproche fait à la première version, arbitré le
+ *  30 juillet 2026. Pas de rouge neuf : le système tient exactement deux voix
+ *  chromatiques, et une troisième serait une décision de site.
+ *  C'est aussi déjà le badge WEAK de `ThinWeekArt` et de `SilenceMock` — trois
+ *  dessins, un seul verdict, une seule couleur.
+ *
+ *  Seuil sur le SCORE et non sur la chaîne `grade` : un libellé ajouté plus tard
+ *  (`PARTIAL`…) tombe du bon côté sans qu'on y revienne. */
+const confirmed = score >= 70;
 ---
 
-<div class="rounded-[8px] border border-rule bg-white p-[18px]">
+<div
+  class:list={[
+    "score-mock rounded-[8px] border border-rule bg-white p-[18px]",
+    { "score-mock--warm": warm, "score-mock--dark": warm && onDark },
+  ]}
+>
   <div
-    class="flex items-start justify-between gap-4 rounded-[6px] border border-live-on-light bg-band-mint px-4 py-[14px]"
+    class:list={[
+      "score-panel flex items-start justify-between gap-4 rounded-[6px] border px-4 py-[14px]",
+      confirmed ? "border-live-on-light bg-band-mint" : "score-panel--weak border-rule bg-paper",
+    ]}
   >
     <div>
-      <p class="label-mono text-[10px] text-live-on-light">{label}</p>
+      <p
+        class:list={[
+          "score-label label-mono text-[10px]",
+          confirmed ? "text-live-on-light" : "text-slate",
+        ]}
+      >
+        {label}
+      </p>
       {/* Le score est un relevé du système, donc mono — la règle Recorded/Written. */}
       <p class="mt-[6px] font-mono text-[36px] font-bold leading-none tracking-[-0.02em]">
-        {score}<span class="font-mono text-[14px] font-medium text-slate">/100</span>
+        {score}<span class="score-total font-mono text-[14px] font-medium text-slate">/100</span>
       </p>
     </div>
 
     <span
-      class="shrink-0 rounded-[3px] bg-live-on-light px-[10px] py-[5px] font-mono text-[11px] font-bold text-white"
+      class:list={[
+        "score-grade shrink-0 rounded-[3px] px-[10px] py-[5px] font-mono text-[11px] font-bold",
+        confirmed ? "bg-live-on-light text-white" : "bg-hour text-ink",
+      ]}
     >
       {grade}
     </span>
   </div>
 
-  {/* Vignettes de capture. La rayure à 45° est la texture « image retenue » du
-      système. Elle dit « une capture existe » sans inventer un écran — et sur une
-      page secteur, inventer un écran serait montrer le logiciel d'un client. */}
-  <div class="mt-4 grid grid-cols-4 gap-2" aria-hidden="true">
+  {/* Ce que le score a noté. C'est la réponse à « d'où sort ce chiffre ? », et
+      c'est ce qui remplace la grille de vignettes vides. */}
+  <p class="coverage-head label-mono text-[10px] text-slate">What was graded</p>
+
+  <dl class="coverage">
     {
-      Array.from({ length: THUMBS }).map(() => (
-        <span
-          class="block aspect-[4/3] rounded-[3px] border border-rule"
-          style="background:repeating-linear-gradient(45deg,#F3F5F7 0 4px,#fff 4px 8px)"
-        />
+      coverage.map((row) => (
+        <div class="coverage-row" data-use-case-motion-row>
+          <dt>{row.label}</dt>
+          <dd>{row.value}</dd>
+        </div>
       ))
     }
-  </div>
+  </dl>
 
-  {/* L'histogramme est décoratif au sens strict : la légende sous lui énonce ce
-      qu'il montre, et aucune valeur individuelle n'est une information produit. */}
-  <div class="mt-[14px] flex h-[38px] items-end gap-[3px]" aria-hidden="true">
-    {
-      ACTIVITY.map((value) => (
-        <span class="flex-1 rounded-[1px]" style={`height:${value}%;background:${tone(value)}`} />
-      ))
-    }
-  </div>
-
-  <p class="mt-2 font-mono text-[10px] text-slate">{foot}</p>
+  <p class="score-foot mt-2 font-mono text-[10px] text-slate">{foot}</p>
 </div>
+
+<style>
+  /* Layered Paper — la carte devient une feuille. Ces valeurs portent leur
+     portée dans leur nom : elles ne descendent jamais dans l'UI. */
+  .score-mock--warm {
+    border: 0;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+  }
+
+  .score-mock--dark {
+    box-shadow: var(--shadow-paper-card-dark);
+  }
+
+  /* Verdict confirmé : la famille sage, qui est ce que la palette papier
+     réserve à « information retenue ou confirmée ». */
+  .score-mock--warm .score-panel {
+    border: 0;
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper-sage);
+    box-shadow: var(--shadow-paper-inset);
+  }
+
+  .score-mock--warm .score-label {
+    color: var(--color-paper-sage-text);
+  }
+
+  .score-mock--warm .score-grade {
+    background: var(--color-paper-sage-text);
+  }
+
+  /* Verdict non confirmé : ton neutre du papier. */
+  .score-mock--warm .score-panel--weak {
+    background: var(--color-paper-chip);
+  }
+
+  .score-mock--warm .score-panel--weak .score-label {
+    color: var(--color-paper-label);
+  }
+
+  .coverage-head {
+    margin-top: 16px;
+  }
+
+  .score-mock--warm .coverage-head,
+  .score-mock--warm .score-total,
+  .score-mock--warm .score-foot {
+    color: var(--color-paper-label);
+  }
+
+  .coverage {
+    margin: 8px 0 0;
+  }
+
+  .coverage-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    border-top: 1px solid var(--color-rule);
+    padding: 10px 2px;
+  }
+
+  .score-mock--warm .coverage-row {
+    border-top-color: var(--color-paper-rule);
+  }
+
+  .coverage-row dt {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-slate);
+  }
+
+  .score-mock--warm .coverage-row dt {
+    color: var(--color-paper-label);
+  }
+
+  .coverage-row dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .score-mock--warm .score-foot {
+    display: inline-block;
+    border-radius: 999px;
+    background: var(--color-paper-chip);
+    padding: 6px 10px;
+  }
+</style>

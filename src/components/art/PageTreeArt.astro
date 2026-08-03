@@ -2,12 +2,27 @@
 /**
  * `/solutions/onboarding-documentation` — section « the situation ».
  *
- * L'arborescence de pages à gauche, la recherche à droite : la réponse EXISTE
- * (elle est dans l'arbre, en surbrillance) mais la personne neuve ne sait pas
- * où. C'est exactement l'écart que la section décrit — un problème d'accès, pas
- * de rédaction.
+ * L'arborescence de pages, la recherche en haut : la réponse EXISTE (elle est
+ * dans l'arbre, en surbrillance) mais la personne neuve ne sait pas où. C'est
+ * exactement l'écart que la section décrit — un problème d'ACCÈS, pas de
+ * rédaction. C'est aussi le H1 de la page, mot pour mot : « The answer already
+ * exists. The new person cannot find it. »
  *
  * La page trouvée est celle du scénario (la politique de remboursement).
+ *
+ * ─── Ce qui a changé le 30 juillet 2026 ────────────────────────────────────
+ *
+ * 1. **Layered Paper**, comme le reste de la page.
+ * 2. **La profondeur est comptée.** Le dessin montrait un chemin sans dire
+ *    combien de niveaux il fallait descendre. Or c'est là tout le sujet : la
+ *    page est à trois niveaux sous la racine, derrière un vocabulaire
+ *    (« Accounts », « Ridgeline ») qu'une personne de troisième jour ne connaît
+ *    pas encore. Le compte est DÉRIVÉ de l'arbre.
+ *
+ * ⚠️ Elle ne double pas `LibraryMock`, le pilier 01 de la même page. Là-bas
+ * c'est l'INVENTAIRE — voilà ce qu'il y a, tout est cherchable. Ici c'est la
+ * NAVIGATION — la page est là, encore faut-il savoir où regarder. Deux
+ * questions, deux formes : des compteurs contre un arbre.
  */
 const TREE = [
   { label: "Getting started", depth: 0 },
@@ -17,125 +32,228 @@ const TREE = [
   { label: "Escalation matrix", depth: 2 },
   { label: "Onboarding sessions", depth: 0 },
 ];
+
+/** Dérivé de l'arbre : la profondeur du résultat. Retapé, il cesserait de
+ *  correspondre au dessin à la première page ajoutée. */
+const match = TREE.find((node) => node.found)!;
+const levels = match.depth + 1;
 ---
 
-<div class="tree" data-art>
-  <header class="search" data-art-in>
-    <span class="glass" aria-hidden="true"></span>
-    <span class="query">refund over $500</span>
-  </header>
+{/* THESIS: the page exists, three levels down, behind words a third-day hire has
+    not learned yet. OWN-WORLD: a warm contents sheet with one line marked.
+    STORY: read the query, run the tree, find the match — and notice how far in
+    it sits. FIRST VIEWPORT: the tree; the depth count closes it. FORM:
+    standalone Layered Paper — the objection illustration on this page is a
+    provenance list, so this one is a tree. */}
+<div class="tree-stage" data-art>
+  <span class="sheet-backing backing-one" aria-hidden="true"></span>
+  <span class="sheet-backing backing-two" aria-hidden="true"></span>
 
-  <ul class="nodes">
-    {
-      TREE.map((node) => (
-        <li
-          class:list={{ found: node.found }}
-          style={`--depth:${node.depth}`}
-          data-art-in
-          data-use-case-motion-row
-        >
-          <span class="dot" aria-hidden="true"></span>
-          <span class="name">{node.label}</span>
-          {node.found && <span class="badge" data-art-pop>match</span>}
-        </li>
-      ))
-    }
-  </ul>
+  <section class="tree-card" aria-label="The page exists in the tree, three levels down">
+    <header class="search" data-art-in>
+      <span class="glass" aria-hidden="true"></span>
+      <span class="query">refund over $500</span>
+    </header>
 
-  <footer class="foot" data-art-in>Full-text search · pages and transcribed calls</footer>
+    <ul class="nodes">
+      {
+        TREE.map((node) => (
+          <li
+            class:list={{ found: node.found }}
+            style={`--depth:${node.depth}`}
+            data-art-in
+            data-use-case-motion-row
+          >
+            <span class="dot" aria-hidden="true" />
+            <span class="name">{node.label}</span>
+            {node.found && <span class="badge" data-art-pop>match</span>}
+          </li>
+        ))
+      }
+    </ul>
+
+    {/* Le compte qui porte l'argument : la réponse est là, mais à trois niveaux,
+        derrière des mots qu'on ne connaît pas encore. */}
+    <footer class="foot" data-art-in>
+      <span class="foot-label">Levels down</span>
+      <span class="foot-value">{levels}</span>
+    </footer>
+  </section>
 </div>
 
 <style>
-  .tree {
-    border: 1px solid var(--color-rule);
-    border-radius: 8px;
-    background: #fff;
-    padding: 14px 18px 16px;
+  /* Scène transparente — padding SEULEMENT. Une carte seule ne s'assied jamais
+     dans une autre carte ; les deux feuilles derrière elle SONT la profondeur. */
+  .tree-stage {
+    position: relative;
+    padding: 14px 16px 18px;
   }
 
-  /* La requête est en mono : elle a été TAPÉE dans le produit, pas rédigée pour
-     cette page — la règle Recorded/Written. */
+  .sheet-backing {
+    position: absolute;
+    inset: 20px 20px 14px;
+    border-radius: var(--radius-paper-card);
+    transition: transform var(--paper-motion-duration) var(--paper-motion-ease);
+  }
+
+  .backing-one {
+    background: var(--color-paper-layer);
+    transform: translate(-7px, 5px) rotate(-2.4deg);
+  }
+
+  .backing-two {
+    background: var(--color-paper-layer-light);
+    transform: translate(6px, 3px) rotate(1.7deg);
+  }
+
+  .tree-card {
+    position: relative;
+    z-index: 2;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+    padding: 15px 18px 16px;
+    transition:
+      transform var(--paper-motion-duration) var(--paper-motion-ease),
+      box-shadow var(--paper-motion-duration) var(--paper-motion-ease);
+    transform: rotate(-0.6deg);
+  }
+
+  /* La requête : elle a été TAPÉE, donc mono et en creux dans la feuille.
+     « The Recorded/Written Rule ». */
   .search {
     display: flex;
     align-items: center;
-    gap: 10px;
-    border-radius: 6px;
-    background: var(--color-paper);
+    gap: 9px;
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper-chip);
+    box-shadow: var(--shadow-paper-inset);
     padding: 10px 12px;
   }
 
   .glass {
-    height: 11px;
-    width: 11px;
+    height: 9px;
+    width: 9px;
     flex: none;
     border-radius: 999px;
-    border: 2px solid var(--color-slate);
+    border: 1.5px solid var(--color-paper-label);
   }
 
   .query {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 11px;
     color: var(--color-ink);
   }
 
   .nodes {
-    margin: 14px 0 0;
+    margin: 12px 0 0;
     padding: 0;
     list-style: none;
   }
 
-  /* Le retrait porte la hiérarchie : c'est ce qui fait lire « pages imbriquées »
-     sans un mot d'explication. */
   .nodes li {
-    display: flex;
+    display: grid;
+    grid-template-columns: 7px minmax(0, 1fr) auto;
     align-items: center;
     gap: 9px;
-    padding: 7px 0 7px calc(var(--depth) * 18px);
+    padding: 8px 0 8px calc(var(--depth) * 16px);
   }
 
   .dot {
     height: 5px;
     width: 5px;
-    flex: none;
     border-radius: 999px;
-    background: var(--color-rule);
+    background: var(--color-paper-layer);
   }
 
   .name {
-    font-size: 12.5px;
-    color: var(--color-slate);
-  }
-
-  /* La page trouvée : la seule note ambre, et le seul texte en `ink`. */
-  .found .name {
-    font-weight: 600;
-    color: var(--color-ink);
-  }
-
-  .found .dot {
-    background: var(--color-hour);
-  }
-
-  .badge {
-    margin-left: auto;
-    border-radius: 3px;
-    background: var(--color-hour);
-    padding: 2px 7px;
+    overflow: hidden;
     font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font-size: 11px;
+    color: var(--color-paper-label);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* La page trouvée. Elle est la seule chose de l'écran qui compte, donc la
+     seule à l'encre pleine. */
+  .found .name {
     font-weight: 700;
     color: var(--color-ink);
   }
 
+  .found .dot {
+    background: var(--color-live);
+  }
+
+  .badge {
+    border-radius: 3px;
+    background: var(--color-paper-sage);
+    padding: 2px 7px;
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    letter-spacing: 0.06em;
+    color: var(--color-paper-sage-text);
+  }
+
   .foot {
-    margin-top: 12px;
-    border-top: 1px solid var(--color-rule);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+    border-top: 1px solid var(--color-paper-rule);
     padding-top: 12px;
+  }
+
+  .foot-label {
     font-family: var(--font-mono);
     font-size: 10px;
-    color: var(--color-slate);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-paper-label);
+  }
+
+  /* L'ambre unique de l'écran — l'oeil-de-boeuf de cette section est en `ink`,
+     donc elle est disponible. Elle marque la distance, qui EST le problème. */
+  .foot-value {
+    border-radius: 3px;
+    background: var(--color-hour);
+    padding: 3px 10px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .tree-stage:hover .backing-one {
+      transform: translate(-13px, 8px) rotate(-3.8deg);
+    }
+
+    .tree-stage:hover .backing-two {
+      transform: translate(10px, 5px) rotate(2.8deg);
+    }
+
+    .tree-stage:hover .tree-card {
+      box-shadow: var(--shadow-paper-card-hover);
+      transform: translateY(-5px) rotate(0deg);
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .tree-stage {
+      padding: 10px 11px 14px;
+    }
+
+    .sheet-backing {
+      inset: 15px 15px 10px;
+    }
+
+    .tree-card {
+      padding-inline: 14px;
+    }
   }
 </style>
 

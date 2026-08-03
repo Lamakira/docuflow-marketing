@@ -1,0 +1,269 @@
+---
+/**
+ * `/solutions/onboarding-documentation` — section « objection » (péremption).
+ *
+ * L'objection est « documentation rots, and stale pages are worse than none ».
+ * La réponse de la section n'est pas « nos pages ne périment pas » — ce serait
+ * faux, et le corps le concède en une phrase : « They can be. » La réponse est
+ * que la CITATION rend la péremption VISIBLE : « you can open the page it came
+ * from and judge whether it still holds. »
+ *
+ * ─── Pourquoi ce dessin REMPLACE `CitedAnswerArt` ──────────────────────────
+ *
+ * `CitedAnswerArt` montrait une réponse, ses sources et leurs dates. Mais le
+ * héros de la même page est `SourceMock` — une réponse et ses sources — et le
+ * pilier 01 en rendait une troisième copie avant la revue du 30 juillet 2026.
+ * La bulle de question et le paragraphe de réponse étaient donc l'écho du
+ * héros, et ils occupaient la place du seul contenu propre à cette section :
+ * l'ÂGE des sources.
+ *
+ * Ce dessin ne porte donc plus de réponse du tout. Deux sources, leurs dates,
+ * leur état d'indexation, et rien d'autre. C'est la provenance, pas la réponse.
+ *
+ * ─── Ce que la carte doit assumer ──────────────────────────────────────────
+ *
+ * ⚠️ Une des deux sources a six mois et LE DIT. Ne jamais « rajeunir » cette
+ * valeur pour faire joli : c'est elle qui rend l'argument crédible. Une carte
+ * où tout est frais dirait « nos pages ne périment pas », c'est-à-dire
+ * l'inverse de ce que la section concède — et la concession est ce qui la rend
+ * lisible par un opérateur méfiant.
+ */
+const SOURCES = [
+  {
+    kind: "doc",
+    name: "Refunds policy",
+    when: "Updated 6 days ago",
+    state: "re-indexed on save",
+    stale: false,
+  },
+  {
+    kind: "call",
+    name: "Onboarding · Mar 6",
+    when: "Recorded 6 months ago",
+    state: "unchanged since",
+    stale: true,
+  },
+];
+
+/** Dérivé : le lecteur voit combien de sources portent l'answer, et combien
+ *  méritent un coup d'oeil. */
+const stale = SOURCES.filter((source) => source.stale).length;
+---
+
+{/* THESIS: every answer carries its sources and their ages, so the reader can
+    judge what still holds. OWN-WORLD: a warm provenance slip, two entries, one
+    of them visibly old. STORY: read the two sources, notice one is six months
+    old and says so, decide. FIRST VIEWPORT: the two entries; the count closes
+    it. FORM: standalone Layered Paper — the situation illustration on this page
+    is a tree, so this one is a list. */}
+<div class="age-stage" data-art>
+  <span class="sheet-backing backing-one" aria-hidden="true"></span>
+  <span class="sheet-backing backing-two" aria-hidden="true"></span>
+
+  <section class="age-card" aria-label="Where the answer came from, and how old each source is">
+    <header class="head" data-art-in>
+      <span class="label">Where this answer came from</span>
+      <span class="count">{SOURCES.length} sources</span>
+    </header>
+
+    <ul class="sources">
+      {
+        SOURCES.map((source) => (
+          <li class:list={{ stale: source.stale }} data-art-in data-use-case-motion-row>
+            <span class="kind">{source.kind}</span>
+            <span class="name">{source.name}</span>
+            <span class="when">{source.when}</span>
+            <span class="state">{source.state}</span>
+          </li>
+        ))
+      }
+    </ul>
+
+    {/* La ligne qui retourne l'objection : la péremption n'est pas niée, elle
+        est affichée. C'est le lecteur qui tranche, et c'est l'argument. */}
+    <footer class="foot" data-art-pop>
+      <span class="foot-mark" aria-hidden="true"></span>
+      {stale} worth re-reading · open either and judge
+    </footer>
+  </section>
+</div>
+
+<style>
+  /* Scène transparente — padding SEULEMENT. Une carte seule ne s'assied jamais
+     dans une autre carte ; les deux feuilles derrière elle SONT la profondeur. */
+  .age-stage {
+    position: relative;
+    padding: 14px 16px 18px;
+  }
+
+  .sheet-backing {
+    position: absolute;
+    inset: 20px 20px 14px;
+    border-radius: var(--radius-paper-card);
+    transition: transform var(--paper-motion-duration) var(--paper-motion-ease);
+  }
+
+  .backing-one {
+    background: var(--color-paper-layer);
+    transform: translate(-7px, 5px) rotate(-2.4deg);
+  }
+
+  .backing-two {
+    background: var(--color-paper-layer-light);
+    transform: translate(6px, 3px) rotate(1.7deg);
+  }
+
+  .age-card {
+    position: relative;
+    z-index: 2;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+    padding: 15px 18px 16px;
+    transition:
+      transform var(--paper-motion-duration) var(--paper-motion-ease),
+      box-shadow var(--paper-motion-duration) var(--paper-motion-ease);
+    transform: rotate(-0.6deg);
+  }
+
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 4px;
+  }
+
+  .label,
+  .count {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--color-paper-label);
+  }
+
+  .label {
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .sources {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sources li {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 4px 10px;
+    border-top: 1px solid var(--color-paper-rule);
+    padding: 11px 2px;
+  }
+
+  /* Écrit ou dit — la même distinction que `LibraryMock`, parce que c'est le
+     même index. Deux capsules de même poids : ni l'une ni l'autre n'est
+     l'exception. */
+  .kind {
+    justify-self: start;
+    border-radius: 3px;
+    background: var(--color-paper-sage);
+    padding: 2px 6px;
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    letter-spacing: 0.06em;
+    color: var(--color-paper-sage-text);
+  }
+
+  .name {
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--color-ink);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .when {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-paper-label);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .state {
+    grid-column: 2 / -1;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    color: var(--color-paper-label);
+  }
+
+  /* La source ancienne. Marquée, jamais barrée : elle reste une source valable,
+     c'est au lecteur d'en juger — la barrer trancherait à sa place. */
+  .stale .kind {
+    background: var(--color-paper-chip);
+    color: var(--color-paper-label);
+  }
+
+  .stale .when {
+    border-radius: 3px;
+    background: var(--color-hour);
+    padding: 2px 7px;
+    color: var(--color-ink);
+  }
+
+  .foot {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 12px;
+    border-top: 1px solid var(--color-paper-rule);
+    padding-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-paper-label);
+  }
+
+  .foot-mark {
+    height: 8px;
+    width: 8px;
+    flex: none;
+    border-radius: 2px;
+    background: var(--color-hour);
+  }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .age-stage:hover .backing-one {
+      transform: translate(-13px, 8px) rotate(-3.8deg);
+    }
+
+    .age-stage:hover .backing-two {
+      transform: translate(10px, 5px) rotate(2.8deg);
+    }
+
+    .age-stage:hover .age-card {
+      box-shadow: var(--shadow-paper-card-hover);
+      transform: translateY(-5px) rotate(0deg);
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .age-stage {
+      padding: 10px 11px 14px;
+    }
+
+    .sheet-backing {
+      inset: 15px 15px 10px;
+    }
+
+    .age-card {
+      padding-inline: 14px;
+    }
+  }
+</style>
+
+<script>
+  import "../../scripts/art";
+</script>

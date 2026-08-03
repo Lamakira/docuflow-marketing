@@ -1,0 +1,282 @@
+---
+/** Un ralenti, pas à pas — l'événement que le produit ne déduit jamais.
+ *
+ * ─── Ce que la section demande ─────────────────────────────────────────────
+ *
+ * Le scénario d'`employee-productivity` s'appelle « How an idle stretch is
+ * handled », son oeil-de-boeuf est une heure (`11:04`) et son pied dit
+ * « 3 min threshold · prompt and countdown ». C'est un ENCHAÎNEMENT : quelque
+ * chose s'arrête, un seuil tombe, une question est posée, et il advient quelque
+ * chose du temps.
+ *
+ * La carte rendait un chronomètre — le même que le pilier 02, aux mêmes
+ * valeurs. Un chronomètre montre un instant ; il ne peut pas montrer une
+ * séquence, donc il ne pouvait pas montrer ce que la section raconte.
+ *
+ * ─── Le chiffre qui compte ─────────────────────────────────────────────────
+ *
+ * ⚠️ La durée du ralenti est DÉRIVÉE de la première et de la dernière étape.
+ * Rien n'est soustrait en silence — c'est la thèse de la section, « nothing was
+ * subtracted quietly » — donc ce chiffre décrit ce qui s'est passé, pas ce qui
+ * a été retiré. Il n'en est que plus exposé : c'est le genre de durée qu'on
+ * arrondit en faveur du produit sans s'en apercevoir. Dérivée, elle ne peut pas
+ * l'être.
+ *
+ * La donnée livrée en portait déjà la preuve : la carte annonçait `0:06:20` en
+ * face d'un texte qui dit « 6 min ». Personne ne l'avait vu.
+ *
+ * ─── Pourquoi ce n'est pas `windows` ───────────────────────────────────────
+ *
+ * `WindowsMock` (le héros de la même page) montre la mesure EN CONTINU, une
+ * heure entière, comptable. Celle-ci est zoomée sur un seul événement. Même
+ * écart de focale qu'entre `WeekMock` et `SilenceMock` sur `remote-teams` : la
+ * vue d'ensemble et le gros plan ne se ressemblent pas, donc les deux cartes
+ * d'une même page ne se ressemblent pas non plus.
+ */
+interface Props {
+  label: string;
+  steps: { at: string; event: string; note?: string }[];
+  outcome: string;
+  foot: string;
+  /** Traitement Layered Paper — voir `DESIGN.md`, « Layered Paper Card ». */
+  warm?: boolean;
+  /** Bande sombre : seule l'ombre change, la feuille reste claire. */
+  onDark?: boolean;
+}
+
+const { label, steps, outcome, foot, warm = false, onDark = false } = Astro.props;
+
+if (steps.length < 3) {
+  throw new Error(
+    `[solutions] IdleMock attend au moins 3 étapes, ${steps.length} reçues. ` +
+      `Une séquence de deux points est un intervalle, pas un enchaînement : elle ne montre ni le seuil, ni la question posée.`
+  );
+}
+
+/** `HH:MM` → minutes depuis minuit. Lève plutôt que de rendre `NaN` : la durée
+ *  non comptée est l'argument de la carte. */
+const toMinutes = (value: string) => {
+  const match = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(value);
+  if (!match) {
+    throw new Error(
+      `[solutions] IdleMock : heure « ${value} » illisible, format attendu \`HH:MM\`. ` +
+        `La durée non comptée est dérivée des étapes, donc une heure hors format la rendrait fausse en silence.`
+    );
+  }
+  return Number(match[1]) * 60 + Number(match[2]);
+};
+
+const span = toMinutes(steps[steps.length - 1].at) - toMinutes(steps[0].at);
+
+if (span <= 0) {
+  throw new Error(
+    `[solutions] IdleMock : les étapes ne progressent pas dans le temps (${steps[0].at} → ${steps[steps.length - 1].at}). ` +
+      `La durée non comptée en est dérivée et serait nulle ou négative.`
+  );
+}
+
+/** `0:05:00` — même format que les durées des chronomètres du site, parce que
+ *  c'est du temps compté par le système. Règle Recorded/Written. */
+const duration = `0:${String(span).padStart(2, "0")}:00`;
+---
+
+<div
+  class:list={[
+    "idle-mock rounded-[8px] border border-rule bg-white p-[18px]",
+    { "idle-mock--warm": warm, "idle-mock--dark": warm && onDark },
+  ]}
+>
+  <header class="head">
+    <p class="label label-mono text-[10px] text-slate">{label}</p>
+    {/* La phrase du produit, pas une promesse marketing : le ralenti déclenche
+        une question. C'est ce qui sépare une mesure acceptée d'une mesure
+        contournée. */}
+    <span class="chip">never deduced</span>
+  </header>
+
+  <ol class="steps">
+    {
+      steps.map((step) => (
+        <li class="step" data-use-case-motion-row>
+          <span class="marker" aria-hidden="true"></span>
+          <span class="at">{step.at}</span>
+          <span class="event">{step.event}</span>
+          {step.note && <span class="note">{step.note}</span>}
+        </li>
+      ))
+    }
+  </ol>
+
+  {/* Ce qu'il advient du temps. Le libellé est écrit, la durée est dérivée des
+      étapes ci-dessus — donc le lecteur peut la recalculer sur la carte. */}
+  <footer class="outcome">
+    <span class="outcome-label">{outcome}</span>
+    <span class="outcome-value">{duration}</span>
+  </footer>
+
+  <p class="foot">{foot}</p>
+</div>
+
+<style>
+  .idle-mock--warm {
+    border: 0;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+  }
+
+  .idle-mock--dark {
+    box-shadow: var(--shadow-paper-card-dark);
+  }
+
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .idle-mock--warm .label,
+  .idle-mock--warm .foot,
+  .idle-mock--warm .at {
+    color: var(--color-paper-label);
+  }
+
+  .chip {
+    border-radius: 3px;
+    background: var(--color-paper);
+    padding: 3px 8px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    color: var(--color-slate);
+  }
+
+  .idle-mock--warm .chip {
+    background: var(--color-paper-chip);
+    color: var(--color-paper-label);
+  }
+
+  .steps {
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Un rail d'étapes, pas un filet d'accent : la pastille marque un moment et
+     le trait relie les moments entre eux. C'est la grammaire du rail de
+     l'accueil, à l'échelle d'une carte. */
+  .step {
+    position: relative;
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: baseline;
+    gap: 10px;
+    padding: 0 0 14px 20px;
+  }
+
+  .step:last-child {
+    padding-bottom: 0;
+  }
+
+  .marker {
+    position: absolute;
+    top: 4px;
+    left: 0;
+    height: 8px;
+    width: 8px;
+    border-radius: 999px;
+    background: var(--color-rule);
+  }
+
+  .idle-mock--warm .marker {
+    background: var(--color-paper-layer);
+  }
+
+  /* Le trait qui relie deux étapes. Il s'arrête à la dernière — une séquence
+     terminée ne continue pas dans le vide. */
+  .step:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    top: 14px;
+    bottom: 2px;
+    left: 3.5px;
+    border-left: 1px solid var(--color-rule);
+  }
+
+  .idle-mock--warm .step:not(:last-child)::before {
+    border-left-color: var(--color-paper-rule);
+  }
+
+  /* La dernière étape est celle qui tranche : sa pastille est pleine. */
+  .step:last-child .marker {
+    background: var(--color-live);
+  }
+
+  .at {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-slate);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .event {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--color-ink);
+  }
+
+  .note {
+    grid-column: 2;
+    margin-top: 3px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    /* ⚠️ Jamais `paper-connector` en TEXTE : c'est une couleur de TRACÉ
+       (« lineage paths », DESIGN.md), et elle tombe à 2,6:1 sur papier.
+       Relevé par la passe polish du 30 juillet 2026. */
+    color: var(--color-paper-label);
+  }
+
+  .outcome {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 16px;
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper);
+    padding: 12px;
+  }
+
+  .idle-mock--warm .outcome {
+    background: var(--color-paper-chip);
+  }
+
+  .outcome-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+
+  .idle-mock--warm .outcome-label {
+    color: var(--color-paper-label);
+  }
+
+  .outcome-value {
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .foot {
+    margin-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-slate);
+  }
+</style>
