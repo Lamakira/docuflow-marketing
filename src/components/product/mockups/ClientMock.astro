@@ -1,10 +1,29 @@
 ---
 import { CONTACTS } from "../../../data/site";
+
+/** ⚠️ Le pourcentage est DÉRIVÉ du budget et du consommé — correction du
+ *  30 juillet 2026.
+ *
+ *  La carte affichait « $48,000 » et « 62% used » sans jamais montrer le
+ *  montant consommé : le lecteur ne pouvait ni vérifier le pourcentage, ni
+ *  savoir ce qu'il restait. Un chiffre qu'on ne peut pas recalculer est une
+ *  assertion, et le pilier Clients existe précisément pour dire que DocuFlow
+ *  connaît le coût réel du travail. Les deux montants sont maintenant affichés
+ *  et le pourcentage tombe de lui-même.
+ *
+ *  Séparateur de milliers posé à la main : `toLocaleString()` suit la locale de
+ *  la MACHINE DE BUILD et livrerait « 48 000 » ou « 48.000 » selon l'endroit où
+ *  le site est compilé. */
+const BUDGET = 48000;
+const SPENT = 29760;
+
+const percent = Math.round((SPENT / BUDGET) * 100);
+const money = (value: number) => `$${value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 ---
 
 {/* Structure de dossier : identité → filet → personnes → filet → chiffres →
     filet → étiquettes. C'est la grammaire de toutes les cartes du site. */}
-<div class="rounded-[8px] border border-rule bg-white p-5">
+<div class="client-mock rounded-[8px] border border-rule bg-white p-5">
   <div class="flex items-center justify-between gap-3">
     <p class="font-display text-[17px] font-bold">Northwind Systems</p>
     <span
@@ -34,16 +53,24 @@ import { CONTACTS } from "../../../data/site";
   <div class="mt-4 border-t border-rule pt-4">
     <div class="flex items-baseline justify-between">
       <span class="font-mono text-[11px] text-slate">Budget</span>
-      <span class="font-mono text-[15px] font-bold">$48,000</span>
+      <span class="font-mono text-[15px] font-bold">{money(BUDGET)}</span>
+    </div>
+
+    {/* Le consommé, en clair. C'est lui qui rend le pourcentage vérifiable. */}
+    <div class="mt-[6px] flex items-baseline justify-between">
+      <span class="font-mono text-[11px] text-slate">Spent</span>
+      <span class="font-mono text-[13px] font-semibold text-live-on-light">{money(SPENT)}</span>
     </div>
 
     {/* La jauge et son relevé énoncent la même chose : même vert. Le relevé
         étant du texte, c'est la variante lisible qui gagne, et la barre la suit
         — deux verts à 8px l'un de l'autre se liraient comme une erreur. */}
     <span class="mt-2 block h-[6px] overflow-hidden rounded-full bg-paper">
-      <span class="block h-full w-[62%] bg-live-on-light"></span>
+      <span class="block h-full bg-live-on-light" style={`width:${percent}%`}></span>
     </span>
-    <p class="mt-[6px] text-right font-mono text-[11px] text-live-on-light">62% used</p>
+    <p class="mt-[6px] text-right font-mono text-[11px] text-live-on-light">
+      {percent}% used · {money(BUDGET - SPENT)} left
+    </p>
   </div>
 
   <div class="mt-4 flex gap-2 border-t border-rule pt-4">

@@ -6,10 +6,38 @@ import { ANSWER_CARD } from "../../../data/site";
  *  le H2 annonce. La puce verte cerclée est le « source chip » du système — le
  *  filet vert est ce qui fait qu'une réponse a l'air redevable.
  *  Question, réponse et sources viennent de `data/site.ts` (`ANSWER_CARD`),
- *  partagé avec l'accueil (`sections/AiAnswer.astro`). */
+ *  partagé avec l'accueil (`sections/AiAnswer.astro`).
+ *
+ * ─── Correction du 30 juillet 2026 ─────────────────────────────────────────
+ *
+ * Le H2 de la section dit « Search covers WHAT WAS SAID, not just what was
+ * written », et la carte le laissait deviner : les deux sources sortaient en
+ * puces identiques, préfixées `doc ·` et `call ·` en petit. La distinction qui
+ * porte tout le pilier était donc la chose la moins visible de la carte — par
+ * ailleurs la plus vide des quatre.
+ *
+ * Les sources sont maintenant listées avec leur NATURE en clair (écrit / parlé)
+ * et leur compte est dérivé. Le lecteur voit d'un coup que la réponse s'appuie
+ * sur les deux, ce qui est exactement la promesse du pilier.
+ *
+ * ⚠️ `ANSWER_CARD` n'est pas modifié : il est partagé avec l'accueil. Seul le
+ * rendu de cette carte change.
+ */
+
+/** `"doc · Ledger SOW"` → `{ kind: "written", name: "Ledger SOW" }`.
+ *  Le préfixe est la convention de `ANSWER_CARD`. Toute valeur inattendue
+ *  retombe sur la chaîne brute plutôt que d'inventer une nature : mieux vaut
+ *  une puce sans étiquette qu'une puce qui ment sur l'origine d'une réponse. */
+const LABELS: Record<string, string> = { doc: "written", call: "spoken" };
+
+const sources = ANSWER_CARD.sources.map((source) => {
+  const [prefix, ...rest] = source.split(" · ");
+  const kind = LABELS[prefix];
+  return kind ? { kind, name: rest.join(" · ") } : { kind: null, name: source };
+});
 ---
 
-<div class="rounded-[8px] border border-rule bg-white p-5">
+<div class="answer-mock rounded-[8px] border border-rule bg-white p-5">
   {/* La question est en mono : elle a été tapée dans le produit, pas rédigée
       pour cette page (« The Recorded/Written Rule »). */}
   <p class="rounded-[6px] bg-paper px-[14px] py-3 font-mono text-[13px]">
@@ -20,13 +48,27 @@ import { ANSWER_CARD } from "../../../data/site";
     {ANSWER_CARD.answer}
   </p>
 
-  <div class="mt-4 flex flex-wrap gap-2">
+  {/* Les sources, avec leur nature. C'est le H2 rendu vérifiable : une écrite,
+      une parlée, et le compte est dérivé. */}
+  <div class="mt-4 flex items-baseline justify-between gap-3 border-t border-rule pt-4">
+    <span class="label-mono text-[10px] text-slate">Answered from</span>
+    <span class="font-mono text-[11px] font-semibold text-ink">{sources.length} sources</span>
+  </div>
+
+  <ul class="mt-[10px] space-y-2">
     {
-      ANSWER_CARD.sources.map((source) => (
-        <span class="rounded-[3px] border border-live-on-light px-[9px] py-[4px] font-mono text-[11px] text-live-on-light">
-          {source}
-        </span>
+      sources.map((source) => (
+        <li class="flex items-center gap-[10px]">
+          {source.kind && (
+            <span class="w-[54px] shrink-0 rounded-[3px] bg-paper px-[6px] py-[3px] text-center font-mono text-[9px] tracking-[0.06em] text-slate">
+              {source.kind}
+            </span>
+          )}
+          <span class="rounded-[3px] border border-live-on-light px-[9px] py-[4px] font-mono text-[11px] text-live-on-light">
+            {source.name}
+          </span>
+        </li>
       ))
     }
-  </div>
+  </ul>
 </div>

@@ -1,0 +1,192 @@
+---
+/** La scène Layered Paper des maquettes de `/product` — recette AUTONOME.
+ *
+ * ─── Pourquoi elle existe ──────────────────────────────────────────────────
+ *
+ * Les pages `/solutions` obtiennent leurs feuilles de calage via
+ * `solutions/mockups/SectorMockup.astro`, qui est un AIGUILLAGE piloté par
+ * l'union `Mockup` : il choisit la maquette depuis une donnée. `/product` ne
+ * fonctionne pas ainsi — ses quatre visuels sont des composants choisis par
+ * `id` de pilier. Il lui fallait donc le même habillage, mais par `<slot>`.
+ *
+ * ⚠️ Arbitré le 30 juillet 2026. `/product` était resté plat pendant que les
+ * quatorze pages `/solutions` passaient au papier chaud, au motif que la fiche
+ * technique relève de l'« operational UI » que `DESIGN.md` veut « ruled,
+ * compact and square to the page ». C'était une mauvaise lecture : cette règle
+ * vise l'INTERFACE (nav, formulaires, cartes tarifaires, l'application), et
+ * « The Layered Paper Boundary » définit le chaud comme « an illustration of
+ * records, NOT a live product panel ». Les quatre visuels de `/product` sont
+ * précisément des illustrations de relevés, comme ceux des pages secteur.
+ * Un visiteur qui passe de `/solutions/remote-teams` à `/product` voyait les
+ * mêmes objets produit rendus dans deux mondes différents.
+ *
+ * ─── La recette, à la valeur près ──────────────────────────────────────────
+ *
+ * `DESIGN.md`, « Layered Paper Card », recette autonome :
+ *  1. la scène est TRANSPARENTE et n'a que du padding — jamais de fond, de
+ *     filet, de rayon ni d'ombre. Une carte seule ne s'assied pas dans une
+ *     autre carte ;
+ *  2. deux feuilles de calage, `paper-layer` et `paper-layer-light`, aux
+ *     décalages et rotations exacts de la recette ;
+ *  3. la face porte le contenu et la sémantique.
+ *
+ * Le padding n'est pas décoratif : c'est lui qui RÉSERVE la place que les
+ * feuilles occupent en débordant. Le réduire les fait rogner par la colonne.
+ */
+interface Props {
+  /** Laisse la maquette plate. Réservé au cas où une future section de
+   *  `/product` rendrait une vraie surface d'interface plutôt qu'une
+   *  illustration de relevé — la frontière de `DESIGN.md`, pas un réglage. */
+  warm?: boolean;
+}
+
+const { warm = true } = Astro.props;
+---
+
+<div class:list={["paper-stage", { "paper-stage--warm": warm }]} data-product-motion-card>
+  {warm && <span class="sheet-backing backing-one" aria-hidden="true"></span>}
+  {warm && <span class="sheet-backing backing-two" aria-hidden="true"></span>}
+
+  <div class="paper-face">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .paper-stage {
+    position: relative;
+  }
+
+  .paper-stage--warm {
+    padding: 14px 16px 18px;
+  }
+
+  .sheet-backing {
+    position: absolute;
+    inset: 20px 20px 14px;
+    border-radius: var(--radius-paper-card);
+    transition: transform var(--paper-motion-duration) var(--paper-motion-ease);
+  }
+
+  .backing-one {
+    background: var(--color-paper-layer);
+    transform: translate(-7px, 5px) rotate(-2.4deg);
+  }
+
+  .backing-two {
+    background: var(--color-paper-layer-light);
+    transform: translate(6px, 3px) rotate(1.7deg);
+  }
+
+  .paper-face {
+    position: relative;
+    z-index: 2;
+  }
+
+  .paper-stage--warm .paper-face {
+    transition: transform var(--paper-motion-duration) var(--paper-motion-ease);
+    transform: rotate(-0.6deg);
+  }
+
+  /* Séparation des plans au survol, plafonnée à 5px de levée par la recette.
+     Le mouvement explique la construction physique de l'objet ; il ne prétend
+     pas qu'on a pressé un contrôle. */
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .paper-stage--warm:hover .backing-one {
+      transform: translate(-13px, 8px) rotate(-3.8deg);
+    }
+
+    .paper-stage--warm:hover .backing-two {
+      transform: translate(10px, 5px) rotate(2.8deg);
+    }
+
+    .paper-stage--warm:hover .paper-face {
+      transform: translateY(-5px) rotate(0deg);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .paper-stage--warm {
+      padding: 10px 11px 14px;
+    }
+
+    .sheet-backing {
+      inset: 15px 15px 10px;
+    }
+  }
+
+  /* ─── La face, en papier ──────────────────────────────────────────────────
+     Les quatre maquettes gardent leur balisage Tailwind froid et sont
+     RETEINTES ici, en `:global()`, plutôt que de porter chacune un jeu de
+     règles `--warm`. Une seule raison : la frontière Layered Paper est une
+     décision de SYSTÈME, et elle doit se lire à un seul endroit. Quatre copies
+     divergeraient au premier réglage.
+     Les utilitaires Tailwind vivent dans une couche en cascade ; ces règles,
+     non couchées, l'emportent sans `!important`. */
+  .paper-stage--warm :global(.timer-mock),
+  .paper-stage--warm :global(.evidence-mock),
+  .paper-stage--warm :global(.client-mock),
+  .paper-stage--warm :global(.answer-mock) {
+    border: 0;
+    border-radius: var(--radius-paper-card);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-card);
+  }
+
+  /* Les filets internes deviennent des filets de papier. */
+  .paper-stage--warm :global(.timer-mock [class*="border-rule"]),
+  .paper-stage--warm :global(.evidence-mock [class*="border-rule"]),
+  .paper-stage--warm :global(.client-mock [class*="border-rule"]),
+  .paper-stage--warm :global(.answer-mock [class*="border-rule"]) {
+    border-color: var(--color-paper-rule);
+  }
+
+  /* Les surfaces en creux : `paper` froid → `paper-chip`, avec le rayon et
+     l'ombre intérieure de la recette. */
+  .paper-stage--warm :global(.timer-mock [class*="bg-paper"]),
+  .paper-stage--warm :global(.answer-mock [class*="bg-paper"]) {
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper-chip);
+    box-shadow: var(--shadow-paper-inset);
+  }
+
+  /* Le bandeau de score : la famille sage, que la palette papier réserve à
+     l'information confirmée. */
+  .paper-stage--warm :global(.evidence-mock [class*="bg-band-mint"]) {
+    border-color: transparent;
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper-sage);
+    box-shadow: var(--shadow-paper-inset);
+  }
+
+  /* Le texte secondaire suit la feuille. `paper-label` est la teinte corrigée
+     du 30 juillet 2026 : 4,8:1 sur `paper-chip`, au-dessus d'AA. */
+  .paper-stage--warm :global(.timer-mock .text-slate),
+  .paper-stage--warm :global(.evidence-mock .text-slate),
+  .paper-stage--warm :global(.client-mock .text-slate),
+  .paper-stage--warm :global(.answer-mock .text-slate) {
+    color: var(--color-paper-label);
+  }
+
+  /* Les pistes de jauge et les fonds neutres. */
+  .paper-stage--warm :global(.client-mock .bg-paper),
+  .paper-stage--warm :global(.answer-mock .bg-paper) {
+    background: var(--color-paper-chip);
+  }
+
+  .paper-stage--warm :global(.evidence-mock .bg-rule) {
+    background: var(--color-paper-track);
+  }
+
+  /* Le contrôle inerte du chronomètre : blanc sur papier, il flottait comme une
+     pièce rapportée. Il prend la teinte de la feuille et l'ombre de contrôle,
+     comme son équivalent sur les pages `/solutions`.
+     Le sélecteur est un DESCENDANT : la racine porte elle aussi `bg-white`, et
+     un `.bg-white` non qualifié l'aurait reteinte deux fois. */
+  .paper-stage--warm :global(.timer-mock .bg-white) {
+    border-color: transparent;
+    border-radius: var(--radius-paper-inset);
+    background: var(--color-paper-surface);
+    box-shadow: var(--shadow-paper-control);
+  }
+</style>

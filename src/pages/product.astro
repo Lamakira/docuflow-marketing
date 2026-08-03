@@ -11,6 +11,7 @@ import TimerMock from "../components/product/mockups/TimerMock.astro";
 import EvidenceMock from "../components/product/mockups/EvidenceMock.astro";
 import ClientMock from "../components/product/mockups/ClientMock.astro";
 import AnswerMock from "../components/product/mockups/AnswerMock.astro";
+import PaperStage from "../components/product/mockups/PaperStage.astro";
 import { PRODUCT_PILLARS, type PillarId } from "../data/product";
 
 const title = "DocuFlow product - time, activity, clients and knowledge";
@@ -63,7 +64,18 @@ const MOCKUPS: Record<PillarId, typeof TimerMock> = {
       const Mockup = MOCKUPS[pillar.id];
       return (
         <ProductPillar pillar={pillar} reverse={i % 2 === 1}>
-          <Mockup />
+          {/* ⚠️ Les quatre visuels passent par `PaperStage` — l'habillage
+              Layered Paper des pages `/solutions`. Arbitré le 30 juillet 2026 :
+              `/product` était resté plat au motif que la fiche technique relève
+              de l'« operational UI » que `DESIGN.md` veut ruled et square. C'est
+              une mauvaise lecture — cette règle vise l'INTERFACE, et « The
+              Layered Paper Boundary » définit le chaud comme « an illustration
+              of records, not a live product panel ». Ces quatre cartes sont des
+              illustrations de relevés, exactement comme celles des pages
+              secteur. */}
+          <PaperStage>
+            <Mockup />
+          </PaperStage>
         </ProductPillar>
       );
     })

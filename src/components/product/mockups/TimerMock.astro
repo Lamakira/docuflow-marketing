@@ -1,26 +1,66 @@
 ---
 /** Maquette schématique du chronomètre — dessinée en DOM, pas une capture.
  *  Elle illustre la phrase du pilier : le temps court CONTRE une tâche d'un
- *  projet client, et la feuille de temps en est le sous-produit. */
+ *  projet client, et la feuille de temps en est le sous-produit.
+ *
+ * ─── Deux corrections du 30 juillet 2026 ───────────────────────────────────
+ *
+ * 1. **La tâche en cours était listée DEUX FOIS.** Le chronomètre affichait
+ *    « Northwind · Migration scripts · 1:47:12 » et la feuille de temps juste
+ *    en dessous répétait la même tâche à la même durée. Sur une carte dont le
+ *    sujet est le décompte des heures, ça se lit comme un double comptage — et
+ *    c'est exactement le reproche que `/solutions/hybrid-teams` existe pour
+ *    lever. La ligne en cours ne figure plus dans la liste des terminées.
+ *
+ * 2. **Aucun total.** La carte alignait des durées sans jamais les additionner,
+ *    donc le lecteur n'avait rien à vérifier. Le total est maintenant DÉRIVÉ
+ *    des entrées, celle en cours comprise, et libellé « so far » puisque le
+ *    chronomètre tourne encore. Voir le test d'acceptation de
+ *    `docs/mockup-corrections.md`.
+ */
+const running = { task: "Migration scripts", project: "Northwind · Ledger rebuild", elapsed: "1:47:12" };
+
+/** Les entrées TERMINÉES du jour. La tâche en cours n'y figure pas : elle est
+ *  au-dessus, et l'y remettre ferait compter ses heures deux fois. */
 const timesheet = [
-  { task: "Northwind · Migration scripts", duration: "1:47:12" },
   { task: "Acme · Sprint planning", duration: "0:52:40" },
   { task: "Internal · Standup", duration: "0:15:03" },
+  { task: "Northwind · Schema review", duration: "0:38:20" },
 ];
+
+/** `H:MM:SS` → secondes. Lève plutôt que de rendre `NaN` : un total muet sur la
+ *  carte du pilier Time serait la pire des maquettes. */
+const toSeconds = (value: string) => {
+  const match = /^(\d+):([0-5]\d):([0-5]\d)$/.exec(value);
+  if (!match) {
+    throw new Error(
+      `[product] TimerMock : durée « ${value} » illisible, format attendu \`H:MM:SS\`. ` +
+        `Le total de la journée en est dérivé et serait faux en silence.`
+    );
+  }
+  return Number(match[1]) * 3600 + Number(match[2]) * 60 + Number(match[3]);
+};
+
+/** Le total inclut la tâche en cours — c'est ce que le produit affiche, et
+ *  « so far » le dit. Dérivé, donc le lecteur peut refaire l'addition. */
+const totalSeconds =
+  toSeconds(running.elapsed) + timesheet.reduce((sum, e) => sum + toSeconds(e.duration), 0);
+const pad = (n: number) => String(n).padStart(2, "0");
+const total = `${Math.floor(totalSeconds / 3600)}:${pad(Math.floor((totalSeconds % 3600) / 60))}:${pad(totalSeconds % 60)}`;
 ---
 
-<div class="rounded-[8px] border border-rule bg-white p-[18px]">
+<div class="timer-mock rounded-[8px] border border-rule bg-white p-[18px]">
   {/* La ligne en cours : surface `paper` en creux dans la carte blanche — le
       système empile des tons, il n'empile pas des ombres. */}
   <div class="flex items-center gap-[14px] rounded-[6px] border border-rule bg-paper px-4 py-[14px]">
     <span class="h-[10px] w-[10px] shrink-0 rounded-full bg-live" aria-hidden="true"></span>
 
     <div class="min-w-0">
-      <p class="truncate text-[13px] font-semibold">Northwind · Ledger rebuild</p>
-      <p class="font-mono text-[11px] text-slate">Migration scripts</p>
+      <p class="truncate text-[13px] font-semibold">{running.project}</p>
+      <p class="font-mono text-[11px] text-slate">{running.task}</p>
     </div>
 
-    <p class="ml-auto font-mono text-[22px] font-bold tracking-[-0.02em]">1:47:12</p>
+    <p class="ml-auto font-mono text-[22px] font-bold tracking-[-0.02em]">{running.elapsed}</p>
 
     {/* Élément d'interface inerte : la maquette ne prétend pas être cliquable.
         `<span>` et non `<button>` — un bouton qui ne fait rien est un mensonge
@@ -45,5 +85,12 @@ const timesheet = [
     }
   </ul>
 
-  <p class="mt-3 font-mono text-[10px] text-slate">Timesheet · today · editable</p>
+  {/* Le total, dérivé des lignes ci-dessus. C'est ce qui rend la carte
+      vérifiable : le lecteur additionne et retombe dessus. */}
+  <div class="mt-[14px] flex items-baseline justify-between gap-3 border-t border-rule pt-3">
+    <span class="label-mono text-[10px] text-slate">Today, so far</span>
+    <span class="font-mono text-[15px] font-bold tracking-[-0.02em]">{total}</span>
+  </div>
+
+  <p class="mt-2 font-mono text-[10px] text-slate">Timesheet · editable, with history</p>
 </div>
