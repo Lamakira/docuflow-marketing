@@ -1,6 +1,7 @@
 ---
 import { Icon } from "astro-icon/components";
 import { NAV_LINKS, type MegaMenu } from "../../data/site";
+import { APP_SIGN_IN, APP_SIGN_UP } from "../../data/app";
 
 /** Le CONTENU du tiroir mobile — la boîte et son comportement restent dans
  *  `Nav.astro`, comme pour le panneau de bureau.
@@ -93,8 +94,8 @@ const isCurrent = (href: string) => path === href || path.startsWith(`${href}/`)
   {/* `Sign in` vit ici et nulle part ailleurs sous 561px : c'est ce qui rachète
       la largeur dont la barre a besoin à 360px. */}
   <div class="foot">
-    <a href="/signin" class="row">Sign in</a>
-    <a href="/signup" class="cta">Start free trial</a>
+    <a href={APP_SIGN_IN} class="row">Sign in</a>
+    <a href={APP_SIGN_UP} class="cta">Start free trial</a>
   </div>
 </nav>
 

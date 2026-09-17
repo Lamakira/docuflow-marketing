@@ -3,6 +3,7 @@ import { Icon } from "astro-icon/components";
 import SolutionsPanel from "./nav/SolutionsPanel.astro";
 import DrawerContent from "./nav/DrawerContent.astro";
 import { NAV_LINKS } from "../data/site";
+import { APP_SIGN_IN, APP_SIGN_UP } from "../data/app";
 import { SOLUTIONS_MENU } from "../data/solutions";
 
 /** Page courante. Marquée en `ink` et non en ambre : l'ambre désigne l'action à
@@ -89,7 +90,7 @@ const MENUS = { solutions: SOLUTIONS_MENU };
         document. Sous 561px il disparaît pour de bon : `Sign in` vit alors
         dans le tiroir, et c'est cette largeur-là qui fait tenir la barre à 360px. */}
     <div class="nav-departing" data-nav-departing>
-      <a href="/signin" class="nav-link">Sign in</a>
+      <a href={APP_SIGN_IN} class="nav-link">Sign in</a>
     </div>
 
     {/* Le libellé se raccourcit à « Start free » sous 400px. C'est le CTA qui
@@ -98,7 +99,7 @@ const MENUS = { solutions: SOLUTIONS_MENU };
     {/* `&nbsp;` et non une espace ordinaire : le compilateur Astro rogne
         l'espace en tête du contenu d'un élément, et le CTA se lisait
         « Start freetrial ». L'insécable n'est pas rognée. */}
-    <a href="/signup" class="nav-cta">Start free<span class="cta-tail">&nbsp;trial</span></a>
+    <a href={APP_SIGN_UP} class="nav-cta">Start free<span class="cta-tail">&nbsp;trial</span></a>
 
     {/* Le tiroir mobile — n'existe que sous 561px, où le site n'avait
         strictement aucune navigation. Même technique que le méga-menu, autre

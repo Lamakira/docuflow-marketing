@@ -1,6 +1,7 @@
 ---
 import SectorMockup from "./mockups/SectorMockup.astro";
 import { FINE_PRINT, type Mockup } from "../../data/solutions";
+import { APP_SIGN_UP } from "../../data/app";
 
 /** Le héros d'une page secteur. Même forme à deux colonnes que `ProductHero` —
  *  plutôt qu'un troisième héros pour le site — mais la colonne de droite porte
@@ -45,17 +46,14 @@ const { tag, h1, lede, mock, warmMockup = false } = Astro.props;
 
       <div class="mt-7 flex flex-wrap items-center gap-3">
         <a
-          href="/signup"
+          href={APP_SIGN_UP}
           class="rounded-[6px] bg-hour px-[22px] py-[13px] font-medium text-ink transition-colors hover:bg-hour-hover"
         >
           Start free trial
         </a>
-        <a
-          href="/demo"
-          class="rounded-[6px] border border-rule bg-white px-[22px] py-[13px] font-medium transition-colors hover:border-ink"
-        >
-          Book a 15-minute demo
-        </a>
+        {/* Rangée d'un seul bouton : « Book a 15-minute demo » visait `/demo`, page
+            inexistante, et est retiré (#231 — voir AGENTS.md). Les classes de
+            rangée restent : le rétablir ne doit pas demander de les retrouver. */}
       </div>
 
       <p class="mt-5 font-mono text-[12.5px] text-slate">{FINE_PRINT}</p>
