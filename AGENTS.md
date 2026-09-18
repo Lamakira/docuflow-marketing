@@ -94,6 +94,47 @@ alors que son conteneur, lui, est bien aligné.
 - **Aucune statistique ni logo client inventés.** DocuFlow n'a pas encore de clients externes ;
   au Canada les indications trompeuses relèvent de la *Loi sur la concurrence*.
 
+## Les appels à l'action et l'application
+
+**Le site ne porte aucune surface d'identification.** `ADR-0002` de l'application donne les
+écrans de connexion, d'inscription et l'entrée en essai à l'application elle-même ; en
+construire une deuxième ici recréerait exactement les deux autorités que l'ADR refuse. Le
+site n'a donc ni `/signup`, ni `/signin`, ni aucune page qui demande un mot de passe — et il
+ne doit pas en gagner.
+
+**Une seule variable, un seul module.** L'hôte de l'application change d'un environnement à
+l'autre : `APP_URL` est déclarée dans `env.schema` (`astro.config.mjs`), validée au build
+(`url: true` arrête une valeur qui n'est pas une URL), et lue **uniquement** par
+`src/data/app.ts`. Les composants importent une destination finie — `APP_SIGN_UP`,
+`APP_SIGN_IN`, `appSignUpWithPlan(plan)` — jamais une base à concaténer. Aucune URL
+d'application n'est écrite dans un composant ; renommer une route de l'application, c'est une
+ligne à changer.
+
+Le défaut est l'environnement parallèle (`https://docuflow-masdouk1.replit.app`), le seul
+hôte qui existe aujourd'hui : un site qui se construit sans `.env` doit mener quelque part de
+réel. Construire contre un autre hôte se fait en posant `APP_URL` — voir `.env.example` — sans
+toucher au balisage.
+
+Les huit composants qui appellent à l'action passent par ce module : `Nav`,
+`nav/DrawerContent`, `sections/Hero`, `sections/FinalCta`, `sections/TheBill`,
+`pricing/PlanCards`, `product/ProductHero`, `solutions/SectorHero`.
+
+**« Book a 15-minute demo » est retiré.** Le second CTA des quatre héros visait `/demo`, une
+page qui n'a jamais existé et qu'ADR-0002 ne donne pas au site. Il n'y avait aucune
+destination réelle à lui donner : pas d'outil de prise de rendez-vous, pas d'adresse de
+contact, et `/contact` du pied de page est lui-même à construire. Un bouton qui renvoie un 404
+coûte plus cher qu'un bouton absent, donc il est parti plutôt que d'être détourné vers
+l'inscription — ce qu'il ne veut pas dire. Le rétablir demande d'abord la surface, pas un
+`href`.
+
+**À faire signer par Masdouk**, comme toute modification de copy : le retrait du second CTA et
+la ligne de `PRODUCT.md` qui l'annonçait.
+
+**`Talk to us` (Enterprise) reste pointé sur l'inscription**, sur les cartes de `/pricing`
+comme sur la souche du reçu. Ce n'est pas ce que le libellé promet, mais c'est le seul
+destinataire réel que le site possède aujourd'hui, et ça ne renvoie plus un 404. À reprendre
+en même temps que la page contact.
+
 ## Animation
 
 **C'est une landing page, pas une brochure : le mouvement est attendu.** Le plafond
@@ -632,6 +673,10 @@ vérifié), et `prefers-reduced-motion` coupe l'animation entièrement plutôt q
       343 px dans un conteneur de 312 px (`ComparisonTable.astro`). Ni l'accueil, ni `/product`, ni
       aucune des neuf pages `/solutions` ne débordent, à aucune des huit largeurs testées.
 - [ ] Arbitrer le domaine et mettre à jour `site` dans `astro.config.mjs` (actuellement `docuflow.ca`)
+- [ ] **Donner une destination réelle à la prise de rendez-vous et au contact commercial.**
+      Le second CTA « Book a 15-minute demo » est retiré des quatre héros et `Talk to us`
+      (Enterprise) pointe faute de mieux sur l'inscription. Les deux attendent la même chose :
+      une page contact ou un outil de rendez-vous. Voir « Les appels à l'action et l'application ».
 - [x] ~~Décider EN seul ou bilingue FR/EN~~ — **EN seul**, tranché le 27 juillet 2026 avant d'ajouter
       les neuf pages Solutions : huit 404 en ligne coûtaient plus cher que le rétrofit i18n.
       `src/data/solutions.ts` est façonné pour accueillir une clé de locale (`CONTENT[slug][locale]`)

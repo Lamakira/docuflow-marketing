@@ -1,4 +1,6 @@
 ---
+import { APP_SIGN_UP } from "../../data/app";
+
 interface Props {
   /** Chaque page appelle à l'action avec ses mots. Le défaut est celui de
    *  l'accueil — la copy vient du handoff validé, ne pas l'improviser ici. */
@@ -23,17 +25,14 @@ const { title = "Start with your next client project.", note } = Astro.props;
 
     <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
       <a
-        href="/signup"
+        href={APP_SIGN_UP}
         class="rounded-[6px] bg-ink px-[22px] py-[13px] font-medium text-paper transition-colors hover:bg-[#1c2740]"
       >
         Start free trial
       </a>
-      <a
-        href="/demo"
-        class="rounded-[6px] bg-white px-[22px] py-[13px] font-medium text-ink transition-colors hover:bg-paper"
-      >
-        Book a 15-minute demo
-      </a>
+      {/* Rangée d'un seul bouton : « Book a 15-minute demo » visait `/demo`, page
+          inexistante, et est retiré (#231 — voir AGENTS.md). Les classes de
+          rangée restent : le rétablir ne doit pas demander de les retrouver. */}
     </div>
 
     {note && <p class="mt-5 font-mono text-[12.5px] text-ink/75">{note}</p>}

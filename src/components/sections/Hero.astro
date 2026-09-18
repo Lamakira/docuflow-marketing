@@ -1,5 +1,6 @@
 ---
 import { CONTACTS, STAGES } from "../../data/site";
+import { APP_SIGN_UP } from "../../data/app";
 
 const CURRENT_STAGE = "IN PROGRESS";
 
@@ -71,17 +72,14 @@ const layers = [
 
       <div class="mt-8 flex flex-wrap items-center gap-3">
         <a
-          href="/signup"
+          href={APP_SIGN_UP}
           class="rounded-[6px] bg-hour px-[22px] py-[13px] font-medium text-ink transition-colors hover:bg-hour-hover"
         >
           Start free trial
         </a>
-        <a
-          href="/demo"
-          class="rounded-[6px] border border-rule bg-white px-[22px] py-[13px] font-medium transition-colors hover:border-ink"
-        >
-          Book a 15-minute demo
-        </a>
+        {/* Rangée d'un seul bouton : « Book a 15-minute demo » visait `/demo`, page
+            inexistante, et est retiré (#231 — voir AGENTS.md). Les classes de
+            rangée restent : le rétablir ne doit pas demander de les retrouver. */}
       </div>
 
       <p class="mt-4 font-mono text-[13px] text-slate">

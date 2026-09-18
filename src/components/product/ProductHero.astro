@@ -1,5 +1,6 @@
 ---
 import { PRODUCT_PILLARS } from "../../data/product";
+import { APP_SIGN_UP } from "../../data/app";
 
 /** Le compte de capacités est DÉRIVÉ de la liste, jamais recopié : la carte
  *  d'index promet la complétude de la page, elle ne peut pas mentir d'un cran
@@ -39,17 +40,14 @@ const index = PRODUCT_PILLARS.map((pillar) => ({
 
       <div class="mt-7 flex flex-wrap items-center gap-3">
         <a
-          href="/signup"
+          href={APP_SIGN_UP}
           class="rounded-[6px] bg-hour px-[22px] py-[13px] font-medium text-ink transition-colors hover:bg-hour-hover"
         >
           Start free trial
         </a>
-        <a
-          href="/demo"
-          class="rounded-[6px] border border-rule bg-white px-[22px] py-[13px] font-medium transition-colors hover:border-ink"
-        >
-          Book a 15-minute demo
-        </a>
+        {/* Rangée d'un seul bouton : « Book a 15-minute demo » visait `/demo`, page
+            inexistante, et est retiré (#231 — voir AGENTS.md). Les classes de
+            rangée restent : le rétablir ne doit pas demander de les retrouver. */}
       </div>
     </div>
 

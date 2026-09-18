@@ -1,5 +1,6 @@
 ---
 import { STACK, STACK_TOTAL, PLANS, planPrice, type Plan } from "../../data/site";
+import { appSignUpWithPlan } from "../../data/app";
 
 /** Plan pré-sélectionné au chargement. Rendu côté serveur : sans JS, le reçu
  *  affiche déjà ce plan et la souche correspondante est marquée. */
@@ -113,7 +114,7 @@ const selected = PLANS.find((p) => p.name === DEFAULT_PLAN) ?? PLANS[0];
 
                 <a
                   class="stub-cta"
-                  href={`/signup?plan=${plan.name.toLowerCase()}`}
+                  href={appSignUpWithPlan(plan)}
                   aria-label={`${plan.cta} - ${plan.name}`}
                 >
                   {plan.cta}

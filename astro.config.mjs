@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
+import { defineConfig, envField } from 'astro/config';
 
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
@@ -15,6 +15,29 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()]
   },
+
+  // L'application vit dans un autre repo et sur un autre hôte (ADR-0002), et cet
+  // hôte change d'un environnement à l'autre : l'environnement parallèle
+  // aujourd'hui, un domaine de production le jour de la bascule. Les appels à
+  // l'action passent tous par `src/data/app.ts`, qui lit cette valeur — aucune
+  // URL d'application n'est écrite dans un composant.
+  //
+  // Le défaut est l'environnement parallèle, parce que c'est le seul hôte qui
+  // existe aujourd'hui et qu'un site qui se construit sans `.env` doit mener
+  // quelque part de réel. Pointer ailleurs se fait en posant `APP_URL` au
+  // build, sans toucher au balisage. `url: true` arrête au build une valeur
+  // qui n'est pas une URL, plutôt qu'en produisant des liens cassés.
+  env: {
+    schema: {
+      APP_URL: envField.string({
+        context: 'server',
+        access: 'public',
+        url: true,
+        default: 'https://docuflow-masdouk1.replit.app',
+      }),
+    },
+  },
+
 
   integrations: [
     react(),

@@ -44,7 +44,10 @@ Time Doctor for that team. (See Evidence on Hand — this is true, but its publi
 approved.)
 
 The site's job: convince the buyer that replacing a four-tool stack with one is credible, then get them
-to start a trial. **Primary conversion: Start free trial. Secondary: Book a demo.** One primary CTA.
+to start a trial. **Primary conversion: Start free trial.** One primary CTA, et un seul :
+le « Book a 15-minute demo » secondaire est retiré des quatre héros faute de destination réelle
+(#231 — voir « Les appels à l'action et l'application » dans AGENTS.md). Il revient le jour où
+une page contact ou un outil de rendez-vous existe.
 
 ## Positioning
 

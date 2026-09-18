@@ -1,6 +1,7 @@
 ---
 import { Icon } from "astro-icon/components";
 import { PLANS, PLAN_FEATURES, planPrice, planYearly } from "../../data/site";
+import { appSignUpWithPlan } from "../../data/app";
 
 /** L'en-tête condensé et la grille vivent dans le MÊME composant, et ce n'est pas
  *  un choix de rangement : la bascule mensuel/annuel est en CSS pur (`:has()`), donc
@@ -129,7 +130,7 @@ const EAR = 30;
 
               <a
                 class="cta"
-                href={`/signup?plan=${plan.name.toLowerCase()}`}
+                href={appSignUpWithPlan(plan)}
                 aria-label={`${plan.cta} - ${plan.name}`}
               >
                 {plan.cta}
