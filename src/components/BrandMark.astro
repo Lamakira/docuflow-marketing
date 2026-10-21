@@ -2,6 +2,12 @@
 /**
  * La marque DocuFlow, « le d et le point » : un d minuscule et un point final ambre.
  * Géométrie identique à `brand/mark-light.svg` du repo applicatif (source de vérité).
+ * Source de vérité : `Lamakira/docuflow`, dossier `brand/` + `npm run brand:assets`.
+ * Les rasters de `public/` (favicon.ico, apple-touch-icon.png, icon-192/512.png,
+ * site.webmanifest) sont copiés depuis `client/public/` de ce repo : ne pas les
+ * éditer ici, régénérer là-bas puis recopier.
+ * Le blanc du d sur fond sombre est `#fff` en dur : `card-white` (DESIGN.md) n'a
+ * pas de variable CSS dans ce site.
  * Les remplissages viennent du CSS : le d prend `ink` (ou blanc sur fond sombre via
  * `onDark`), le point est toujours `hour`. Décorative par défaut — le nom accessible
  * vient du texte du wordmark à côté ; passer `label` pour une marque seule.
