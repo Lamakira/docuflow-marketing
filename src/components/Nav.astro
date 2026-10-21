@@ -1,5 +1,6 @@
 ---
 import { Icon } from "astro-icon/components";
+import BrandMark from "./BrandMark.astro";
 import SolutionsPanel from "./nav/SolutionsPanel.astro";
 import DrawerContent from "./nav/DrawerContent.astro";
 import { NAV_LINKS } from "../data/site";
@@ -30,7 +31,7 @@ const MENUS = { solutions: SOLUTIONS_MENU };
     document, donc CLS = 0. */}
 <header class="nav-header sticky top-0 z-30 flex h-(--nav-h) items-center" data-nav>
   <nav class="nav-shell" data-nav-shell aria-label="Main">
-    <a href="/" class="nav-word font-display font-extrabold tracking-[-0.02em]">DocuFlow</a>
+    <a href="/" class="nav-word font-display font-extrabold tracking-[-0.02em]"><BrandMark /><span>DocuFlow</span></a>
 
     <ul class="nav-links">
       {
@@ -167,6 +168,9 @@ const MENUS = { solutions: SOLUTIONS_MENU };
   }
 
   .nav-word {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
     font-size: 20px;
     color: var(--color-ink);
     text-decoration: none;
