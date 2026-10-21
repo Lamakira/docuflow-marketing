@@ -1,0 +1,60 @@
+---
+/**
+ * La marque DocuFlow, « le d et le point » : un d minuscule et un point final ambre.
+ * Géométrie identique à `brand/mark-light.svg` du repo applicatif (source de vérité).
+ * Source de vérité : `Lamakira/docuflow`, dossier `brand/` + `npm run brand:assets`.
+ * Les rasters de `public/` (favicon.ico, apple-touch-icon.png, icon-192/512.png,
+ * site.webmanifest) sont copiés depuis `client/public/` de ce repo : ne pas les
+ * éditer ici, régénérer là-bas puis recopier.
+ * Le blanc du d sur fond sombre est `#fff` en dur : `card-white` (DESIGN.md) n'a
+ * pas de variable CSS dans ce site.
+ * Les remplissages viennent du CSS : le d prend `ink` (ou blanc sur fond sombre via
+ * `onDark`), le point est toujours `hour`. Décorative par défaut — le nom accessible
+ * vient du texte du wordmark à côté ; passer `label` pour une marque seule.
+ */
+interface Props {
+  /** Taille CSS du carré. En `em` par défaut : la marque suit la taille du wordmark. */
+  size?: string;
+  onDark?: boolean;
+  label?: string;
+}
+
+const { size = "1.1em", onDark = false, label } = Astro.props;
+---
+
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="10 10 44 44"
+  class:list={["brand-mark", { "on-dark": onDark }]}
+  style={`width:${size};height:${size}`}
+  {...label ? { role: "img", "aria-label": label } : { "aria-hidden": "true" }}
+  focusable="false"
+>
+  <circle cx="26" cy="37" r="10" fill="none" stroke-width="6.5" class="brand-mark-d brand-mark-stroke"></circle>
+  <rect x="32.75" y="14" width="6.5" height="36.25" rx="3.25" class="brand-mark-d"></rect>
+  <circle cx="47" cy="46.25" r="4" class="brand-mark-dot"></circle>
+</svg>
+
+<style>
+  .brand-mark {
+    flex: none;
+    display: block;
+  }
+  .brand-mark-d {
+    fill: var(--color-ink);
+  }
+  .brand-mark-stroke {
+    fill: none;
+    stroke: var(--color-ink);
+  }
+  .on-dark .brand-mark-d {
+    fill: #fff;
+  }
+  .on-dark .brand-mark-stroke {
+    fill: none;
+    stroke: #fff;
+  }
+  .brand-mark-dot {
+    fill: var(--color-hour);
+  }
+</style>
