@@ -1,4 +1,6 @@
 ---
+import { evidenceRows, evidenceScore, type Evidence } from "../../../data/solutions";
+
 /** Le score de qualité de la preuve, et CE QU'IL A NOTÉ.
  *
  *  ⚠️ Le score note la QUALITÉ DU RELEVÉ, jamais la personne, et il ne modifie
@@ -23,24 +25,24 @@
  *
  * ─── Ce qui les remplace ───────────────────────────────────────────────────
  *
- * La couverture, en clair. Un score de complétude qui n'affiche pas ce qu'il a
- * compté demande au lecteur de le croire sur parole — et le lecteur de ces
- * pages est un opérateur méfiant. Les lignes sont des faits produit, elles se
- * comptent, et elles répondent à la seule question que pose un score :
- * « d'où sort ce chiffre ? »
+ * Les entrées du score, en clair. Un score de complétude qui n'affiche pas ce
+ * qu'il a compté demande au lecteur de le croire sur parole — et le lecteur de
+ * ces pages est un opérateur méfiant.
  *
- * ⚠️ Elles ne PROUVENT pas le score arithmétiquement, et ne doivent pas
- * prétendre le faire : la formule est celle du produit, pas une règle de trois
- * inventée ici. Elles montrent la matière notée, ce qui est vrai et suffisant.
+ * ⚠️ Depuis le 23 novembre 2026 elles PROUVENT le score : ce sont les entrées
+ * réelles de la formule du produit (captures contre captures attendues,
+ * doublons, activité moyenne, événements, dernier contact du poste), et le
+ * chiffre comme le verdict sont calculés par `evidenceScore()`. Les anciennes
+ * lignes (« activity windows », « idle prompts answered », « devices
+ * reporting ») n'étaient pas des entrées du score, et quatre des six cartes
+ * affichaient un chiffre impossible pour leurs propres captures.
  *
- *  `foot` porte le contexte du secteur (une semaine d'engagement, un quart de
- *  nuit, une semaine de haute saison). Le score lui-même reste ce qu'il est
- *  dans le produit : 0–100, par personne. */
+ *  `foot` porte le contexte du secteur (une semaine d'engagement, une semaine
+ *  de haute saison). Le score lui-même reste ce qu'il est dans le produit :
+ *  0–100, par personne et par période. */
 interface Props {
   label: string;
-  score: number;
-  grade: string;
-  coverage: { label: string; value: string }[];
+  evidence: Evidence;
   foot: string;
   /** Traitement Layered Paper — voir `DESIGN.md`, « Layered Paper Card ». */
   warm?: boolean;
@@ -51,14 +53,10 @@ interface Props {
   onDark?: boolean;
 }
 
-const { label, score, grade, coverage, foot, warm = false, onDark = false } = Astro.props;
+const { label, evidence, foot, warm = false, onDark = false } = Astro.props;
 
-if (coverage.length < 3) {
-  throw new Error(
-    `[solutions] ScoreMock attend au moins 3 lignes de couverture, ${coverage.length} reçues. ` +
-      `Un score sans ce qu'il a noté est un chiffre asséné — c'est précisément ce que ces lignes remplacent.`
-  );
-}
+const { score, grade } = evidenceScore(evidence);
+const coverage = evidenceRows(evidence);
 
 /** ⚠️ Le verdict se colore, et il ne se colore pas toujours en vert.
  *
@@ -75,9 +73,9 @@ if (coverage.length < 3) {
  *  C'est aussi déjà le badge WEAK de `ThinWeekArt` et de `SilenceMock` — trois
  *  dessins, un seul verdict, une seule couleur.
  *
- *  Seuil sur le SCORE et non sur la chaîne `grade` : un libellé ajouté plus tard
- *  (`PARTIAL`…) tombe du bon côté sans qu'on y revienne. */
-const confirmed = score >= 70;
+ *  Seul STRONG (≥ 75) est confirmé : le seuil suit le verdict du produit, donc
+ *  un MODERATE ne peut plus sortir en vert. */
+const confirmed = grade === "STRONG";
 ---
 
 <div

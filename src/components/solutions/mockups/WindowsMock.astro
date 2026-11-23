@@ -1,26 +1,32 @@
 ---
-/** Les fenêtres de 60 secondes — l'atome de la mesure, comptable.
+import CaptureThumb from "../../CaptureThumb.astro";
+import { CAPTURE_VARIANTS } from "../../captures";
+import { minutesOf } from "../../../data/solutions";
+
+/** Les captures d'une heure, chacune avec son activité — l'atome de la mesure,
+ * comptable.
  *
  * ─── Ce que la section demande ─────────────────────────────────────────────
  *
- * Le lede d'`employee-productivity` ouvre là-dessus : « Activity is measured in
- * 60-second windows and idle time is flagged with a prompt, never deduced
- * quietly. A visible indicator shows when the timer is running. »
+ * Le lede d'`employee-productivity` ouvre là-dessus : « Each screenshot carries
+ * the keyboard and mouse activity of the minute before it, and by default the
+ * agent asks before it pauses for idle. A visible indicator shows when the
+ * timer is running. »
  *
- * Trois faits, trois choses à dessiner : la granularité, le ralenti signalé, et
- * l'indicateur visible. Une carte de score n'en portait aucun — elle posait
- * `88/100` sur vingt-quatre barres anonymes, exactement le défaut relevé en
- * revue (`docs/mockup-corrections.md`).
+ * Trois faits, trois choses à dessiner : la capture et son activité, le
+ * ralenti, et l'indicateur visible.
  *
- * ─── Pourquoi une grille et pas un histogramme ─────────────────────────────
+ * ─── Pourquoi des vignettes et plus une grille de soixante cases ───────────
  *
- * Parce qu'elle SE COMPTE. Soixante carrés font une heure, et le lecteur peut
- * le vérifier sur la carte — c'est la première exigence du test d'acceptation.
- * Un histogramme de hauteurs variables ne se compte pas : il se regarde, et un
- * opérateur méfiant ne croit pas ce qu'il ne peut pas vérifier.
+ * La première version dessinait soixante « fenêtres d'une minute ». L'agent
+ * n'enregistre pas de série minute par minute (23 novembre 2026) : il prend une
+ * capture à intervalle aléatoire et y joint l'activité clavier / souris de la
+ * minute qui précède. La carte montre donc ce que montre la galerie du produit
+ * — des vignettes horodatées, chacune avec son pourcentage.
  *
- * Le compte de fenêtres et celui des ralentis sont DÉRIVÉS du tableau. Ajouter
- * une fenêtre au ralenti met l'étiquette à jour toute seule.
+ * Elle SE COMPTE toujours : le nombre de captures, l'activité moyenne et la
+ * durée du ralenti sont DÉRIVÉS des données. Le ralenti est un TROU entre deux
+ * captures, situé à son heure, pas une rangée de cases.
  *
  * ⚠️ L'indicateur visible est SUR la carte, en haut, comme il est en haut du
  * produit. Sur une page dont le H1 est « Measure openly », la visibilité de la
@@ -29,7 +35,8 @@
 interface Props {
   label: string;
   indicator: string;
-  cells: (number | null)[];
+  captures: { at: string; activity: number }[];
+  idle?: { from: string; to: string };
   foot: string;
   /** Traitement Layered Paper — voir `DESIGN.md`, « Layered Paper Card ». */
   warm?: boolean;
@@ -37,44 +44,49 @@ interface Props {
   onDark?: boolean;
 }
 
-const { label, indicator, cells, foot, warm = false, onDark = false } = Astro.props;
+const { label, indicator, captures, idle, foot, warm = false, onDark = false } = Astro.props;
 
-/** Une heure pile. Le dessin ne vaut que si le compte tombe juste : sa promesse
- *  est qu'on peut le vérifier à l'écran. */
-const WINDOWS_PER_HOUR = 60;
-
-if (cells.length !== WINDOWS_PER_HOUR) {
+if (captures.length < 6) {
   throw new Error(
-    `[solutions] WindowsMock attend ${WINDOWS_PER_HOUR} fenêtres (une heure), ${cells.length} reçues. ` +
-      `La carte annonce « ${WINDOWS_PER_HOUR} windows · one hour » et ce compte doit être vérifiable à l'écran : ` +
-      `c'est toute la raison d'être d'une grille plutôt que d'un histogramme.`
+    `[solutions] WindowsMock attend au moins 6 captures, ${captures.length} reçues. ` +
+      `Une heure à l'intervalle par défaut (3–5 min) en compte une douzaine ou plus.`
   );
 }
 
-const idle = cells.filter((value) => value === null).length;
-const active = cells.length - idle;
+/** `HH:MM` → minutes depuis minuit. `minutesOf` lit `H:MM`, ce qui couvre aussi
+ *  une heure d'horloge, et lève sur une valeur illisible. */
+const clock = (value: string) => minutesOf(value);
 
-/** Deux tons seulement : enregistré, ou au ralenti. La question de cette carte
- *  est « est-ce mesuré », pas « combien ». Une échelle de vert ferait un damier
- *  — le bruit retiré de `SilenceMock` pour la même raison. L'intensité passe par
- *  l'opacité, qui module sans introduire de troisième couleur. */
-const shade = (value: number) => 0.35 + (value / 100) * 0.65;
+const average = Math.round(
+  captures.reduce((sum, capture) => sum + capture.activity, 0) / captures.length
+);
+const idleMinutes = idle ? clock(idle.to) - clock(idle.from) : 0;
 
-/** ⚠️ DÉCOUPÉ EN QUARTS D'HEURE, et étiqueté.
- *
- *  Soixante carrés d'un bloc se lisent comme un graphe de contributions — le
- *  motif générique par excellence, et le reproche exact de la revue. Quatre
- *  rangées nommées `:00 :15 :30 :45` en font une HORLOGE : la structure du
- *  temps devient visible, le ralenti se situe (« vers la demie »), et le compte
- *  de soixante se vérifie d'un coup d'oeil — quatre fois quinze.
- *
- *  Même leçon que l'axe de `SilenceMock` : une grille sans repère de temps ne
- *  se situe pas, donc elle ne se lit pas. */
-const QUARTER = 15;
-const quarters = Array.from({ length: cells.length / QUARTER }, (_, row) => ({
-  label: `:${String(row * QUARTER).padStart(2, "0")}`,
-  cells: cells.slice(row * QUARTER, (row + 1) * QUARTER),
-}));
+if (idle && idleMinutes <= 0) {
+  throw new Error(
+    `[solutions] WindowsMock : le ralenti ne progresse pas dans le temps (${idle.from} → ${idle.to}).`
+  );
+}
+
+if (idle && captures.some((capture) => clock(capture.at) > clock(idle.from) && clock(capture.at) < clock(idle.to))) {
+  throw new Error(
+    `[solutions] WindowsMock : une capture tombe pendant le ralenti ${idle.from} → ${idle.to}. ` +
+      `Le trou doit être un trou.`
+  );
+}
+
+/** La rangée de vignettes, avec le trou du ralenti inséré à son heure. */
+type Tile = { kind: "shot"; at: string; activity: number; n: number } | { kind: "idle" };
+const tiles: Tile[] = [];
+let idlePlaced = !idle;
+captures.forEach((capture, n) => {
+  if (!idlePlaced && idle && clock(capture.at) >= clock(idle.to)) {
+    tiles.push({ kind: "idle" });
+    idlePlaced = true;
+  }
+  tiles.push({ kind: "shot", at: capture.at, activity: capture.activity, n });
+});
+if (!idlePlaced) tiles.push({ kind: "idle" });
 ---
 
 <div
@@ -93,40 +105,52 @@ const quarters = Array.from({ length: cells.length / QUARTER }, (_, row) => ({
     </span>
   </header>
 
-  {/* Soixante carrés, en quatre quarts d'heure nommés. Comptables, c'est le
-      point — et situables, ce qui est l'autre moitié du point. */}
-  <div class="grid" aria-hidden="true">
+  {/* Les captures de l'heure, horodatées, chacune avec l'activité de la minute
+      qui la précède. Le ralenti est un trou à son heure. */}
+  <ol class="tiles">
     {
-      quarters.map((quarter) => (
-        <div class="quarter">
-          <span class="quarter-label">{quarter.label}</span>
-          <div class="quarter-cells">
-            {quarter.cells.map((value) =>
-              value === null ? (
-                <span class="cell cell--idle" />
-              ) : (
-                <span class="cell" style={`opacity:${shade(value)}`} />
-              )
-            )}
-          </div>
-        </div>
-      ))
+      tiles.map((tile) =>
+        tile.kind === "shot" ? (
+          <li class="tile" data-use-case-motion-row>
+            <span class="thumb" aria-hidden="true">
+              <CaptureThumb variant={CAPTURE_VARIANTS[tile.n % CAPTURE_VARIANTS.length]} />
+            </span>
+            <span class="tile-meta">
+              <span class="tile-at">{tile.at}</span>
+              <span class="tile-activity">{tile.activity}%</span>
+            </span>
+          </li>
+        ) : (
+          <li class="tile tile--idle" data-use-case-motion-row>
+            <span class="idle-box">
+              <span class="idle-range">
+                {idle?.from}–{idle?.to}
+              </span>
+              <span class="idle-note">idle · not counted</span>
+            </span>
+          </li>
+        )
+      )
     }
-  </div>
+  </ol>
 
   <dl class="legend">
     <div class="legend-row">
-      <dt><span class="swatch swatch--active" aria-hidden="true"></span>Recorded</dt>
-      <dd>{active} windows</dd>
+      <dt><span class="swatch swatch--active" aria-hidden="true"></span>Average activity</dt>
+      <dd>{average}%</dd>
     </div>
-    <div class="legend-row">
-      <dt><span class="swatch swatch--idle" aria-hidden="true"></span>Idle · prompted</dt>
-      <dd>{idle} windows</dd>
-    </div>
+    {
+      idle && (
+        <div class="legend-row">
+          <dt><span class="swatch swatch--idle" aria-hidden="true"></span>Idle · asked, not counted</dt>
+          <dd>{idleMinutes} min</dd>
+        </div>
+      )
+    }
   </dl>
 
   <footer class="foot">
-    <span class="count">{cells.length} windows</span>
+    <span class="count">{captures.length} screenshots</span>
     <span class="note">{foot}</span>
   </footer>
 </div>
@@ -182,56 +206,98 @@ const quarters = Array.from({ length: cells.length / QUARTER }, (_, row) => ({
     background: var(--color-live);
   }
 
-  /* Quatre quarts d'heure étiquetés, quinze fenêtres chacun. Un carré par
-     fenêtre de 60 secondes. */
-  .grid {
+  /* Les vignettes de l'heure. Quatre par rangée : assez grandes pour se lire
+     comme des écrans, assez nombreuses pour qu'une heure se compte. */
+  .tiles {
     display: grid;
-    gap: 5px;
-    margin-top: 16px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
   }
 
-  .quarter {
+  .tile {
     display: grid;
-    grid-template-columns: 26px minmax(0, 1fr);
-    align-items: center;
-    gap: 9px;
+    gap: 4px;
+    min-width: 0;
   }
 
-  .quarter-label {
+  .thumb {
+    display: block;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border: 1px solid var(--color-rule);
+    border-radius: 3px;
+  }
+
+  .windows-mock--warm .thumb {
+    border-color: var(--color-paper-rule);
+    --cap-surface: var(--color-paper-surface);
+    --cap-chrome: var(--color-paper-chip);
+    --cap-mark: var(--color-paper-layer-light);
+  }
+
+  .tile-meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px;
     font-family: var(--font-mono);
     font-size: 9px;
-    color: var(--color-slate);
     font-variant-numeric: tabular-nums;
   }
 
-  .windows-mock--warm .quarter-label {
+  .tile-at {
+    color: var(--color-slate);
+  }
+
+  .windows-mock--warm .tile-at {
     color: var(--color-paper-label);
   }
 
-  .quarter-cells {
-    display: grid;
-    grid-template-columns: repeat(15, minmax(0, 1fr));
-    gap: 3px;
-  }
-
-  /* Rectangles plutôt que carrés : une fenêtre est une TRANCHE DE TEMPS, et une
-     rangée de carrés pleins fait le pavé de graphe de contributions qu'on
-     cherche à éviter. */
-  .cell {
-    height: 14px;
-    border-radius: 1px;
-    background: var(--color-live);
+  .tile-activity {
+    font-weight: 600;
+    color: var(--color-live-on-light);
   }
 
   /* ⚠️ Le ralenti n'est pas une case vide. Le produit le SIGNALE — il demande
-     au lieu de déduire — donc la case porte une marque plutôt qu'un blanc. Une
-     case vide dirait « rien enregistré », ce qui est l'histoire de
-     `SilenceMock` et pas celle-ci. */
-  .cell--idle {
-    height: 14px;
-    border-radius: 1px;
-    background: var(--color-hour);
-    opacity: 0.55;
+     avant de mettre en pause — donc le trou porte une marque et son heure. Un
+     blanc dirait « rien enregistré », ce qui est l'histoire de `SilenceMock`
+     et pas celle-ci. */
+  .idle-box {
+    display: grid;
+    aspect-ratio: 16 / 10;
+    align-content: center;
+    gap: 2px;
+    border: 1px dashed var(--color-hour);
+    border-radius: 3px;
+    padding: 4px;
+    text-align: center;
+  }
+
+  .idle-range {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .idle-note {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    color: var(--color-slate);
+  }
+
+  .windows-mock--warm .idle-note {
+    color: var(--color-paper-label);
+  }
+
+  @media (max-width: 560px) {
+    .tiles {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
   }
 
   .legend {

@@ -18,6 +18,13 @@
  * sur la facture, ce qui EST la réponse à « itemiser invite le client à tout
  * auditer ».
  *
+ * ⚠️ Corrigé le 23 novembre 2026 : DocuFlow ne produit ni facture ni ligne de
+ * facture (aucun montant, taux ni état « facturé » dans l'application). Le dessin
+ * ne dit donc plus « Disclosure control » ni « Selected for invoice », qui
+ * faisaient de la sélection une fonction du produit : la ligne est écrite par le
+ * client dans SON outil de facturation, le relevé détaillé reste dans DocuFlow.
+ * « Editable history » est retiré : une entrée ne se modifie pas en v2.
+ *
  * ⚠️ Les valeurs sont celles de la page (`solutions.ts`, `client-billing`) :
  * 42 entrées et 3 tâches viennent de la maquette du héros, la ligne à 4 200 $ du
  * scénario et de `InvoiceArt`. Trois endroits, une seule vérité — si l'une bouge,
@@ -45,7 +52,7 @@ const ROWS = [
     desk illustration but composed around selection rather than traceability. */}
 <div class="disclosure-desk" data-art>
   <header class="desk-head" data-art-in>
-    <span class="desk-label">Disclosure control</span>
+    <span class="desk-label">Record and invoice</span>
     <span class="desk-note">You choose what leaves</span>
   </header>
 
@@ -76,7 +83,7 @@ const ROWS = [
 
       <footer class="held-foot" data-art-in>
         <span class="lock-dot" aria-hidden="true"></span>
-        Editable history stays inside
+        The detail stays in DocuFlow
       </footer>
     </section>
 
@@ -84,7 +91,7 @@ const ROWS = [
       <path data-art-draw d="M278 145 C360 145 353 188 425 188" />
     </svg>
 
-    <span class="choice-label" data-art-pop>Selected for invoice</span>
+    <span class="choice-label" data-art-pop>You write it</span>
 
     <section class="sent-card" aria-label="Single line sent on the invoice">
       <header class="head" data-art-in>
@@ -98,7 +105,7 @@ const ROWS = [
         <span class="line-total">$4,200</span>
       </div>
 
-      <footer class="sent-foot" data-art-in>Invoice · March</footer>
+      <footer class="sent-foot" data-art-in>Your invoice · March</footer>
     </section>
   </div>
 </div>

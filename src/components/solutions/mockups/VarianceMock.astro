@@ -1,12 +1,17 @@
 ---
-/** Budget contre réel, ligne par ligne — et la ligne qui déborde.
+/** Le budget du projet, et le réel tâche par tâche — et la tâche qui pèse.
  *
  * ─── Ce que la section demande ─────────────────────────────────────────────
  *
  * Le scénario de `/solutions/project-profitability` s'appelle « How an overrun
  * gets caught early », et sa phrase centrale est : « The hours are already
- * attributed, so THE CAUSE IS ON THE SAME SCREEN: coordination 62 h against
- * 20 h budgeted. »
+ * attributed to tasks: 62 h of the 249 sit on submittals and RFIs. »
+ *
+ * ⚠️ UN SEUL BUDGET, celui du projet (23 novembre 2026). La première version
+ * donnait un budget à chaque ligne ; or les tâches n'ont pas d'estimation dans
+ * DocuFlow, seul le projet porte un budget d'heures. Le réel par tâche existe
+ * (analytique admin), le budget par tâche non. La ligne marquée est donc celle
+ * que nomme la copy (`flag`), et non « celle qui déborde de son budget ».
  *
  * La carte rendait une fiche `record` — la même que le héros ET que le pilier
  * 01, aux mêmes valeurs — dont la jauge affichait `78%`. Un pourcentage ne
@@ -15,10 +20,10 @@
  *
  * ─── Ce qui rend cette carte vérifiable ────────────────────────────────────
  *
- * ⚠️ LES DEUX TOTAUX ET LE POURCENTAGE SONT DÉRIVÉS DES LIGNES.
+ * ⚠️ LE RÉEL TOTAL ET LE POURCENTAGE SONT DÉRIVÉS DES LIGNES.
  *
- * Le lecteur peut additionner la colonne et retrouver les `320 h` et `249 h`
- * que cite le texte, puis vérifier que 249/320 fait bien les `78%` de la copy.
+ * Le lecteur peut additionner la colonne et retrouver les `249 h` que cite le
+ * texte, puis vérifier que 249/320 fait bien les `78%` de la copy.
  * Sur une page dont le H1 est « Every job was profitable until somebody added
  * it up », une carte dont les lignes ne s'additionnent pas serait la faute la
  * plus embarrassante possible — et c'est exactement le genre d'écart qu'un
@@ -35,7 +40,9 @@
 interface Props {
   title: string;
   period: string;
-  lines: { label: string; budget: number; actual: number }[];
+  /** Le budget du projet, en heures. */
+  budget: number;
+  lines: { label: string; actual: number; flag?: boolean }[];
   foot: string;
   /** Traitement Layered Paper — voir `DESIGN.md`, « Layered Paper Card ». */
   warm?: boolean;
@@ -43,28 +50,30 @@ interface Props {
   onDark?: boolean;
 }
 
-const { title, period, lines, foot, warm = false, onDark = false } = Astro.props;
+const { title, period, budget, lines, foot, warm = false, onDark = false } = Astro.props;
 
 if (lines.length < 3) {
   throw new Error(
     `[solutions] VarianceMock attend au moins 3 lignes, ${lines.length} reçues. ` +
-      `Avec moins, la ligne qui déborde n'a rien contre quoi ressortir et la carte redevient une jauge.`
+      `Avec moins, la ligne marquée n'a rien contre quoi ressortir et la carte redevient une jauge.`
   );
 }
 
-const budgetTotal = lines.reduce((sum, line) => sum + line.budget, 0);
+/** Une seule ligne marquée : c'est « la cause », au singulier, et deux marques
+ *  ambre en feraient une liste de problèmes au lieu d'un coupable. */
+if (lines.filter((line) => line.flag).length !== 1) {
+  throw new Error(
+    `[solutions] VarianceMock attend exactement une ligne \`flag\` — celle que nomme la copy.`
+  );
+}
+
 const actualTotal = lines.reduce((sum, line) => sum + line.actual, 0);
-const percent = Math.round((actualTotal / budgetTotal) * 100);
+const percent = Math.round((actualTotal / budget) * 100);
 
-/** La ligne qui déborde le plus, en écart ABSOLU. Une seule est marquée : c'est
- *  « la cause », au singulier, et deux marques ambre en feraient une liste de
- *  problèmes au lieu d'un coupable. */
-const overruns = lines.map((line) => line.actual - line.budget);
-const worst = overruns.indexOf(Math.max(...overruns));
-
-/** Largeur de barre relative au plus grand des deux totaux de ligne, pour que
- *  budget et réel se comparent à la même échelle d'une ligne à l'autre. */
-const widest = Math.max(...lines.map((line) => Math.max(line.budget, line.actual)));
+/** Part de chaque tâche dans le réel, et largeur de barre relative à la plus
+ *  grosse tâche. */
+const share = (actual: number) => Math.round((actual / actualTotal) * 100);
+const widest = Math.max(...lines.map((line) => line.actual));
 ---
 
 <div
@@ -80,19 +89,18 @@ const widest = Math.max(...lines.map((line) => Math.max(line.budget, line.actual
 
   <ul class="lines">
     {
-      lines.map((line, index) => (
-        <li class:list={["line", { "line--over": index === worst }]} data-use-case-motion-row>
+      lines.map((line) => (
+        <li class:list={["line", { "line--over": line.flag }]} data-use-case-motion-row>
           {/* Libellé et chiffres d'abord : ils partagent la première rangée de
-              la grille. Les barres passent dessous, sur toute la largeur. */}
+              la grille. La barre passe dessous, sur toute la largeur. */}
           <span class="line-label">{line.label}</span>
 
           <span class="line-figures">
-            <span class="line-budget">{line.budget} h</span>
+            <span class="line-budget">{share(line.actual)}%</span>
             <span class="line-actual">{line.actual} h</span>
           </span>
 
           <span class="bars" aria-hidden="true">
-            <span class="bar bar--budget" style={`width:${(line.budget / widest) * 100}%`} />
             <span class="bar bar--actual" style={`width:${(line.actual / widest) * 100}%`} />
           </span>
         </li>
@@ -100,12 +108,12 @@ const widest = Math.max(...lines.map((line) => Math.max(line.budget, line.actual
     }
   </ul>
 
-  {/* Les totaux, dérivés. Ce sont eux qui rendent la carte vérifiable : ils
-      doivent retomber sur les chiffres que cite le texte de la section. */}
+  {/* Le budget du projet, puis le réel et le pourcentage, dérivés des lignes.
+      Ils doivent retomber sur les chiffres que cite le texte de la section. */}
   <footer class="totals">
     <div class="total">
-      <span class="total-label">Budgeted</span>
-      <span class="total-value">{budgetTotal} h</span>
+      <span class="total-label">Budget</span>
+      <span class="total-value">{budget} h</span>
     </div>
     <div class="total">
       <span class="total-label">Actual</span>
@@ -214,9 +222,8 @@ const widest = Math.max(...lines.map((line) => Math.max(line.budget, line.actual
     color: var(--color-ink);
   }
 
-  /* Deux barres empilées, même échelle : le réel sous le budget. Quand le réel
-     dépasse, il déborde visiblement de la barre au-dessus — c'est la seule
-     information que ce couple doit porter. */
+  /* Une barre par tâche, à l'échelle de la plus grosse : le réel seul, puisque
+     les tâches n'ont pas de budget. */
   .bars {
     display: grid;
     grid-column: 1 / -1;
@@ -229,22 +236,14 @@ const widest = Math.max(...lines.map((line) => Math.max(line.budget, line.actual
     border-radius: 999px;
   }
 
-  .bar--budget {
-    background: var(--color-rule);
-  }
-
-  .variance-mock--warm .bar--budget {
-    background: var(--color-paper-track);
-  }
-
   /* Le réel est vert : c'est du temps CONSTATÉ par le système, pas une cible.
      « The Two Voices Rule ». */
   .bar--actual {
     background: var(--color-live);
   }
 
-  /* La ligne qui déborde, et elle seule. Ambre — l'état présent qui appelle une
-     action, ici une variation à soulever en semaine 2. */
+  /* La ligne que nomme la copy, et elle seule. Ambre — l'état présent qui
+     appelle une action, ici une variation à soulever en semaine 2. */
   .line--over .bar--actual {
     background: var(--color-hour);
   }

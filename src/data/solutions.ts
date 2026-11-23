@@ -94,31 +94,28 @@ export type Mockup =
       entries: { task: string; duration: string }[];
       foot: string;
     }
-  /** Une ligne de facture contestée, rapprochée des tâches qui la justifient. */
+  /** La question d'un client sur une ligne de SA facture, en face des entrées
+   *  du projet qui y répondent. DocuFlow n'écrit aucune facture et ne stocke
+   *  aucun montant : la ligne est le libellé que le client cite, jamais une
+   *  donnée du produit. Le total d'heures est dérivé des tâches. */
   | {
       kind: "query";
       client: string;
-      invoice: string;
-      amount: string;
-      tasks: { name: string; hours: string }[];
+      line: string;
+      /** `hours` en heures décimales. Le total en est dérivé. */
+      tasks: { name: string; hours: number }[];
       foot: string;
     }
-  /** Le score de qualité de la preuve. Note le RELEVÉ, jamais la personne. */
+  /** Le score de qualité de la preuve. Note le RELEVÉ, jamais la personne.
+   *
+   *  Ne porte que les ENTRÉES RÉELLES du score (`Evidence`) : le chiffre et le
+   *  verdict en sont calculés par `evidenceScore()`, et les lignes « What was
+   *  graded » sont ces mêmes entrées. Un score retapé à côté de lignes qui ne
+   *  l'atteignent pas n'est donc plus possible. */
   | {
       kind: "score";
       label: string;
-      score: number;
-      grade: string;
-      /** CE QUE LE SCORE A NOTÉ. Obligatoire, et c'est le point.
-       *
-       *  La carte affichait le chiffre au-dessus de huit vignettes rayées
-       *  vides : un score asséné, appuyé sur des rectangles de gabarit. C'est
-       *  la définition du wireframe abstrait que la revue refuse.
-       *
-       *  Un score de complétude se justifie par ce qu'il a compté. Ces lignes
-       *  sont donc des faits produit — captures, fenêtres, prompts, postes —
-       *  et elles se lisent, se comptent et se vérifient. */
-      coverage: { label: string; value: string }[];
+      evidence: Evidence;
       foot: string;
     }
   /** LA SEMAINE ENREGISTRÉE, jour par jour — le relevé qu'on peut compter.
@@ -131,30 +128,30 @@ export type Mockup =
    *
    *  Ici les jours sont nommés, chacun porte ses heures, son activité et ses
    *  captures, et le total se DÉDUIT des journées. Le score cesse d'être un
-   *  chiffre posé sur un décor : il note une semaine que le lecteur vient de
-   *  compter lui-même. */
+   *  chiffre posé sur un décor : il est CALCULÉ (`evidenceScore()`) sur la
+   *  semaine que le lecteur vient de compter lui-même. */
   | {
       kind: "week";
       label: string;
-      score: number;
-      grade: string;
-      /** `hours` en `H:MM`. Le total de la semaine en est dérivé — il ne
-       *  s'écrit nulle part, donc il ne peut pas mentir.
+      /** `hours` en `H:MM`, `activity` en %. Le temps suivi, le nombre de
+       *  captures et l'activité moyenne de la semaine en sont dérivés.
        *
-       *  `tag` est optionnel et porte le LIEU de la journée (`OFFICE`, `HOME`).
-       *  Il n'existe que pour `/solutions/hybrid-teams`, dont le H1 — « The desk
-       *  and the kitchen table on one timesheet » — tient entièrement dans le
-       *  fait qu'une seule feuille couvre deux endroits. Une page qui ne parle
-       *  pas de lieu ne le passe pas, et la colonne disparaît. */
-      days: { day: string; hours: string; activity: number; shots: number; tag?: string }[];
+       *  Pas de lieu par journée : DocuFlow n'enregistre aucun lieu (ni dans les
+       *  entrées de temps, ni dans les événements de l'agent). La colonne
+       *  `OFFICE` / `HOME` de `hybrid-teams` a été retirée le 23 novembre 2026. */
+      days: { day: string; hours: string; activity: number; shots: number }[];
+      /** Les deux entrées du score que les journées ne portent pas. */
+      duplicates: number;
+      seenDaysAgo: number;
       foot: string;
     }
   /** CE QUI S'ATTACHE AU DOSSIER — heures, tâches, notes, documents.
    *
    *  Le pilier « The line » de `client-billing` dit : « Hours, tasks, notes and
-   *  documents ATTACH TO THE CLIENT PROJECT as work happens. At month end, the
-   *  invoice becomes A VIEW OF THAT RECORD. » Quatre natures nommées, et la
-   *  carte y rendait la fiche `record` du héros, aux mêmes valeurs.
+   *  documents ATTACH TO THE CLIENT PROJECT as work happens. » Quatre natures
+   *  nommées, et la carte y rendait la fiche `record` du héros, aux mêmes
+   *  valeurs. (DocuFlow n'écrit pas la facture : la carte montre le dossier
+   *  d'où les lignes sont tirées, jamais une facture.)
    *
    *  Le total est dérivé : c'est ce qui rend « one record » vérifiable au lieu
    *  d'être une figure de style. */
@@ -165,14 +162,14 @@ export type Mockup =
       rows: { label: string; count: number; unit: string }[];
       foot: string;
     }
-  /** LA BIBLIOTHÈQUE — ce qui est écrit, ce qui est dit, et le fait que les deux
-   *  se cherchent.
+  /** LA BIBLIOTHÈQUE — ce qui est écrit, ce qui est dit, et le fait que
+   *  l'assistant lit les deux.
    *
-   *  Le pilier « The library » d'`onboarding-documentation` dit :
-   *  « Search covers WHAT WAS SAID AND TYPED. » C'est la seule promesse de la
-   *  page qu'aucune autre surface ne porte — et la carte y rendait une TROISIÈME
-   *  copie de la réponse citée, identique au héros et au scénario, question et
-   *  sources comprises.
+   *  Le pilier « The library » d'`onboarding-documentation` dit que l'assistant
+   *  répond depuis les pages ET les transcriptions Loom / Fathom. (La RECHERCHE,
+   *  elle, ne trouve que des titres et des noms de fichier : elle ne couvre pas
+   *  ce qui a été dit.) La carte y rendait une TROISIÈME copie de la réponse
+   *  citée, identique au héros et au scénario, question et sources comprises.
    *
    *  Le total indexé est dérivé : deux natures de contenu, un seul index. */
   | {
@@ -187,7 +184,7 @@ export type Mockup =
    *
    *  Le scénario s'appelle « How a question stops being an interruption », et
    *  son arc est un CONTRASTE : l'ancienne route passe par une personne
-   *  occupée, la nouvelle par la recherche. Une carte de réponse citée ne
+   *  occupée, la nouvelle par l'assistant. Une carte de réponse citée ne
    *  montre que la seconde — elle ne peut pas montrer ce qu'on évite.
    *
    *  ⚠️ Aucune durée inventée : `20 seconds` et `$740` sont dans la copy de la
@@ -220,33 +217,37 @@ export type Mockup =
       tasks: { state: string; count: number }[];
       foot: string;
     }
-  /** BUDGET CONTRE RÉEL, LIGNE PAR LIGNE — et la ligne qui déborde.
+  /** LE BUDGET DU PROJET ET LE RÉEL PAR TÂCHE — et la tâche qui pèse.
    *
-   *  Le scénario dit « the hours are already attributed, so THE CAUSE IS ON THE
-   *  SAME SCREEN ». Une jauge à 78 % ne montre aucune cause : elle montre un
-   *  pourcentage. Il faut les lignes, et il faut qu'elles s'additionnent.
+   *  Le scénario dit « the hours are already attributed to tasks ». Une jauge à
+   *  78 % ne montre aucune cause : elle montre un pourcentage. Il faut les
+   *  lignes, et il faut qu'elles s'additionnent.
    *
-   *  ⚠️ Les deux totaux et le pourcentage sont DÉRIVÉS des lignes. C'est ce qui
-   *  rend la carte vérifiable : le lecteur peut additionner la colonne et
-   *  retrouver les `320 h` et `249 h` que cite le texte. Un total retapé
-   *  au-dessus de lignes qui ne tombent pas juste, sur une page dont le H1 est
-   *  « Every job was profitable until somebody added it up », serait la faute la
-   *  plus embarrassante du site. */
+   *  ⚠️ UN SEUL budget, celui du projet, en heures. Les tâches n'ont pas
+   *  d'estimation dans DocuFlow : un budget par ligne serait une fonction
+   *  inventée. Le réel par tâche, lui, existe (analytique admin).
+   *
+   *  ⚠️ Le réel total et le pourcentage sont DÉRIVÉS des lignes : le lecteur
+   *  peut additionner la colonne et retrouver les `249 h` et `78 %` que cite le
+   *  texte. `flag` marque la ligne que nomme la copy — une seule. */
   | {
       kind: "variance";
       title: string;
       period: string;
-      /** `budget` et `actual` en heures entières. */
-      lines: { label: string; budget: number; actual: number }[];
+      /** Le budget du projet, en heures entières. */
+      budget: number;
+      /** `actual` en heures entières. */
+      lines: { label: string; actual: number; flag?: boolean }[];
       foot: string;
     }
-  /** LES FENÊTRES DE 60 SECONDES — l'atome de la mesure, comptable.
+  /** LES CAPTURES D'UNE HEURE, chacune avec son activité — l'atome de la
+   *  mesure, comptable.
    *
-   *  Le lede d'`employee-productivity` ouvre sur « activity is measured in
-   *  60-second windows ». La grille montre donc UNE HEURE, soit soixante
-   *  fenêtres qu'on peut littéralement compter à l'écran. C'est la réponse la
-   *  plus directe au reproche fait aux cartes de score : un histogramme de
-   *  vingt-quatre barres anonymes ne se compte pas, soixante carrés si.
+   *  L'agent n'enregistre pas une série minute par minute : il prend une
+   *  capture à intervalle aléatoire et y joint l'activité clavier / souris de
+   *  la minute qui précède. La carte montre donc ce que montre la galerie du
+   *  produit — des vignettes horodatées, chacune avec son pourcentage — et le
+   *  ralenti comme un TROU entre deux captures, pas comme des cases vides.
    *
    *  L'indicateur visible est SUR la carte, pas en légende : sur une page dont
    *  le H1 est « Measure openly », la visibilité de la mesure doit être une
@@ -257,18 +258,21 @@ export type Mockup =
       /** Le libellé de l'indicateur visible — « Recording », jamais un verbe
        *  passif. C'est la garantie no 1 de la page. */
       indicator: string;
-      /** Une valeur d'activité par fenêtre. `null` = fenêtre au ralenti, qui a
-       *  déclenché un prompt. Leur nombre est affiché et DÉRIVÉ. */
-      cells: (number | null)[];
+      /** Une entrée par capture, dans l'ordre. `at` en `HH:MM`, `activity` en %.
+       *  Le compte et l'activité moyenne sont DÉRIVÉS. */
+      captures: { at: string; activity: number }[];
+      /** Le ralenti de l'heure, s'il y en a un. Sa durée est dérivée. */
+      idle?: { from: string; to: string };
       foot: string;
     }
-  /** UN RALENTI, PAS À PAS — l'événement que le produit ne déduit jamais.
+  /** UN RALENTI, PAS À PAS — l'agent demande avant de mettre en pause.
    *
    *  Le scénario d'`employee-productivity` s'appelle « How an idle stretch is
    *  handled » : c'est un ENCHAÎNEMENT, pas un état. Chaque étape porte son
    *  heure, et la durée non comptée se DÉDUIT de la première et de la dernière
-   *  — le chiffre qui rassure ne peut donc pas être arrondi en faveur du
-   *  produit.
+   *  — le chiffre ne peut donc pas être arrondi en faveur du produit. Les
+   *  seules réponses du produit sont « I'm back » et « I'm not working » :
+   *  aucune annotation, rien de stocké sur la réponse.
    *
    *  Distinct de `windows`, qui montre la mesure en continu : ici on est zoomé
    *  sur un seul événement. Même écart de focale qu'entre `week` et `silence`
@@ -299,8 +303,9 @@ export type Mockup =
       kind: "reconcile";
       label: string;
       /** Les blocs de la journée, dans l'ordre. `offline` marque ceux qui ont
-       *  été mis en file au lieu d'être envoyés tout de suite. */
-      blocks: { at: string; place: string; task: string; hours: string; offline?: boolean }[];
+       *  été mis en file au lieu d'être envoyés tout de suite. Pas de lieu :
+       *  DocuFlow n'en enregistre aucun. */
+      blocks: { at: string; task: string; hours: string; offline?: boolean }[];
       /** L'heure de reconnexion. La bascule du dessin tombe dessus. */
       reconnected: string;
       foot: string;
@@ -315,10 +320,12 @@ export type Mockup =
    *
    *  Le partage est net : le héros porte le chiffre qu'on LIT (« you can read
    *  the record »), le pilier porte la MACHINE qui le fabrique, ce qui est
-   *  exactement ce que son corps énumère — agent de bureau, fenêtres de 60 s,
-   *  file hors ligne, registre révocable. Et c'est ce poste-là que le scénario
-   *  fait taire deux sections plus bas : le lecteur l'a vu battre avant de le
-   *  voir s'arrêter. */
+   *  exactement ce que son corps énumère — agent de bureau, registre
+   *  révocable. Les lignes ne montrent que ce que la page Devices du produit
+   *  affiche : OS, dernier contact, statut, révocation (ni taille de file, ni
+   *  état de synchronisation, qui ne remontent pas au web). Et c'est ce
+   *  poste-là que le scénario fait taire deux sections plus bas : le lecteur
+   *  l'a vu battre avant de le voir s'arrêter. */
   | {
       kind: "device";
       label: string;
@@ -330,25 +337,28 @@ export type Mockup =
       rows: { label: string; value: string }[];
       foot: string;
     }
-  /** La semaine QUI S'ARRÊTE — un relevé coupé net, et la suite retenue.
+  /** La semaine QUI S'ARRÊTE — un relevé coupé net.
    *
    *  Variante distincte de `score` et non un réglage de celle-ci. Un relevé
    *  interrompu n'est pas un relevé pâle : baisser l'opacité d'un histogramme
-   *  donne « la page charge », pas « le poste s'est tu mardi ». Il faut trois
+   *  donne « la page charge », pas « le poste s'est tu mardi ». Il faut deux
    *  choses qu'un graphique de score ne porte pas — un AXE DE TEMPS pour que
-   *  « mardi » existe à l'écran, une COUPURE nette, et les jours manquants
-   *  dessinés comme RETENUS plutôt que comme vides. */
+   *  « mardi » existe à l'écran, et une COUPURE nette.
+   *
+   *  ⚠️ Le serveur ne voit pas ce qu'un poste n'a pas envoyé : les jours après
+   *  la coupure sont « rien reçu », jamais « N jours en file ». Ce que le
+   *  produit sait, c'est le dernier contact du poste. Le score est calculé sur
+   *  ce qui EST arrivé (`evidence`). */
   | {
       kind: "silence";
       label: string;
-      score: number;
-      grade: string;
+      evidence: Evidence;
       /** Les jours de la semaine, dans l'ordre. Ils portent l'axe. */
       days: string[];
       /** Position de la coupure en pourcentage de la semaine. Elle DOIT tomber
        *  dans le jour que nomme `lastEvent` — c'est ce qui rend le dessin
        *  vérifiable : à 34 % sur cinq jours, la coupure est dans le deuxième
-       *  jour, donc mardi. Le nombre de jours retenus en est DÉRIVÉ, jamais
+       *  jour, donc mardi. L'intervalle sans données en est DÉRIVÉ, jamais
        *  écrit à la main : déplacer la coupure ne peut pas faire mentir
        *  l'étiquette. */
       cut: number;
@@ -467,6 +477,86 @@ interface UseCaseCopy {
   meta: { title: string; description: string };
 }
 
+/* ─────────────────── Le score de qualité de la preuve ─────────────────────── */
+
+/** Les ENTRÉES RÉELLES du score de qualité de la preuve, telles que l'app les
+ *  lit : par personne, sur une période choisie, page Analytics, admins
+ *  seulement, plan Business. Une maquette de score ne porte QUE ces valeurs, et
+ *  le chiffre affiché en est calculé — il ne peut donc pas être retapé à côté de
+ *  lignes qui ne l'atteignent pas (c'était le cas de quatre cartes sur six :
+ *  38 captures pour 40 h plafonnent à 66, pas à 84). */
+export interface Evidence {
+  /** Temps suivi sur la période, `H:MM`. */
+  tracked: string;
+  screenshots: number;
+  /** Part de captures en double, en %. */
+  duplicates: number;
+  /** Moyenne des pourcentages clavier et souris, en %. */
+  activity: number;
+  /** Au moins un événement d'activité reçu sur la période. */
+  events: boolean;
+  /** Jours depuis le dernier contact du poste. 0 = aujourd'hui. */
+  seenDaysAgo: number;
+}
+
+export type EvidenceGrade = "STRONG" | "MODERATE" | "WEAK" | "INSUFFICIENT";
+
+/** `H:MM` → minutes. Lève plutôt que de rendre `NaN` : un score muet dans une
+ *  maquette de relevé est pire qu'un build cassé. */
+export const minutesOf = (value: string): number => {
+  const match = /^(\d+):([0-5]\d)$/.exec(value);
+  if (!match) {
+    throw new Error(`[solutions] durée « ${value} » illisible, format attendu \`H:MM\`.`);
+  }
+  return Number(match[1]) * 60 + Number(match[2]);
+};
+
+/** La formule du produit, terme à terme :
+ *    couverture 0–40  = 40 × min(1, captures / captures attendues), 1 attendue par 10 min suivies
+ *    qualité    0–30  = 30 − pénalité doublons (15 × min(1, 2 × part)) − pénalité activité (15 × max(0, 1 − activité/20))
+ *    événements 0–20  = 20 si au moins un événement d'activité
+ *    poste      0–10  = 10 si vu depuis ≤ 1 jour, 5 si ≤ 7 jours, sinon 0
+ *  Verdict : ≥ 75 strong, ≥ 50 moderate, ≥ 25 weak, sinon insufficient. */
+export const evidenceScore = (evidence: Evidence) => {
+  const expected = Math.ceil((minutesOf(evidence.tracked) * 60) / 600);
+  const coverage = Math.round(40 * Math.min(1, evidence.screenshots / expected));
+  const duplicatePenalty = Math.round(15 * Math.min(1, (2 * evidence.duplicates) / 100));
+  const activityPenalty = Math.round(15 * Math.max(0, 1 - evidence.activity / 20));
+  const quality = 30 - duplicatePenalty - activityPenalty;
+  const events = evidence.events ? 20 : 0;
+  const device = evidence.seenDaysAgo <= 1 ? 10 : evidence.seenDaysAgo <= 7 ? 5 : 0;
+  const score = coverage + quality + events + device;
+  const grade: EvidenceGrade =
+    score >= 75 ? "STRONG" : score >= 50 ? "MODERATE" : score >= 25 ? "WEAK" : "INSUFFICIENT";
+
+  return { expected, score, grade };
+};
+
+/** Les lignes « What was graded » : les entrées elles-mêmes, en clair. Le
+ *  lecteur peut refaire le calcul avec ce qu'il voit. */
+export const evidenceRows = (evidence: Evidence): { label: string; value: string }[] => {
+  const { expected } = evidenceScore(evidence);
+  const seen = evidence.seenDaysAgo;
+
+  return [
+    { label: "Tracked", value: evidence.tracked },
+    {
+      label: "Screenshots",
+      value:
+        evidence.screenshots <= expected
+          ? `${evidence.screenshots} of ${expected} expected`
+          : `${evidence.screenshots} · ${expected} expected`,
+    },
+    { label: "Duplicates", value: `${evidence.duplicates}%` },
+    { label: "Average activity", value: `${evidence.activity}%` },
+    { label: "Activity events", value: evidence.events ? "yes" : "none" },
+    {
+      label: "Device seen",
+      value: seen === 0 ? "today" : seen === 1 ? "yesterday" : `${seen} days ago`,
+    },
+  ];
+};
+
 /* ───────────────────────── Sélection des capacités ────────────────────────── */
 
 /** Choisit des puces DANS `PRODUCT_PILLARS` et lève si l'une n'y est pas.
@@ -513,7 +603,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
         kind: "record",
         title: "Northwind Systems",
         chip: "In progress",
-        meter: { label: "Budget", value: "$48,000", percent: 62, read: "62% used" },
+        meter: { label: "Budget", value: "300 h", percent: 62, read: "62% used" },
         foot: "Day 11 of 30",
         tags: ["retainer", "Q2"],
       },
@@ -544,16 +634,15 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Clients and contacts, with status and source",
             "Client projects with full stage-change history",
             "Budgeted vs actual hours, live",
-            "Notes with @mentions that notify",
+            "Project notes",
             "Reminders with due dates, in-app and email",
-            "Custom modules and fields - 12 field types",
           ]),
           mock: {
             kind: "record",
             title: "Northwind Systems",
             chip: "In progress",
             people: true,
-            meter: { label: "Budget", value: "$48,000", percent: 62, read: "62% used" },
+            meter: { label: "Budget", value: "300 h", percent: 62, read: "62% used" },
             tags: ["retainer", "Q2"],
           },
         },
@@ -561,13 +650,13 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
           ref: "time",
           label: "The hours",
           heading: "Hours that arrive already attributed.",
-          body: "The timer runs against a task inside a client project, so nobody writes a timesheet from memory on Friday afternoon. It survives multiple browser tabs and pauses itself when the screen goes idle.",
+          body: "The timer runs against a task inside a client project, so nobody writes a timesheet from memory on Friday afternoon. It runs from one tab even with several open, and with the desktop agent it pauses when you go idle.",
           caps: capsOf("time", [
-            "Time logged against a task in a client project",
+            "Time logged against a project and its task",
             "Multi-tab safe - one tab leads, no double counting",
-            "Automatic pause past the idle threshold",
-            "Timesheets and entry history, editable",
-            "Payroll-ready CSV export",
+            "The desktop agent pauses the timer when you go idle",
+            "Timesheets and entry history",
+            "CSV export of time entries for payroll",
           ]),
           mock: {
             kind: "timer",
@@ -577,26 +666,26 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
               { task: "Acme · Second round of edits", duration: "1:12:05" },
               { task: "Northwind · Deck for Thursday", duration: "2:03:40" },
             ],
-            foot: "Timesheet · today · editable",
+            foot: "Timesheet · today",
           },
         },
         {
           ref: "knowledge",
           label: "The paper trail",
           heading: "The statement of work, where the work is.",
-          body: "Briefs, scopes and meeting notes live inside the client project, and recorded calls are transcribed as they happen. When a client asks whether something was in scope, the answer has a source.",
+          body: "Briefs, scopes and meeting notes live inside the client project. Add a call's Loom or Fathom link and the assistant can answer from its transcript. When a client asks whether something was in scope, the answer has a source.",
           caps: capsOf("knowledge", [
             "Block editor with slash commands and nested pages",
             "Video embeds - YouTube, Loom, Fathom",
-            "Automatic video transcription, indexed",
-            "Full-text search across everything",
+            "Loom and Fathom transcripts, indexed",
+            "Search by project, page and file name",
             "AI assistant over semantic search, cited",
           ]),
           mock: {
             kind: "source",
             question: "was the reporting module in the Ledger scope?",
             answer: "No. The signed statement of work covers migration only. Reporting was raised on the April 3 call and left for a separate quote.",
-            sources: ["doc · Ledger SOW", "call · Apr 3"],
+            sources: ["doc · Ledger SOW", "page · Apr 3 call (Loom)"],
           },
         },
       ],
@@ -607,16 +696,18 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
           [
             "Northwind is on a ",
             fig("$48,000"),
-            " retainer. On the 11th the budget meter reads ",
+            " retainer, budgeted at ",
+            fig("300 h"),
+            ". On the 11th the budget meter reads ",
             fig("62%"),
             ", which is high for the date - so you open the record before the standup instead of after the invoice.",
           ],
           [
-            "The hours are already attributed: ",
+            "The entries on the project show ",
             fig("38.5 h"),
-            " on the Ledger rebuild, ",
+            " logged to the Ledger rebuild and ",
             fig("21 h"),
-            " on client calls. The call time is the anomaly. Two of those calls have transcripts, and both are about a reporting module that isn't in the statement of work.",
+            " to client calls. The call time is the anomaly. Two of those calls have a Loom recording on the project, and both transcripts are about a reporting module that isn't in the statement of work.",
           ],
           [
             "That is a scope conversation you can have on the 11th, with the document open - not a write-off you absorb on the 30th.",
@@ -626,20 +717,20 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
           kind: "record",
           title: "Northwind Systems",
           chip: "In progress",
-          meter: { label: "Budget", value: "$48,000", percent: 62, read: "62% used" },
+          meter: { label: "Budget", value: "300 h", percent: 62, read: "62% used" },
           foot: "Day 11 of 30",
         },
       },
       objection: {
         eyebrow: "Transparency",
         heading: "Your team will ask what's being recorded.",
-        body: "So tell them, and let them check. DocuFlow shows a visible indicator whenever the timer is running, screenshots can be blurred so content is never legible, capture can be limited to working hours, and anyone can open and review their own data.",
+        body: "So tell them, and let them check. The desktop agent shows in the tray whenever the timer is running, no screenshot is taken while the timer is stopped, screenshots can be limited to the working hours your admins set, and anyone can open and review their own data.",
         argument:
           "Used this way, the record protects the team as much as the account. Evidence that a request was out of scope is what lets you bill for it - instead of absorbing it as an unpaid evening.",
         guarantees: [
           "A visible indicator shows the team exactly when the timer is running",
-          "Screenshots can be blurred so content is never legible",
-          "Capture is scheduled to working hours only",
+          "No screenshot is taken while the timer is stopped",
+          "Screenshots can be limited to the working hours your admins set",
           "Anyone can open and review their own recorded data",
         ],
       },
@@ -666,7 +757,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
           { task: "DF-482 · Auth refactor", duration: "6:48:05" },
           { task: "Sprint 14 · Ceremonies", duration: "1:20:00" },
         ],
-        foot: "Timesheet · sprint 14 · editable",
+        foot: "Timesheet · sprint 14",
       },
       problem: {
         heading: "Estimates are guesses. Actuals are evidence.",
@@ -689,14 +780,14 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
         {
           ref: "time",
           label: "The hours",
-          heading: "Time that lands on the ticket.",
-          body: "The timer runs against a task inside a client project, never a free-text label, so hours reach the ticket that asked for them. It leads from one tab, pauses past the idle threshold, and exports without a spreadsheet in between.",
+          heading: "Time that lands on the task.",
+          body: "The timer runs against a task inside a client project, never a free-text label. Name tasks after your tickets, and the hours land on them. It leads from one tab, and with the desktop agent it pauses when you go idle.",
           caps: capsOf("time", [
             "Web timer - start, pause, resume, stop",
-            "Time logged against a task in a client project",
+            "Time logged against a project and its task",
             "Multi-tab safe - one tab leads, no double counting",
-            "Automatic pause past the idle threshold",
-            "Timesheets and entry history, editable",
+            "The desktop agent pauses the timer when you go idle",
+            "Timesheets and entry history",
           ]),
           mock: {
             kind: "timer",
@@ -706,27 +797,27 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
               { task: "DF-482 · Auth refactor", duration: "6:48:05" },
               { task: "DF-461 · Review", duration: "0:44:15" },
             ],
-            foot: "Timesheet · sprint 14 · editable",
+            foot: "Timesheet · sprint 14",
           },
         },
         {
           ref: "clients",
           label: "The project",
           heading: "Estimate and actual, on the same record.",
-          body: "Tasks, budgets and stages live on the client project the hours are logged against. Budgeted versus actual is a live number on the board, so a sprint running hot announces itself while it can still be re-scoped.",
+          body: "Tasks, budgets and stages live on the client project the hours are logged against. Budgeted versus actual is a live number on the board, so a sprint running hot shows while it can still be re-scoped.",
           caps: capsOf("clients", [
             "Client projects with full stage-change history",
             "Kanban board across all projects",
             "Budgeted vs actual hours, live",
             "Tasks - open / in progress / done / archived",
             "Team assignment per project",
-            "Daily updates with status, blockers and KPIs",
+            "Daily updates with status and blockers",
           ]),
           mock: {
             kind: "record",
             title: "Atlas · Sprint 14",
             chip: "In progress",
-            meter: { label: "Estimated", value: "40 h", percent: 100, read: "61 h actual" },
+            meter: { label: "Budget", value: "40 h", percent: 100, read: "61 h actual" },
             foot: "Two tickets added on day three",
             tags: ["fixed bid", "sprint 14"],
           },
@@ -735,19 +826,19 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
           ref: "knowledge",
           label: "The decisions",
           heading: "What was agreed, with the call attached.",
-          body: "Specs, tickets and meeting notes sit inside the project, and recorded calls are transcribed as they happen. When a change request is disputed, the answer is a source rather than a recollection.",
+          body: "Specs and meeting notes sit inside the project. Add a call's Loom or Fathom link and the assistant can answer from its transcript. When a change request is disputed, the answer is a source rather than a recollection.",
           caps: capsOf("knowledge", [
             "Block editor with slash commands and nested pages",
             "Video embeds - YouTube, Loom, Fathom",
-            "Automatic video transcription, indexed",
-            "Full-text search across everything",
+            "Loom and Fathom transcripts, indexed",
+            "Search by project, page and file name",
             "AI assistant over semantic search, cited",
           ]),
           mock: {
             kind: "source",
             question: "when did token rotation enter sprint 14?",
             answer: "Day three, on the March 9 call. The sprint scope signed on March 2 covers the auth refactor only.",
-            sources: ["doc · Sprint 14 scope", "call · Mar 9"],
+            sources: ["doc · Sprint 14 scope", "page · Mar 9 call (Loom)"],
           },
         },
       ],
@@ -760,12 +851,12 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             fig("40 h"),
             ". On Thursday the board reads ",
             fig("61 h"),
-            ", and ",
+            ", and the entries show ",
             fig("9.5 h"),
-            " of that sits on DF-482 - a ticket that entered on day three.",
+            " logged to DF-482 - a task that entered on day three.",
           ],
           [
-            "Nobody has to reconstruct where it went. DF-482 came out of a call, the call has a transcript, and the transcript says the client asked for token rotation. The signed sprint scope doesn't mention it.",
+            "Nobody has to reconstruct where it went. DF-482 came out of a call, the call's Loom recording is on the sprint page, and its transcript says the client asked for token rotation. The signed sprint scope doesn't mention it.",
           ],
           [
             "That is a change-order conversation you have on Thursday with the transcript open - not an overrun you explain at the retro.",
@@ -775,20 +866,20 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
           kind: "record",
           title: "Atlas · Sprint 14",
           chip: "In progress",
-          meter: { label: "Estimated", value: "40 h", percent: 100, read: "61 h actual" },
+          meter: { label: "Budget", value: "40 h", percent: 100, read: "61 h actual" },
           foot: "DF-482 added on day three",
         },
       },
       objection: {
         eyebrow: "Monitoring",
         heading: "Screenshots on an engineering team is a fair objection.",
-        body: "The timer runs in the browser and the desktop agent is a separate application, so a team can run time, tickets and projects with no capture at all. Where it is used - usually because a client contract asks for it - a visible indicator shows when the timer is running, screenshots can be blurred so content is never legible, and capture is restricted to an active-hours window.",
+        body: "The timer runs in the browser and the desktop agent is a separate application, so a team can run time, tickets and projects with no capture at all. Where it is used - usually because a client contract asks for it - the desktop agent shows in the tray whenever the timer runs, no screenshot is taken while the timer is stopped, and screenshots can be limited to the working hours your admins set.",
         argument:
           "On an engineering team the record is pointed at the client, not at the developer. Evidence that a request arrived on day three is what gets it billed as a change order, instead of absorbed as a weekend.",
         guarantees: [
           "The web timer runs in a browser - the desktop agent is a separate install",
           "A visible indicator shows the team exactly when the timer is running",
-          "Screenshots can be blurred so content is never legible",
+          "Screenshots can be switched off for the whole workspace",
           "Anyone can open and review their own recorded data",
         ],
       },
@@ -797,7 +888,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
       meta: {
         title: "DocuFlow for development teams - estimate against actual",
         description:
-          "Hours logged against a ticket inside a client project, budgets live on the board, and transcribed calls that say when a change request arrived. For teams billing fixed-scope work.",
+          "Hours logged against a task inside a client project, budgets live on the board, and call transcripts that say when a change request arrived. For teams billing fixed-scope work.",
       },
     },
   },
@@ -806,19 +897,12 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
   "consulting-firms": {
     en: {
       h1: "Answer “what did you do for these forty hours?” from the record.",
-      lede: "Hours attach to an engagement, activity and screenshots attach to the hours, and the monitoring data grades its own completeness. When an invoice is questioned, the answer is a record with a score on it rather than a recollection.",
+      lede: "Hours attach to an engagement, activity and screenshots attach to the hours, and admins see a score for how complete that record is. When a client questions an invoice, the answer is a record with a score on it rather than a recollection.",
       hero: {
         kind: "score",
         label: "Evidence quality",
-        score: 84,
-        grade: "STRONG",
-        coverage: [
-  { label: "Screenshots", value: "38 captured" },
-  { label: "Activity windows", value: "1,914 of 2,010" },
-  { label: "Idle prompts", value: "3 · all answered" },
-  { label: "Devices reporting", value: "2 of 2" },
-],
-foot: "Meridian · week 32 · advisory",
+        evidence: { tracked: "40:00", screenshots: 236, duplicates: 9, activity: 47, events: true, seenDaysAgo: 0 },
+        foot: "Meridian · week 32 · one consultant",
       },
       problem: {
         heading: "The invoice is a claim. The record is the proof.",
@@ -842,40 +926,33 @@ foot: "Meridian · week 32 · advisory",
           ref: "activity",
           label: "The evidence",
           heading: "The record grades its own completeness.",
-          body: "A desktop agent on Windows, macOS and Linux records screenshots, activity levels and idle time in the background, and scores its own coverage from 0 to 100. A thin week announces itself before a client finds it.",
+          body: "A desktop agent on Windows, macOS and Linux records screenshots, activity levels and idle time in the background. Admins see an evidence-quality score from 0 to 100 per person, so hours with too little evidence behind them show before a client asks.",
           caps: capsOf("activity", [
             "Evidence quality score, 0–100 per person",
             "Desktop agent for Windows, macOS and Linux",
             "Screenshots at randomised, configurable intervals",
             "Keyboard and mouse activity in 60-second windows",
             "Capture restricted to an active-hours window",
-            "Admin analytics - coverage, quality, devices, alerts",
+            "Admin analytics - coverage, quality, devices, warnings",
           ]),
           mock: {
             kind: "score",
             label: "Evidence quality",
-            score: 84,
-            grade: "STRONG",
-            coverage: [
-  { label: "Screenshots", value: "38 captured" },
-  { label: "Activity windows", value: "1,914 of 2,010" },
-  { label: "Idle prompts", value: "3 · all answered" },
-  { label: "Devices reporting", value: "2 of 2" },
-],
-foot: "Meridian · week 32 · advisory",
+            evidence: { tracked: "40:00", screenshots: 236, duplicates: 9, activity: 47, events: true, seenDaysAgo: 0 },
+            foot: "Meridian · week 32 · one consultant",
           },
         },
         {
           ref: "time",
           label: "The hours",
           heading: "Hours that carry their engagement.",
-          body: "Time is logged against a task inside a client engagement, never a free-text label. Timesheets stay editable, expected hours are configurable per person, and the export is clean enough to reconcile against a fee note.",
+          body: "Time is logged against a task inside a client engagement, never a free-text label. Expected hours are configurable per person, and admins export a CSV of every entry by task.",
           caps: capsOf("time", [
-            "Time logged against a task in a client project",
-            "Timesheets and entry history, editable",
-            "Attendance and presence",
+            "Web timer - start, pause, resume, stop",
+            "Time logged against a project and its task",
+            "Timesheets and entry history",
             "Configurable expected hours per person",
-            "Payroll-ready CSV export",
+            "CSV export of time entries for payroll",
           ]),
           mock: {
             kind: "timer",
@@ -885,27 +962,27 @@ foot: "Meridian · week 32 · advisory",
               { task: "Meridian · Stakeholder calls", duration: "1:45:30" },
               { task: "Harborline · Diagnostic", duration: "3:05:12" },
             ],
-            foot: "Timesheet · week 32 · editable",
+            foot: "Timesheet · week 32",
           },
         },
         {
           ref: "clients",
           label: "The engagement",
           heading: "The statement of work, with its budget attached.",
-          body: "Each engagement is a client project with stages, a budget and its own structure. Twelve custom field types mean the record matches how your practice scopes work, rather than the other way round.",
+          body: "Each engagement is a client project with stages, an hours budget and its tasks, and every stage change is kept.",
           caps: capsOf("clients", [
             "Clients and contacts, with status and source",
             "Client projects with full stage-change history",
             "Budgeted vs actual hours, live",
-            "Custom modules and fields - 12 field types",
-            "Daily updates with status, blockers and KPIs",
+            "Tasks - open / in progress / done / archived",
+            "Daily updates with status and blockers",
           ]),
           mock: {
             kind: "record",
             title: "Meridian Group",
             chip: "In progress",
             people: true,
-            meter: { label: "Budget", value: "$96,000", percent: 71, read: "71% used" },
+            meter: { label: "Budget", value: "400 h", percent: 71, read: "71% used" },
             tags: ["advisory", "SOW-2026-04"],
           },
         },
@@ -913,19 +990,19 @@ foot: "Meridian · week 32 · advisory",
           ref: "knowledge",
           label: "The deliverable",
           heading: "Answers with a source, months later.",
-          body: "Deliverables, working papers and recorded workshops live in the engagement and are indexed as they are written. The assistant answers from them with citations, so a question in November reaches work done in June.",
+          body: "Deliverables, working papers and the Loom or Fathom recordings of workshops live in the engagement and are indexed as they are added. The assistant answers from them with citations, so a question in November reaches work done in June.",
           caps: capsOf("knowledge", [
             "Block editor with slash commands and nested pages",
-            "Automatic video transcription, indexed",
+            "Loom and Fathom transcripts, indexed",
             "Company files in folders - PDF, Word, text",
-            "Full-text search across everything",
+            "Search by project, page and file name",
             "AI assistant over semantic search, cited",
           ]),
           mock: {
             kind: "source",
             question: "what did we deliver in week 32?",
             answer: "The operating model draft and the August board pack. Both were walked through on the August 14 workshop.",
-            sources: ["doc · Operating model v3", "call · Aug 14"],
+            sources: ["doc · Operating model v3", "page · Aug 14 workshop (Fathom)"],
           },
         },
       ],
@@ -941,14 +1018,14 @@ foot: "Meridian · week 32 · advisory",
             " described as “advisory support”.",
           ],
           [
-            "The engagement record has those hours against three deliverables - ",
+            "The entries on the engagement put those hours against three deliverables - ",
             fig("18 h"),
             " on the operating model, ",
             fig("14 h"),
             " on the board pack, ",
             fig("8 h"),
             " on workshops - and the week's evidence quality reads ",
-            fig("84/100"),
+            fig("96/100"),
             ".",
           ],
           [
@@ -958,27 +1035,20 @@ foot: "Meridian · week 32 · advisory",
         mock: {
           kind: "score",
           label: "Evidence quality",
-          score: 84,
-          grade: "STRONG",
-          coverage: [
-  { label: "Screenshots", value: "38 captured" },
-  { label: "Activity windows", value: "1,914 of 2,010" },
-  { label: "Idle prompts", value: "3 · all answered" },
-  { label: "Hours on the record", value: "40:00" },
-],
-foot: "Meridian · week 32 · 40 h",
+          evidence: { tracked: "40:00", screenshots: 236, duplicates: 9, activity: 47, events: true, seenDaysAgo: 0 },
+          foot: "Meridian · week 32 · 40 h",
         },
       },
       objection: {
         eyebrow: "Confidentiality",
         heading: "Client material will be on screen when a capture fires.",
-        body: "So make it unreadable. Screenshots can be blurred so content is never legible, capture is restricted to an active-hours window, and a screenshot that shouldn't exist is soft-deleted with a recorded reason rather than silently erased. Devices are registered and revocable at any time.",
+        body: "Then decide whether a capture fires at all. Screenshots can be switched off for the whole workspace, none is taken while the timer is stopped, and they can be limited to the working hours your admins set. Devices are registered and revocable at any time.",
         argument:
-          "Confidentiality and evidence are not opposites here. A blurred screenshot still proves the hour was worked on that engagement without showing a single line of the client's material - which is the only thing an invoice query actually asks.",
+          "Confidentiality and evidence are a trade you set per workspace. With screenshots off, the engagement still holds the entries against each deliverable and the documents they produced - which is what an invoice query actually asks about. Keep them on, inside working hours, when a client contract asks for the stronger record.",
         guarantees: [
-          "Screenshots can be blurred so content is never legible",
-          "Capture is restricted to an active-hours window",
-          "Screenshots are soft-deleted with a recorded reason, never silently erased",
+          "Screenshots can be switched off for the whole workspace",
+          "No screenshot is taken while the timer is stopped",
+          "Screenshots can be limited to the working hours your admins set",
           "Devices are registered and revocable at any time",
         ],
       },
@@ -987,7 +1057,7 @@ foot: "Meridian · week 32 · 40 h",
       meta: {
         title: "DocuFlow for consulting firms - evidence behind the invoice",
         description:
-          "Hours against an engagement, screenshots and activity behind the hours, and an evidence quality score from 0 to 100 that tells you when a week is thinly recorded.",
+          "Hours against an engagement, screenshots and activity behind the hours, and an evidence quality score from 0 to 100 that tells you when the hours have too little evidence behind them.",
       },
     },
   },
@@ -1005,7 +1075,7 @@ foot: "Meridian · week 32 · 40 h",
           { task: "Ridgeway Ltd · T2 return", duration: "1:05:55" },
           { task: "Novak · Payroll", duration: "0:18:32" },
         ],
-        foot: "Timesheet · March 14 · editable",
+        foot: "Timesheet · March 14",
       },
       problem: {
         heading: "A dozen files a day, one timesheet from memory.",
@@ -1029,14 +1099,14 @@ foot: "Meridian · week 32 · 40 h",
           ref: "time",
           label: "The timer",
           heading: "One click per file, not one memory per week.",
-          body: "Start, pause, resume, stop - against a task inside a client engagement rather than a free-text line. It leads from a single tab, pauses itself past the idle threshold, and the timesheet is built by the time the day ends.",
+          body: "Start, pause, resume, stop - against a task inside a client engagement rather than a free-text line. It leads from a single tab, the desktop agent pauses it when you go idle, and the timesheet is built by the time the day ends.",
           caps: capsOf("time", [
             "Web timer - start, pause, resume, stop",
-            "Time logged against a task in a client project",
+            "Time logged against a project and its task",
             "Multi-tab safe - one tab leads, no double counting",
-            "Automatic pause past the idle threshold",
-            "Timesheets and entry history, editable",
-            "Payroll-ready CSV export",
+            "The desktop agent pauses the timer when you go idle",
+            "Timesheets and entry history",
+            "CSV export of time entries for payroll",
           ]),
           mock: {
             kind: "timer",
@@ -1046,47 +1116,40 @@ foot: "Meridian · week 32 · 40 h",
               { task: "Ridgeway Ltd · T2 return", duration: "1:05:55" },
               { task: "Novak · Payroll", duration: "0:18:32" },
             ],
-            foot: "Timesheet · March 14 · editable",
+            foot: "Timesheet · March 14",
           },
         },
         {
           ref: "activity",
           label: "The record",
           heading: "Hours with something behind them.",
-          body: "While the timer runs, the desktop agent records screenshots and activity levels in the background and scores its own coverage. A week that was barely captured says so, rather than looking identical to one that was.",
+          body: "While the timer runs, the desktop agent records screenshots and activity levels in the background, and admins see a coverage score per person. A week that was barely captured says so, rather than looking identical to one that was.",
           caps: capsOf("activity", [
             "Desktop agent for Windows, macOS and Linux",
             "Screenshots at randomised, configurable intervals",
             "Capture restricted to an active-hours window",
-            "Screenshots soft-deleted with a recorded reason",
+            "Screenshot review by person and date",
             "Evidence quality score, 0–100 per person",
           ]),
           mock: {
             kind: "score",
             label: "Evidence quality",
-            score: 79,
-            grade: "STRONG",
-            coverage: [
-  { label: "Screenshots", value: "52 captured" },
-  { label: "Activity windows", value: "2,140 of 2,400" },
-  { label: "Idle prompts", value: "6 · all answered" },
-  { label: "Devices reporting", value: "4 of 4" },
-],
-foot: "Busy season · week of March 10",
+            evidence: { tracked: "46:30", screenshots: 301, duplicates: 3, activity: 44, events: true, seenDaysAgo: 0 },
+            foot: "Busy season · week of March 10 · one accountant",
           },
         },
         {
           ref: "clients",
           label: "The engagement",
           heading: "Every file, with its budget and its stage.",
-          body: "Clients, engagements, stages and budgeted hours in one record, so a file that is running past its fee is visible in March rather than in June. Reminders and @mentions keep the follow-ups on the engagement instead of in an inbox.",
+          body: "Clients, engagements, stages and budgeted hours in one record, so a file that is running past its fee is visible in March rather than in June. Reminders keep the follow-ups on the engagement instead of in an inbox.",
           caps: capsOf("clients", [
             "Clients and contacts, with status and source",
             "Client projects with full stage-change history",
             "Budgeted vs actual hours, live",
             "Tasks - open / in progress / done / archived",
             "Reminders with due dates, in-app and email",
-            "Daily updates with status, blockers and KPIs",
+            "Daily updates with status and blockers",
           ]),
           mock: {
             kind: "record",
@@ -1135,13 +1198,13 @@ foot: "Busy season · week of March 10",
       objection: {
         eyebrow: "Client data",
         heading: "Client financials will be on screen when a capture fires.",
-        body: "So they don't have to be legible. Screenshots can be blurred, capture is restricted to an active-hours window, and any screenshot is soft-deleted with a recorded reason rather than silently erased. Anyone can open and review their own recorded data, and devices are revocable at any time.",
+        body: "Then choose when captures fire, or whether they do. Screenshots can be switched off for the whole workspace, none is taken while the timer is stopped, and they can be limited to the working hours your admins set. Anyone can open and review their own recorded data, and devices are revocable at any time.",
         argument:
-          "A blurred capture still does the job it is there for: it shows the hour was worked on that engagement. Nothing in the record has to be readable for the record to hold up - which is what makes this workable on files covered by professional confidentiality.",
+          "On files covered by professional confidentiality, a firm can run the timer with screenshots off and the timesheet still holds up: every block, down to the four-minute call, was started against a client engagement rather than written from memory on Friday.",
         guarantees: [
-          "Screenshots can be blurred so content is never legible",
-          "Capture is restricted to an active-hours window",
-          "Screenshots are soft-deleted with a recorded reason, never silently erased",
+          "Screenshots can be switched off for the whole workspace",
+          "No screenshot is taken while the timer is stopped",
+          "Screenshots can be limited to the working hours your admins set",
           "Anyone can open and review their own recorded data",
         ],
       },
@@ -1164,7 +1227,7 @@ foot: "Busy season · week of March 10",
         kind: "record",
         title: "Halvorsen · Matter 2026-0184",
         chip: "In progress",
-        meter: { label: "Retainer", value: "$25,000", percent: 41, read: "41% billed" },
+        meter: { label: "Budget", value: "60 h", percent: 41, read: "41% used" },
         foot: "Docketed today · 3.4 h",
         tags: ["litigation", "retainer"],
       },
@@ -1190,13 +1253,13 @@ foot: "Busy season · week of March 10",
           ref: "time",
           label: "The docket",
           heading: "Time entered against the matter, not after it.",
-          body: "The timer runs against a task inside a matter, so an entry exists before the description has to be remembered. It leads from one tab, pauses past the idle threshold, and every entry stays editable with its history.",
+          body: "The timer runs against a task inside a matter, so an entry exists before the description has to be remembered. It leads from one tab, and a wrong entry can be deleted - durations come from the timer, not from typing.",
           caps: capsOf("time", [
             "Web timer - start, pause, resume, stop",
-            "Time logged against a task in a client project",
+            "Time logged against a project and its task",
             "Multi-tab safe - one tab leads, no double counting",
-            "Automatic pause past the idle threshold",
-            "Timesheets and entry history, editable",
+            "The desktop agent pauses the timer when you go idle",
+            "Timesheets and entry history",
           ]),
           mock: {
             kind: "timer",
@@ -1206,48 +1269,47 @@ foot: "Busy season · week of March 10",
               { task: "Whitlock estate · Drafting", duration: "1:24:36" },
               { task: "Halvorsen · Client call", duration: "0:36:12" },
             ],
-            foot: "Docket · March 11 · editable",
+            foot: "Docket · March 11",
           },
         },
         {
           ref: "knowledge",
           label: "The file",
-          heading: "The whole file, searchable, with sources.",
-          body: "Pleadings, correspondence, memos and recorded calls live on the matter and are indexed as they arrive. Search covers what was said as well as what was written, and the assistant answers with the document it came from.",
+          heading: "The whole file, with sources.",
+          body: "Pleadings, correspondence, memos and call recordings live on the matter and are indexed as they arrive. Search finds them by title, and the assistant answers from their content - Loom and Fathom transcripts included - with the document it came from.",
           caps: capsOf("knowledge", [
             "Block editor with slash commands and nested pages",
             "Images, file attachments and audio recordings",
             "Company files in folders - PDF, Word, text",
-            "Automatic video transcription, indexed",
-            "Full-text search across everything",
+            "Loom and Fathom transcripts, indexed",
+            "Search by project, page and file name",
             "AI assistant over semantic search, cited",
           ]),
           mock: {
             kind: "source",
             question: "what was agreed on scope of production?",
             answer: "Documents from January 2024 onward only. Confirmed on the March 11 call and recorded in the file note the same day.",
-            sources: ["doc · File note Mar 11", "call · Mar 11"],
+            sources: ["doc · File note Mar 11", "page · Mar 11 call (Fathom)"],
           },
         },
         {
           ref: "clients",
           label: "The matter",
           heading: "Matters, contacts and the history of every stage.",
-          body: "Each matter is a record with its own stages, its own contacts and its own structure - twelve custom field types, so a litigation file and a corporate file don't have to look the same. Every stage change is kept.",
+          body: "Each matter is a record with its own stages, contacts and tasks, and every stage change is kept.",
           caps: capsOf("clients", [
             "Clients and contacts, with status and source",
             "Client projects with full stage-change history",
             "Tasks - open / in progress / done / archived",
-            "Notes with @mentions that notify",
+            "Project notes",
             "Reminders with due dates, in-app and email",
-            "Custom modules and fields - 12 field types",
           ]),
           mock: {
             kind: "record",
             title: "Halvorsen · Matter 2026-0184",
             chip: "In progress",
             people: true,
-            meter: { label: "Retainer", value: "$25,000", percent: 41, read: "41% billed" },
+            meter: { label: "Budget", value: "60 h", percent: 41, read: "41% used" },
             tags: ["litigation", "retainer"],
           },
         },
@@ -1262,7 +1324,7 @@ foot: "Busy season · week of March 10",
             " docketed on the 11th, described as review and correspondence.",
           ],
           [
-            "The matter still holds what sat behind those hours - two documents opened that day, a call with a transcript, and a file note carrying the date it was written. All three are on the matter, not in an inbox.",
+            "The matter still holds what sat behind those hours - the entries themselves, the call's recording with its transcript, and a file note carrying the date it was written. All three are on the matter, not in an inbox.",
           ],
           [
             "Assembling the answer takes ",
@@ -1274,19 +1336,19 @@ foot: "Busy season · week of March 10",
           kind: "source",
           question: "what was done on the Halvorsen file on March 11?",
           answer: "Review of the production sent on March 8, a file note, and a 36-minute call with the client. 3.4 h docketed.",
-          sources: ["doc · File note Mar 11", "call · Mar 11"],
+          sources: ["doc · File note Mar 11", "page · Mar 11 call (Fathom)"],
         },
       },
       objection: {
         eyebrow: "Privilege",
         heading: "Privileged material cannot end up in a screenshot.",
-        body: "Then don't capture it. The timer runs in a browser and the desktop agent is a separate application - a practice can run time, matters and documents with no capture at all. Where a firm does use it, screenshots can be blurred so content is never legible, capture is restricted to an active-hours window, screenshots are soft-deleted with a recorded reason rather than silently erased, and device tokens are stored only as hashes and revocable at any time.",
+        body: "Then don't capture it. The timer runs in a browser and the desktop agent is a separate application - a practice can run time, matters and documents with no capture at all. Where a firm does use it, screenshots can be switched off for the whole workspace, none is taken while the timer is stopped, and device tokens are stored only as hashes and revocable at any time.",
         argument:
           "The record that defends a fee is the docket and the file, not the screenshot. Nothing here asks a firm to point a camera at privileged material in order to get a defensible account of its own time.",
         guarantees: [
           "The web timer runs in a browser - the desktop agent is a separate install",
-          "Screenshots can be blurred so content is never legible",
-          "Screenshots are soft-deleted with a recorded reason, never silently erased",
+          "Screenshots can be switched off for the whole workspace",
+          "No screenshot is taken while the timer is stopped",
           "Device tokens are stored only as hashes and revocable at any time",
         ],
       },
@@ -1295,7 +1357,7 @@ foot: "Busy season · week of March 10",
       meta: {
         title: "DocuFlow for legal services - docket, file and matter",
         description:
-          "Time docketed against a matter, with the documents, notes and transcribed calls on the same file. A record that still answers the question ten months later.",
+          "Time docketed against a matter, with the documents, notes and call transcripts on the same file. A record that still answers the question ten months later.",
       },
     },
   },
@@ -1304,19 +1366,12 @@ foot: "Busy season · week of March 10",
   "bpo-call-centers": {
     en: {
       h1: "Prove the seats were staffed, without asking anyone for a status update.",
-      lede: "Attendance, activity and evidence quality roll up per agent, per shift and per account, so coverage is something you show a client rather than something you assert. Built to be read across a floor, not one desk.",
+      lede: "Recorded time per agent and per account, and evidence quality per agent, for any date range - so coverage is something you show a client rather than something you assert. Built to be read across a floor, not one desk.",
       hero: {
         kind: "score",
         label: "Evidence quality",
-        score: 88,
-        grade: "STRONG",
-        coverage: [
-  { label: "Screenshots", value: "1,204 captured" },
-  { label: "Activity windows", value: "19,880 of 20,160" },
-  { label: "Idle prompts", value: "31 · all answered" },
-  { label: "Devices reporting", value: "41 of 42" },
-],
-foot: "Night shift · 42 agents · admin analytics",
+        evidence: { tracked: "40:00", screenshots: 588, duplicates: 4, activity: 31, events: true, seenDaysAgo: 0 },
+        foot: "Seat 14 · nights, week 12 · one agent",
       },
       problem: {
         heading: "The client isn't buying hours. They are buying coverage.",
@@ -1339,8 +1394,8 @@ foot: "Night shift · 42 agents · admin analytics",
         {
           ref: "activity",
           label: "Coverage",
-          heading: "Coverage you can show, per agent and per shift.",
-          body: "The desktop agent records screenshots, activity levels and idle time in the background, keeps working offline, and grades its own coverage. Admin analytics raise the exceptions - thin quality, silent devices, missing capture - instead of leaving them to be found at month end.",
+          heading: "Coverage you can show, per agent.",
+          body: "The desktop agent records screenshots, activity levels and idle time in the background, keeps working offline, and each agent's record gets an evidence-quality score. The Analytics page lists the exceptions when an admin opens it - timers running with no screenshot, agents mostly idle, devices silent for a week - instead of leaving them to be found at month end.",
           caps: capsOf("activity", [
             "Desktop agent for Windows, macOS and Linux",
             "Keyboard and mouse activity in 60-second windows",
@@ -1349,34 +1404,27 @@ foot: "Night shift · 42 agents · admin analytics",
             "Offline-first - events queue and sync on reconnect",
             "Device registry with remote revocation",
             "Evidence quality score, 0–100 per person",
-            "Admin analytics - coverage, quality, devices, alerts",
-            "Screenshot review with a timezone selector",
+            "Admin analytics - coverage, quality, devices, warnings",
+            "Screenshot review by person and date",
           ]),
           mock: {
             kind: "score",
             label: "Evidence quality",
-            score: 88,
-            grade: "STRONG",
-            coverage: [
-  { label: "Screenshots", value: "1,204 captured" },
-  { label: "Activity windows", value: "19,880 of 20,160" },
-  { label: "Idle prompts", value: "31 · all answered" },
-  { label: "Devices reporting", value: "41 of 42" },
-],
-foot: "Night shift · 42 agents · admin analytics",
+            evidence: { tracked: "40:00", screenshots: 588, duplicates: 4, activity: 31, events: true, seenDaysAgo: 0 },
+            foot: "Seat 14 · nights, week 12 · one agent",
           },
         },
         {
           ref: "time",
-          label: "Attendance",
-          heading: "Presence and expected hours, per person.",
-          body: "Attendance and presence sit next to the timer, expected hours are configurable per person, and the export is payroll-ready. A shift that started late is a fact on the record rather than a supervisor's recollection.",
+          label: "The hours",
+          heading: "Hours and expected hours, per person.",
+          body: "Each entry carries its start and stop time, expected hours are configurable per person, and the CSV export goes to payroll.",
           caps: capsOf("time", [
             "Web timer - start, pause, resume, stop",
-            "Attendance and presence",
+            "Time logged against a project and its task",
             "Configurable expected hours per person",
-            "Automatic pause past the idle threshold",
-            "Payroll-ready CSV export",
+            "The desktop agent pauses the timer when you go idle",
+            "CSV export of time entries for payroll",
           ]),
           mock: {
             kind: "timer",
@@ -1393,20 +1441,20 @@ foot: "Night shift · 42 agents · admin analytics",
           ref: "clients",
           label: "The account",
           heading: "Every account, with the work filed under it.",
-          body: "Client accounts, projects and teams, with the hours and the activity filed against them. Assignment is per project, so a report per account is a view of the record rather than an export somebody assembles.",
+          body: "Client accounts, projects and teams, with the hours and the activity filed against them. Assignment is per project, and recorded time by account sits in admin analytics rather than in an export somebody assembles.",
           caps: capsOf("clients", [
             "Clients and contacts, with status and source",
             "Client projects with full stage-change history",
             "Team assignment per project",
             "Tasks - open / in progress / done / archived",
-            "Daily updates with status, blockers and KPIs",
+            "Daily updates with status and blockers",
           ]),
           mock: {
             kind: "record",
             title: "Ridgeline · Tier 1 support",
             chip: "In progress",
-            meter: { label: "Contracted", value: "336 h", percent: 92, read: "309 h staffed" },
-            foot: "42 agents · night shift",
+            meter: { label: "Budget", value: "336 h", percent: 92, read: "309 h logged" },
+            foot: "42 agents assigned",
             tags: ["SLA", "inbound"],
           },
         },
@@ -1414,12 +1462,11 @@ foot: "Night shift · 42 agents · admin analytics",
           ref: "knowledge",
           label: "The floor",
           heading: "Procedures the floor can actually find.",
-          body: "Scripts, escalation paths and account procedures live in the workspace and are indexed as they are written. New agents search instead of asking, and the assistant answers with the page it came from.",
+          body: "Scripts, escalation paths and account procedures live in the workspace and are indexed as they are written. New agents find the page by title or ask the assistant, which answers with the page it came from.",
           caps: capsOf("knowledge", [
             "Block editor with slash commands and nested pages",
-            "Page reordering, templates and duplication",
             "Company files in folders - PDF, Word, text",
-            "Full-text search across everything",
+            "Search by project, page and file name",
             "AI assistant over semantic search, cited",
           ]),
           mock: {
@@ -1440,9 +1487,9 @@ foot: "Night shift · 42 agents · admin analytics",
             fig("23:00"),
             ". By ",
             fig("02:00"),
-            " the board shows ",
+            " the Devices page shows ",
             fig("41"),
-            " reporting: one device stopped syncing at ",
+            " online: one device dropped off at ",
             fig("01:12"),
             " and queued its events locally.",
           ],
@@ -1450,36 +1497,29 @@ foot: "Night shift · 42 agents · admin analytics",
             "It reconnects at 02:40 and its events reconcile without double counting, so the shift total doesn't need a correction and nobody files an exception for it.",
           ],
           [
-            "The account report goes out at ",
+            "At ",
             fig("07:00"),
-            " with attendance, activity and evidence quality per agent - and not one supervisor was asked for a status update.",
+            " the account's hours and each agent's evidence quality are on the Analytics page - and not one supervisor was asked for a status update.",
           ],
         ],
         mock: {
           kind: "score",
           label: "Evidence quality",
-          score: 88,
-          grade: "STRONG",
-          coverage: [
-  { label: "Screenshots", value: "1,204 captured" },
-  { label: "Activity windows", value: "19,880 of 20,160" },
-  { label: "Idle prompts", value: "31 · all answered" },
-  { label: "Devices reporting", value: "41 of 42" },
-],
-foot: "41 of 42 devices reporting · 02:00",
+          evidence: { tracked: "7:55", screenshots: 118, duplicates: 3, activity: 16, events: true, seenDaysAgo: 0 },
+          foot: "Seat 27 · night of March 11 · reconnected 02:40",
         },
       },
       objection: {
         eyebrow: "Scale",
         heading: "Hundreds of agents is a different problem from ten.",
-        body: "At this size the work is exceptions, not totals. The agent is offline-first: events queue locally and reconcile on reconnect without double counting. Devices are registered and revocable at any time, admin analytics raise coverage, quality and device alerts, and screenshot review carries a timezone selector for shifts that cross midnight.",
+        body: "At this size the work is exceptions, not totals. The agent is offline-first: events queue locally and reconcile on reconnect without double counting. Devices are registered and revocable at any time, and the Analytics page lists timers running with no screenshot, agents mostly idle and devices silent for a week.",
         argument:
-          "That changes what a supervisor does with a shift. A silent device or a seat that went idle surfaces as an alert during the night, instead of as a discrepancy in the report a client reads at the end of the month.",
+          "That changes what a supervisor does with a shift. A timer running with no screenshot or an agent who went idle shows on the Analytics page the next time it is opened, instead of as a discrepancy in a report a client reads at the end of the month.",
         guarantees: [
           "Events queue locally and reconcile without double counting",
           "Devices are registered and revocable at any time",
-          "Admin analytics raise coverage, quality and device alerts",
-          "Screenshot review carries a timezone selector for shifts that cross midnight",
+          "The Analytics page lists idle agents, timers with no screenshot and silent devices",
+          "Screenshots can be reviewed by person and date",
         ],
       },
       related: ["consulting-firms", "staffing-agencies", "digital-agencies"],
@@ -1487,7 +1527,7 @@ foot: "41 of 42 devices reporting · 02:00",
       meta: {
         title: "DocuFlow for BPO teams - coverage you can show a client",
         description:
-          "Attendance, activity and evidence quality per agent and per shift, with an offline-first agent and device alerts. Coverage reporting for outsourced teams at floor scale.",
+          "Recorded time per agent and per account, evidence quality per agent, and an offline-first desktop agent. Coverage evidence for outsourced teams.",
       },
     },
   },
@@ -1501,8 +1541,8 @@ foot: "41 of 42 devices reporting · 02:00",
       hero: {
         kind: "source",
         question: "which revision did the electrical sub build to?",
-        answer: "Revision C, issued March 14. Walked through on the March 21 coordination call, which is transcribed on the project.",
-        sources: ["doc · E-201 rev C", "call · Mar 21"],
+        answer: "Revision C, issued March 14. Walked through on the March 21 coordination call, whose Fathom recording is on the project page.",
+        sources: ["doc · E-201 rev C", "page · Mar 21 call (Fathom)"],
       },
       problem: {
         heading: "The build is on site. The disputes are on paper.",
@@ -1526,21 +1566,20 @@ foot: "41 of 42 devices reporting · 02:00",
           ref: "knowledge",
           label: "Document control",
           heading: "One version, on the project, searchable.",
-          body: "Drawings, specs, submittals and meeting notes live inside the project, and recorded coordination calls are transcribed as they happen. Search covers what was said in the call as well as what was written in the RFI.",
+          body: "Drawings, specs, submittals and meeting notes live inside the project. Add a coordination call's Loom or Fathom link to the project page, and the assistant can answer from its transcript as well as from the RFI.",
           caps: capsOf("knowledge", [
             "Block editor with slash commands and nested pages",
-            "Page reordering, templates and duplication",
             "Images, file attachments and audio recordings",
             "Company files in folders - PDF, Word, text",
-            "Automatic video transcription, indexed",
-            "Full-text search across everything",
+            "Loom and Fathom transcripts, indexed",
+            "Search by project, page and file name",
             "AI assistant over semantic search, cited",
           ]),
           mock: {
             kind: "source",
             question: "which revision did the electrical sub build to?",
-            answer: "Revision C, issued March 14. Walked through on the March 21 coordination call, which is transcribed on the project.",
-            sources: ["doc · E-201 rev C", "call · Mar 21"],
+            answer: "Revision C, issued March 14. Walked through on the March 21 coordination call, whose Fathom recording is on the project page.",
+            sources: ["doc · E-201 rev C", "page · Mar 21 call (Fathom)"],
           },
         },
         {
@@ -1554,7 +1593,6 @@ foot: "41 of 42 devices reporting · 02:00",
             "Kanban board across all projects",
             "Tasks - open / in progress / done / archived",
             "Reminders with due dates, in-app and email",
-            "Custom modules and fields - 12 field types",
             "Project cloning",
           ]),
           mock: {
@@ -1570,13 +1608,12 @@ foot: "41 of 42 devices reporting · 02:00",
           ref: "time",
           label: "Office hours",
           heading: "The coordination time, on the job that caused it.",
-          body: "The hours your project administrators, estimators and coordinators spend run against the job rather than disappearing into overhead. Timesheets stay editable and export payroll-ready.",
+          body: "The hours your project administrators, estimators and coordinators spend run against the job rather than disappearing into overhead, and the entries export to CSV for payroll.",
           caps: capsOf("time", [
             "Web timer - start, pause, resume, stop",
-            "Time logged against a task in a client project",
-            "Timesheets and entry history, editable",
-            "Attendance and presence",
-            "Payroll-ready CSV export",
+            "Time logged against a project and its task",
+            "Timesheets and entry history",
+            "CSV export of time entries for payroll",
           ]),
           mock: {
             kind: "timer",
@@ -1604,7 +1641,7 @@ foot: "41 of 42 devices reporting · 02:00",
             fig("March 14"),
             ", and the ",
             fig("March 21"),
-            " coordination call where the change was walked through, transcribed. Both are on the project record rather than in somebody's inbox.",
+            " coordination call where the change was walked through, recorded in Fathom with its transcript. Both are on the project record rather than in somebody's inbox.",
           ],
           [
             "The conversation takes one call instead of a claim - and the ",
@@ -1616,7 +1653,7 @@ foot: "41 of 42 devices reporting · 02:00",
           kind: "source",
           question: "when was revision C issued and who confirmed it?",
           answer: "Issued March 14 and confirmed by the electrical sub on the March 21 coordination call.",
-          sources: ["doc · E-201 rev C", "call · Mar 21"],
+          sources: ["doc · E-201 rev C", "page · Mar 21 call (Fathom)"],
         },
       },
       objection: {
@@ -1626,9 +1663,9 @@ foot: "41 of 42 devices reporting · 02:00",
         argument:
           "What it does carry is the half of a construction business that runs on paper: revisions, RFIs, submittals, subcontractor contacts and the coordination time nobody bills. That is where the disputes are decided, and it is the half that has to still make sense a year after handover.",
         guarantees: [
-          "The web timer runs in a browser, on the office and trailer machines you control",
+          "The web timer runs in a browser, on the office and trailer machines",
           "Drawings, submittals and recordings attach to the project, not to an inbox",
-          "Full-text search covers transcribed coordination calls as well as documents",
+          "The assistant answers from project pages, files and Loom or Fathom transcripts, with sources",
           "Every stage change on a project is kept, with its history",
         ],
       },
@@ -1637,7 +1674,7 @@ foot: "41 of 42 devices reporting · 02:00",
       meta: {
         title: "DocuFlow for construction - document control and project admin",
         description:
-          "Drawings, RFIs, submittals and transcribed coordination calls on the project record, with the office hours that chase them. Built for the office, not for site labour tracking.",
+          "Drawings, RFIs, submittals and coordination-call transcripts on the project record, with the office hours that chase them. Built for the office, not for site labour tracking.",
       },
     },
   },
@@ -1678,7 +1715,7 @@ foot: "41 of 42 devices reporting · 02:00",
           ref: "clients",
           label: "The mandate",
           heading: "Every role, with the hours it actually took.",
-          body: "Client accounts, mandates, stages and budgeted hours on one record. Twelve custom field types mean a permanent search and a contract placement don't have to be forced into the same shape.",
+          body: "Client accounts, mandates, stages and budgeted hours on one record, with every stage change kept.",
           caps: capsOf("clients", [
             "Clients and contacts, with status and source",
             "Client projects with full stage-change history",
@@ -1686,7 +1723,6 @@ foot: "41 of 42 devices reporting · 02:00",
             "Budgeted vs actual hours, live",
             "Tasks - open / in progress / done / archived",
             "Reminders with due dates, in-app and email",
-            "Custom modules and fields - 12 field types",
           ]),
           mock: {
             kind: "record",
@@ -1704,10 +1740,9 @@ foot: "41 of 42 devices reporting · 02:00",
           body: "The timer runs against a task inside the mandate, so sourcing, screening and rescheduling stop being invisible. What a placement costs to make is a number on the record rather than a feeling at the end of the quarter.",
           caps: capsOf("time", [
             "Web timer - start, pause, resume, stop",
-            "Time logged against a task in a client project",
-            "Timesheets and entry history, editable",
-            "Attendance and presence",
-            "Payroll-ready CSV export",
+            "Time logged against a project and its task",
+            "Timesheets and entry history",
+            "CSV export of time entries for payroll",
           ]),
           mock: {
             kind: "timer",
@@ -1729,14 +1764,14 @@ foot: "41 of 42 devices reporting · 02:00",
             "Block editor with slash commands and nested pages",
             "Images, file attachments and audio recordings",
             "Company files in folders - PDF, Word, text",
-            "Full-text search across everything",
+            "Search by project, page and file name",
             "AI assistant over semantic search, cited",
           ]),
           mock: {
             kind: "source",
             question: "why did the rate on Ridgeway role 3 move?",
             answer: "The spec was revised on April 8 to add a forklift certification. Agreed on the call the same day and reflected in the amended mandate.",
-            sources: ["doc · Mandate 0412 rev B", "call · Apr 8"],
+            sources: ["doc · Mandate 0412 rev B", "doc · Call notes Apr 8"],
           },
         },
       ],
@@ -1771,13 +1806,13 @@ foot: "41 of 42 devices reporting · 02:00",
       objection: {
         eyebrow: "Placed staff",
         heading: "Can you monitor the contractors we place?",
-        body: "Usually not, and implying otherwise would be dishonest. The desktop agent installs on computers your organisation controls - your recruiters' machines. A contractor placed at a client site works on the client's hardware, under the client's IT policy, and installing a monitoring agent there is frequently neither permitted nor yours to authorise.",
+        body: "Usually not, and implying otherwise would be dishonest. The desktop agent runs on the machines you pair with your workspace - your recruiters' machines. A contractor placed at a client site works on the client's hardware, under the client's IT policy, and installing a monitoring agent there is frequently neither permitted nor yours to authorise.",
         argument:
           "What this does cover is your own desk: the hours a mandate costs to fill, the client record it is filled against, and the file that has to outlive the placement. That is where a staffing margin is won or lost, and it is the part you actually control.",
         guarantees: [
-          "The desktop agent installs only on machines your organisation controls",
+          "The desktop agent runs only on machines paired with your workspace",
           "The web timer runs in a browser, on your recruiters' hours",
-          "Devices are registered and revocable at any time",
+          "Any device can be revoked from the Devices page",
           "Anyone can open and review their own recorded data",
         ],
       },
@@ -1820,25 +1855,25 @@ export const USE_CASES = [
      *  l'argument. Il tient en une phrase — un relevé creux est AMBIGU (personne
      *  n'a travaillé, ou rien n'a été capturé), et le score tranche. C'est ce qui
      *  protège la personne d'une mauvaise conclusion, donc ça se dit en clair. */
-    body: "You can't see the work, so you read the record: hours, screenshots and daily updates land on the client project as the week happens. And when the record itself is thin, the evidence quality score says so - a gap in the data doesn't get read as a gap in the work.",
+    body: "You can't see the work, so you read the record: hours, screenshots and daily updates land on the client project as the week happens. The evidence quality score says how well the hours are backed, and the Devices page says when a laptop last checked in - so a gap in the data doesn't get read as a gap in the work.",
     pillar: "activity" as PillarId,
   },
   {
     id: "hybrid-teams",
     title: "Hybrid teams",
-    body: "The same timesheet covers the desk and the kitchen table: the agent queues events locally when the connection drops and reconciles them on reconnect, without double counting. Capture stays inside the hours you set, so a laptop still open at 9pm isn't recording.",
+    body: "The same timesheet covers the desk and the kitchen table: the agent queues events locally when the connection drops and reconciles them on reconnect, without double counting. Screenshots can be limited to the working hours you set, so a laptop still open at 9pm takes none.",
     pillar: "time" as PillarId,
   },
   {
     id: "client-billing",
     title: "Client billing",
-    body: "Time is logged against a task inside a client project, never a free-text label, so an invoice line traces back to hours, tasks and the documents they produced.",
+    body: "Time is logged against a task inside a client project, never a free-text label, so the hours behind an invoice line - by task, with the documents they produced - are already on the record.",
     pillar: "clients" as PillarId,
   },
   {
     id: "employee-productivity",
     title: "Employee productivity",
-    body: "Activity is measured in 60-second windows and idle time is flagged with a prompt, never deduced quietly. A visible indicator shows when the timer is running, and anyone can open the data recorded about them - which is the difference between a measure a team accepts and one it works around.",
+    body: "Each screenshot carries the keyboard and mouse activity of the minute before it, and by default the agent asks before it pauses for idle. A visible indicator shows when the timer is running, and anyone can open the data recorded about them - which is the difference between a measure a team accepts and one it works around.",
     pillar: "activity" as PillarId,
   },
   {
@@ -1850,7 +1885,7 @@ export const USE_CASES = [
   {
     id: "onboarding-documentation",
     title: "Onboarding documentation",
-    body: "A block editor with nested pages and templates, recorded walkthroughs transcribed automatically, and an assistant that answers with the page it came from. New people search instead of asking.",
+    body: "A block editor for procedures, Loom and Fathom walkthroughs whose transcripts are fetched on their own, and an assistant that answers with the page it came from. New people ask it instead of interrupting the team.",
     pillar: "knowledge" as PillarId,
   },
 ];
@@ -2045,20 +2080,20 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
     en: {
       eyebrow: "Client billing",
       h1: "Every invoice line should survive one question: “What was this?”",
-      lede: "Every billed hour starts on a task inside a client project. When a client questions a line, the hours, tasks and documents behind it are already in one record.",
+      lede: "Every hour starts on a task inside a client project. DocuFlow does not write the invoice, but when a client questions a line, the hours, tasks and documents behind it are already in one record.",
       hero: {
         kind: "record",
         title: "Halcyon Retail · March",
         chip: "In review",
-        meter: { label: "Billed", value: "$18,400", percent: 76, read: "76% of budget" },
+        meter: { label: "Budget", value: "120 h", percent: 76, read: "76% used" },
         foot: "42 entries · 3 tasks",
-        tags: ["invoice", "March"],
+        tags: ["campaign", "March"],
       },
       situation: {
         heading: "The line says “campaign production.” The client asks what that means.",
         points: [
           {
-            title: "The line is assembled by hand, not generated from the project record.",
+            title: "The line is assembled by hand.",
             body: "Hours come out of one tool and the work out of another. The evening before the invoice goes out, somebody reconciles both into a line - a summary of a summary.",
           },
           {
@@ -2091,14 +2126,13 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
           ref: "clients",
           label: "The line",
           heading: "Every line traces back to a record.",
-          body: "Hours, tasks, notes and documents attach to the client project as work happens. At month end, the invoice becomes a view of that record instead of something rebuilt by one person.",
+          body: "Hours, tasks, notes and documents attach to the client project as work happens. DocuFlow does not write the invoice; it keeps the record each line is written from, so nobody rebuilds it at month end.",
           caps: capsOf("clients", [
             "Clients and contacts, with status and source",
             "Client projects with full stage-change history",
             "Budgeted vs actual hours, live",
             "Tasks - open / in progress / done / archived",
-            "Notes with @mentions that notify",
-            "Custom modules and fields - 12 field types",
+            "Project notes",
           ]),
           /* ⚠️ `attach` et non `record` — le héros de cette page rendait DÉJÀ
              cette fiche, au titre, à la puce, à la jauge et aux valeurs
@@ -2108,7 +2142,8 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
              Aucune n'était montrée. Le total `57 items` est dérivé — c'est ce
              qui rend « one record » vérifiable au lieu d'être une formule, et
              c'est le chiffre que le dessin de la situation contredit avec son
-             `0 attached`. */
+             `0 attached`. La carte montre le dossier, jamais une facture :
+             DocuFlow n'en écrit pas. */
           mock: {
             kind: "attach",
             title: "Halcyon Retail · March",
@@ -2116,23 +2151,23 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             rows: [
               { label: "Hours", count: 42, unit: "entries" },
               { label: "Tasks", count: 3, unit: "on the project" },
-              { label: "Notes", count: 7, unit: "with mentions" },
+              { label: "Notes", count: 7, unit: "written" },
               { label: "Documents", count: 5, unit: "produced" },
             ],
-            foot: "the invoice is a view of this",
+            foot: "what the March lines are written from",
           },
         },
         {
           ref: "time",
           label: "The hours",
           heading: "Hours that were never free text.",
-          body: "The timer runs against a task inside a client project, so every hour already knows what it was for. Entries remain editable with their history, and exports can be shaped for the fee note.",
+          body: "The timer runs against a task inside a client project, so every hour already knows what it was for. A wrong entry can be deleted, and admins export every entry as a CSV: date, person, project, task, description, hours.",
           caps: capsOf("time", [
             "Web timer - start, pause, resume, stop",
-            "Time logged against a task in a client project",
+            "Time logged against a project and its task",
             "Multi-tab safe - one tab leads, no double counting",
-            "Timesheets and entry history, editable",
-            "Payroll-ready CSV export",
+            "Timesheets and entry history",
+            "CSV export of time entries for payroll",
           ]),
           mock: {
             kind: "timer",
@@ -2145,7 +2180,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
               { task: "Halcyon · Copy review", duration: "0:38:15" },
               { task: "Halcyon · Client call", duration: "0:26:00" },
             ],
-            foot: "Timesheet · March 14 · editable",
+            foot: "Timesheet · March 14",
           },
         },
       ],
@@ -2159,7 +2194,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             ", described as “campaign production”.",
           ],
           [
-            "The project record already holds the work behind it - ",
+            "The entries on the project already hold the work behind it - ",
             fig("14 h"),
             " on the landing page build, ",
             fig("6.5 h"),
@@ -2174,34 +2209,33 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
         mock: {
           kind: "query",
           client: "Halcyon Retail · March",
-          invoice: "Campaign production",
-          amount: "$4,200",
+          line: "“Campaign production” - what was this?",
           tasks: [
-            { name: "Landing page build", hours: "14 h" },
-            { name: "Copy review", hours: "6.5 h" },
-            { name: "Client calls", hours: "3 h" },
+            { name: "Landing page build", hours: 14 },
+            { name: "Copy review", hours: 6.5 },
+            { name: "Client calls", hours: 3 },
           ],
-          foot: "3 tasks · 23.5 h · 42 entries",
+          foot: "from the March entries",
         },
       },
       objection: {
         eyebrow: "Trust",
         heading: "Itemising everything invites the client to audit everything.",
-        body: "You decide what leaves the building. The record exists so a question has an answer, not so every invoice ships with a dossier. Entries and timesheets remain editable with their history, and exports are yours to shape. When screenshots are used, they can be blurred so the hours are supported without exposing the client's material.",
+        body: "You decide what leaves the building. The record exists so a question has an answer, not so every invoice ships with a dossier. Nothing in DocuFlow is visible to your client: admins export one CSV of the entries, and you choose what goes out. Screenshots can be switched off for the whole workspace.",
         argument:
           "A line you can defend in one message is worth more than one that goes unquestioned only because it is opaque. The aim is not to send more detail - it is to avoid rebuilding the record when detail is requested.",
         guarantees: [
           "Time is logged against a task in a client project, never a free-text label",
-          "Timesheets and entry history stay editable",
-          "Screenshots can be blurred so content is never legible",
-          "Exports are yours to shape",
+          "Durations come from the timer, and a wrong entry can be deleted",
+          "Nothing in DocuFlow is visible to your client",
+          "Screenshots can be switched off for the whole workspace",
         ],
       },
       cta: { title: "Start with the invoice you send next.", note: FINE_PRINT },
       meta: {
         title: "DocuFlow for client billing - invoice lines that trace",
         description:
-          "Every billed hour starts on a task inside a client project, so a queried invoice line traces back to the work behind it.",
+          "Every hour starts on a task inside a client project, so a queried invoice line traces back to the work behind it.",
       },
     },
   },
@@ -2214,7 +2248,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
     en: {
       eyebrow: "Remote teams",
       h1: "You cannot see the work. You can read the record.",
-      lede: "Hours, activity and daily updates land on the client project as the week happens. When the record is thin, its evidence quality score says so - before a gap in the data is mistaken for a gap in the work.",
+      lede: "Hours, activity and daily updates land on the client project as the week happens. An evidence quality score says how well those hours are backed, and the Devices page says when a laptop last checked in - before a gap in the data is mistaken for a gap in the work.",
       /* ⚠️ `week` et non `score`. Le H1 promet quelque chose à LIRE — « You
          cannot see the work. You can read the record. » — et `ScoreMock` posait
          le chiffre au-dessus de vingt-quatre fenêtres anonymes et de huit
@@ -2224,19 +2258,20 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
          activité et ses captures. Le total `38 h` est DÉRIVÉ des journées et
          tombe sur le chiffre du scénario (« 11 h against 38 h the week
          before ») : c'est la même semaine, vue entière avant d'être vue
-         cassée. */
+         cassée. Les captures sont au rythme réel (3–5 min par défaut, donc
+         ~15 par heure suivie), et le score est CALCULÉ dessus. */
       hero: {
         kind: "week",
         label: "Evidence quality",
-        score: 84,
-        grade: "STRONG",
         days: [
-          { day: "MON", hours: "7:40", activity: 78, shots: 3 },
-          { day: "TUE", hours: "8:10", activity: 86, shots: 3 },
-          { day: "WED", hours: "6:55", activity: 64, shots: 2 },
-          { day: "THU", hours: "8:25", activity: 91, shots: 3 },
-          { day: "FRI", hours: "6:50", activity: 61, shots: 2 },
+          { day: "MON", hours: "7:40", activity: 78, shots: 112 },
+          { day: "TUE", hours: "8:10", activity: 86, shots: 121 },
+          { day: "WED", hours: "6:55", activity: 64, shots: 102 },
+          { day: "THU", hours: "8:25", activity: 91, shots: 127 },
+          { day: "FRI", hours: "6:50", activity: 61, shots: 100 },
         ],
+        duplicates: 2,
+        seenDaysAgo: 0,
         foot: "Week 31 · remote · one person",
       },
       situation: {
@@ -2276,13 +2311,13 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
           ref: "activity",
           label: "The record",
           heading: "The record grades its own completeness.",
-          body: "The desktop agent records screenshots, activity levels and idle time, then scores the record's coverage from 0 to 100. A thin week announces itself instead of looking like a bad week.",
+          body: "The desktop agent records screenshots, activity levels and idle time, and admins see a score from 0 to 100 for how complete the record is. Hours with too little evidence behind them show as such, and the Devices page shows when a laptop stopped checking in.",
           caps: capsOf("activity", [
             "Evidence quality score, 0–100 per person",
             "Desktop agent for Windows, macOS and Linux",
             "Keyboard and mouse activity in 60-second windows",
             "Offline-first - events queue and sync on reconnect",
-            "Admin analytics - coverage, quality, devices, alerts",
+            "Admin analytics - coverage, quality, devices, warnings",
             "Device registry with remote revocation",
           ]),
           /* ⚠️ `device` et non `score` — le héros de cette page porte DÉJÀ la
@@ -2293,23 +2328,24 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
              Le héros garde le chiffre qu'on LIT — c'est la promesse du H1. Ce
              bloc-ci montre la MACHINE, ce que son corps décrit mot pour mot, et
              c'est ce poste que le scénario fait taire plus bas.
-             Toutes les valeurs viennent de `product.ts` (pilier `activity`) :
-             3 plateformes, captures 3–15 min, fenêtres de 60 s, file hors
-             ligne, registre révocable. Rien d'inventé sauf l'identifiant de
-             parc, qui est une étiquette de maquette comme « Atlas · Sprint 14 ». */
+             Les lignes sont celles de la page Devices du produit — OS, dernier
+             contact, révocation — et rien d'autre : ni taille de file, ni
+             cadence de capture, qui n'y figurent pas. Rien d'inventé sauf
+             l'identifiant de parc, qui est une étiquette de maquette comme
+             « Atlas · Sprint 14 ». */
           mock: {
             kind: "device",
             label: "Device registry",
             name: "WS-2291",
-            platform: "macOS · reporting since Monday",
-            status: "Live",
+            platform: "macOS · paired Monday",
+            status: "Online",
             platforms: [{ short: "WIN" }, { short: "MAC", active: true }, { short: "LNX" }],
             rows: [
-              { label: "Screenshots", value: "randomised · 3–15 min" },
-              { label: "Activity", value: "60-second windows" },
-              { label: "Offline queue", value: "0 events" },
+              { label: "OS", value: "macOS" },
+              { label: "Last seen", value: "2 min ago" },
+              { label: "Token", value: "revocable" },
             ],
-            foot: "Revocable from admin · one device, one person",
+            foot: "Revocable from the Devices page · one device, one person",
           },
         },
         {
@@ -2318,11 +2354,10 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
           heading: "Hours that arrive without being asked for.",
           body: "The timer runs against a task inside a client project, so the week assembles itself as it happens. Daily updates carry status and blockers, which is the part a status meeting was there to collect.",
           caps: capsOf("time", [
-            "Time logged against a task in a client project",
+            "Time logged against a project and its task",
             "Multi-tab safe - one tab leads, no double counting",
-            "Automatic pause past the idle threshold",
-            "Timesheets and entry history, editable",
-            "Attendance and presence",
+            "The desktop agent pauses the timer when you go idle",
+            "Timesheets and entry history",
           ]),
           mock: {
             kind: "timer",
@@ -2331,7 +2366,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
               { task: "Atlas · Standup", duration: "0:12:00" },
               { task: "Atlas · Code review", duration: "1:04:22" },
             ],
-            foot: "Timesheet · Tuesday · editable",
+            foot: "Timesheet · Tuesday",
           },
         },
       ],
@@ -2347,41 +2382,47 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             " the week before. On a dashboard that is a conversation nobody wants to have.",
           ],
           [
-            "The evidence quality score for the week reads ",
-            fig("38/100"),
-            " - weak. The agent stopped reporting on Tuesday and queued four days of events it never sent, so the record is incomplete rather than evidence that little was done.",
+            "The evidence score on those 11 h reads ",
+            fig("94/100"),
+            " - what did arrive is sound. It simply stops: the laptop was last seen on Tuesday at ",
+            fig("14:38"),
+            ".",
           ],
           [
-            "The device shows in admin analytics with an alert against it. The conversation is with IT, not with the person.",
+            "The Devices page shows it offline since then. The conversation is with IT, not with the person.",
           ],
         ],
-        /* `silence` et non `score` : le paragraphe nomme un JOUR, un ARRÊT et
-           des événements RETENUS. Une carte de score ne porte aucun des trois —
-           elle dessinerait une semaine dense sous une note « WEAK », donc un
-           visuel qui contredit sa propre légende.
+        /* `silence` et non `score` : le paragraphe nomme un JOUR et un ARRÊT.
+           Une carte de score ne porte aucun des deux.
            `cut: 34` sur cinq jours tombe dans le deuxième, mardi : la coupure
-           est à l'endroit que la phrase nomme, et le nombre de jours retenus
-           s'en déduit (4) au lieu d'être retapé. */
+           est à l'endroit que la phrase nomme, et l'intervalle sans données
+           s'en déduit au lieu d'être retapé.
+           ⚠️ Le score est calculé sur ce qui EST arrivé (11 h, et leurs
+           captures) : il est fort, et c'est le point de la section — le relevé
+           reçu est sain, il s'arrête. Ce qui explique l'arrêt est le dernier
+           contact du poste, pas le score. L'ancienne version affichait
+           « 38 · WEAK » et « 4 days queued », deux choses que le produit ne
+           peut pas savoir : le serveur ne voit pas ce qu'un poste n'a pas
+           envoyé. */
         mock: {
           kind: "silence",
           label: "Evidence quality",
-          score: 38,
-          grade: "WEAK",
+          evidence: { tracked: "11:00", screenshots: 165, duplicates: 2, activity: 70, events: true, seenDaysAgo: 3 },
           days: ["MON", "TUE", "WED", "THU", "FRI"],
           cut: 34,
-          lastEvent: "Last event · Tue 14:38",
-          foot: "Week 32 · device silent since Tuesday",
+          lastEvent: "Last seen · Tue 14:38",
+          foot: "Week 32 · device offline since Tuesday",
         },
       },
       objection: {
         eyebrow: "Surveillance",
         heading: "Remote monitoring is where trust goes to die.",
-        body: "Monitoring has to be visible or it is not worth having. A running indicator, active-hours window, blurred screenshots and self-review make the record inspectable by the person it describes. The desktop agent is separate from the browser timer, so a team can run time and projects with no capture at all.",
+        body: "Monitoring has to be visible or it is not worth having. A running indicator, an optional working-hours window for screenshots and self-review make the record inspectable by the person it describes. The desktop agent is separate from the browser timer, so a team can run time and projects with no capture at all.",
         argument:
           "The score protects the person because it grades the record, never the human. A week that looks empty is checked against the device before anyone attributes the gap to the individual.",
         guarantees: [
           "A visible indicator shows exactly when the timer is running",
-          "Capture is restricted to an active-hours window",
+          "Screenshots can be limited to the working hours your admins set",
           "Anyone can open and review their own recorded data",
           "The web timer runs in a browser - the desktop agent is a separate install",
         ],
@@ -2390,7 +2431,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
       meta: {
         title: "DocuFlow for remote teams - read the record, not the dot",
         description:
-          "Hours, activity and daily updates land on the client project as the week happens, and an evidence quality score says when the record itself is thin.",
+          "Hours, activity and daily updates land on the client project as the week happens, and an evidence quality score says when the hours have too little evidence behind them.",
       },
     },
   },
@@ -2403,7 +2444,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
     en: {
       eyebrow: "Hybrid teams",
       h1: "The desk and the kitchen table on one timesheet.",
-      lede: "One timesheet follows the week from office to home. Offline events reconcile once the connection returns, and active hours stop capture when the working day ends.",
+      lede: "One timesheet follows the week from office to home. Offline events reconcile once the connection returns, and screenshots can stop when the working day ends.",
       /* ⚠️ `week` et non `timer`. Cette page rendait TROIS chronomètres
          identiques — héros, pilier 01, scénario — aux mêmes valeurs, ce qui
          disait au lecteur qu'il avait déjà vu la page.
@@ -2411,22 +2452,23 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
          SEMAINE ENTIÈRE : c'est la seule surface d'où l'on voit qu'une feuille
          couvre deux endroits. Le pilier 01 garde le chronomètre — c'est LA
          feuille de temps, en cours.
-         Les lieux passent par `tag`, et le total `37 h` est dérivé des cinq
-         journées : sur une page dont la situation dit « a timesheet that has to
-         add up », le total ne peut pas être une décoration. */
+         Le total `37 h` est dérivé des cinq journées : sur une page dont la
+         situation dit « a timesheet that has to add up », le total ne peut pas
+         être une décoration. Plus de lieu par journée (`OFFICE` / `HOME`) :
+         DocuFlow n'en enregistre aucun, donc la carte ne peut pas l'afficher. */
       hero: {
         kind: "week",
         label: "Evidence quality",
-        score: 79,
-        grade: "STRONG",
         days: [
-          { day: "MON", hours: "7:30", activity: 74, shots: 2, tag: "OFFICE" },
-          { day: "TUE", hours: "8:05", activity: 83, shots: 3, tag: "OFFICE" },
-          { day: "WED", hours: "6:45", activity: 66, shots: 2, tag: "HOME" },
-          { day: "THU", hours: "7:50", activity: 88, shots: 3, tag: "HOME" },
-          { day: "FRI", hours: "6:50", activity: 62, shots: 2, tag: "HOME" },
+          { day: "MON", hours: "7:30", activity: 74, shots: 112 },
+          { day: "TUE", hours: "8:05", activity: 83, shots: 121 },
+          { day: "WED", hours: "6:45", activity: 66, shots: 101 },
+          { day: "THU", hours: "7:50", activity: 88, shots: 117 },
+          { day: "FRI", hours: "6:50", activity: 62, shots: 102 },
         ],
-        foot: "Week 14 · one timesheet, two places",
+        duplicates: 6,
+        seenDaysAgo: 0,
+        foot: "Week 14 · one timesheet, whichever desk",
       },
       situation: {
         heading: "Two places, one week, and a timesheet that has to add up.",
@@ -2465,30 +2507,29 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
           ref: "time",
           label: "The timesheet",
           heading: "One timesheet, wherever the day happened.",
-          body: "The timer runs against a task inside a client project, not a location. Entries remain editable with their history, expected hours are configurable per person, and the same export carries work from either desk.",
+          body: "The timer runs against a task inside a client project, not a location. A wrong entry can be deleted, expected hours are configurable per person, and the same export carries work from either desk.",
           caps: capsOf("time", [
             "Web timer - start, pause, resume, stop",
-            "Time logged against a task in a client project",
+            "Time logged against a project and its task",
             "Multi-tab safe - one tab leads, no double counting",
-            "Timesheets and entry history, editable",
-            "Attendance and presence",
+            "Timesheets and entry history",
             "Configurable expected hours per person",
           ]),
           mock: {
             kind: "timer",
             running: { project: "Meridian · Operating model", task: "Board pack revisions", elapsed: "1:32:07" },
             entries: [
-              { task: "Office · Workshop prep", duration: "2:10:00" },
-              { task: "Home · Stakeholder calls", duration: "1:45:30" },
+              { task: "Meridian · Workshop prep", duration: "2:10:00" },
+              { task: "Meridian · Stakeholder calls", duration: "1:45:30" },
             ],
-            foot: "Timesheet · Thursday · two locations",
+            foot: "Timesheet · Thursday",
           },
         },
         {
           ref: "activity",
           label: "The agent",
           heading: "Offline is a state, not a hole.",
-          body: "Events queue locally when the connection drops and reconcile on reconnect without double counting. Capture is restricted to an active-hours window, so the boundary of the working day is a setting rather than an argument.",
+          body: "Events queue locally when the connection drops and reconcile on reconnect without double counting. Screenshots can be limited to the working hours your admins set, so the boundary of the working day is a setting rather than an argument.",
           caps: capsOf("activity", [
             "Offline-first - events queue and sync on reconnect",
             "Capture restricted to an active-hours window",
@@ -2497,16 +2538,16 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "Device registry with remote revocation",
           ]),
           /* Ce bloc s'appelle « The agent » et son corps décrit l'AGENT — file
-             locale, reconnexion, fenêtre d'heures actives, révocation. Une
-             carte de score n'en montre rien : elle note le relevé, pas la
-             machine. `device` porte exactement les lignes que le corps
-             énumère, et le score reste sur le héros où il note la semaine. */
+             locale, reconnexion, fenêtre d'heures, révocation. Une carte de
+             score n'en montre rien : elle note le relevé, pas la machine.
+             `device` montre le poste tel que la page Devices l'affiche, et le
+             score reste sur le héros où il note la semaine. */
           mock: {
             kind: "device",
             label: "Device registry",
             name: "MBP-0417",
-            platform: "macOS · home network",
-            status: "Live",
+            platform: "macOS · MacBook Pro",
+            status: "Online",
             platforms: [{ short: "WIN" }, { short: "MAC", active: true }, { short: "LNX" }],
             /* ⚠️ Pas de ligne « Active hours » ici : la fenêtre d'heures
                actives est le SUJET ENTIER du dessin de l'objection
@@ -2514,11 +2555,11 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
                endroit — sinon la page l'énonce deux fois et le dessin de
                l'objection ne fait que répéter une ligne déjà lue. */
             rows: [
-              { label: "Offline queue", value: "reconciled 14:02" },
-              { label: "Capture", value: "randomised · 3–15 min" },
-              { label: "Screenshots", value: "blurred by default" },
+              { label: "OS", value: "macOS" },
+              { label: "Last seen", value: "14:02" },
+              { label: "Token", value: "revocable" },
             ],
-            foot: "Revocable from admin · one device, one person",
+            foot: "Revocable from the Devices page · one device, one person",
           },
         },
       ],
@@ -2541,7 +2582,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
           [
             "At ",
             fig("21:00"),
-            " the laptop is open again and nothing is captured, because the active-hours window closed at six.",
+            " the laptop is open again and no screenshot is taken, because the working-hours window closed at six.",
           ],
         ],
         /* ⚠️ `reconcile` et non `timer` — c'était le TROISIÈME chronomètre
@@ -2558,10 +2599,10 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
           kind: "reconcile",
           label: "Thursday · one timesheet",
           blocks: [
-            { at: "09:05", place: "OFFICE", task: "Workshop prep", hours: "2:38" },
-            { at: "11:43", place: "OFFICE", task: "Board pack revisions", hours: "1:57" },
-            { at: "13:40", place: "HOME", task: "Stakeholder calls", hours: "0:22", offline: true },
-            { at: "14:02", place: "HOME", task: "Board pack revisions", hours: "2:03" },
+            { at: "09:05", task: "Workshop prep", hours: "2:38" },
+            { at: "11:43", task: "Board pack revisions", hours: "1:57" },
+            { at: "13:40", task: "Stakeholder calls", hours: "0:22", offline: true },
+            { at: "14:02", task: "Board pack revisions", hours: "2:03" },
           ],
           reconnected: "14:02",
           foot: "Thursday · queued and reconciled",
@@ -2570,12 +2611,12 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
       objection: {
         eyebrow: "Boundaries",
         heading: "Working from home should not mean being recorded at home.",
-        body: "It does not. Capture stays inside an active-hours window your organisation sets, and nothing is recorded outside it. Screenshots can be blurred, the desktop agent is separate from the browser timer, and registered devices can be revoked at any time.",
+        body: "It does not have to. Screenshots can be limited to the working hours your organisation sets, and none is taken while the timer is stopped. The desktop agent is separate from the browser timer, and registered devices can be revoked at any time.",
         argument:
-          "The window turns the end of the working day into a setting everyone can see, not a judgement made afterwards. A laptop open at nine records nothing because the tool keeps the boundary for the team.",
+          "The window turns the end of the working day into a setting everyone can see, not a judgement made afterwards. A laptop open at nine takes no screenshot because the tool keeps the boundary for the team.",
         guarantees: [
-          "Capture is restricted to an active-hours window",
-          "Screenshots can be blurred so content is never legible",
+          "Screenshots can be limited to the working hours your admins set",
+          "No screenshot is taken while the timer is stopped",
           "Devices are registered and revocable at any time",
           "Anyone can open and review their own recorded data",
         ],
@@ -2584,7 +2625,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
       meta: {
         title: "DocuFlow for hybrid teams - one timesheet, two places",
         description:
-          "Events queue offline and reconcile without double counting, and capture stays inside the hours you set. Office days and home days on the same timesheet.",
+          "Events queue offline and reconcile without double counting, and screenshots can stay inside the hours you set. Office days and home days on the same timesheet.",
       },
     },
   },
@@ -2597,26 +2638,36 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
     en: {
       eyebrow: "Employee productivity",
       h1: "Measure openly, or the team will work around the measure.",
-      lede: "Activity is measured in 60-second windows and idle time is flagged with a prompt, never deduced quietly. A visible indicator shows when the timer is running, and anyone can open the data recorded about them.",
+      lede: "Each screenshot carries the keyboard and mouse activity of the minute before it, and by default the agent asks before it pauses for idle. A visible indicator shows when the timer is running, and anyone can open the data recorded about them.",
       /* ⚠️ `windows` et non `score` — le pilier 01 rendait la MÊME carte de
          score, aux mêmes valeurs, un écran plus bas.
          Le score reste au pilier 01, dont le corps dit « an evidence quality
          score rates the completeness of the record ». Le héros prend la
-         première phrase du lede, « activity is measured in 60-second
-         windows » : soixante carrés font une heure, et le lecteur peut les
-         compter. C'est ce qu'une carte de score ne permettait pas.
-         Les cinq fenêtres au ralenti tombent sur le ralenti du scénario
-         (11:04 → 11:09), et leur compte est dérivé de la grille. */
+         première phrase du lede : chaque capture porte l'activité de la minute
+         qui la précède. Les captures d'une heure, horodatées, se comptent — ce
+         qu'une carte de score ne permettait pas. (L'ancienne grille de
+         soixante « fenêtres d'une minute » dessinait une série minute par
+         minute que l'agent n'enregistre pas.)
+         Le trou tombe sur le ralenti du scénario (11:04 → 11:14) : aucune
+         capture pendant les dix minutes, et l'intervalle est dérivé. */
       hero: {
         kind: "windows",
-        label: "Activity · one hour",
+        label: "Screenshots · one hour",
         indicator: "Recording",
-        cells: [
-          72, 85, 64, 91, 78, 58, 88, 70, 95, 66, 82, 74, 60, 89, 77,
-          68, 93, 71, 84, 62, 90, 75, 57, 86, null, null, null, null, null, 65,
-          88, 76, 59, 92, 70, 83, 61, 87, 74, 96, 63, 80, 69, 90, 72,
-          85, 58, 91, 77, 64, 66, 89, 75, 82, 60, 93, 71, 84, 68, 79,
+        captures: [
+          { at: "11:00", activity: 72 },
+          { at: "11:03", activity: 64 },
+          { at: "11:17", activity: 81 },
+          { at: "11:21", activity: 77 },
+          { at: "11:25", activity: 58 },
+          { at: "11:30", activity: 85 },
+          { at: "11:33", activity: 69 },
+          { at: "11:38", activity: 91 },
+          { at: "11:42", activity: 74 },
+          { at: "11:46", activity: 62 },
+          { at: "11:51", activity: 88 },
         ],
+        idle: { from: "11:04", to: "11:14" },
         foot: "one hour · visible to the person measured",
       },
       situation: {
@@ -2656,49 +2707,40 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
           ref: "activity",
           label: "The measure",
           heading: "Measured in the open, with the record graded for completeness.",
-          body: "Activity is measured in 60-second windows, idle time triggers a prompt and countdown, and an evidence quality score rates the completeness of the record - not the person it describes.",
+          body: "Each screenshot carries the activity of the minute before it, idle time triggers a prompt and countdown, and an evidence quality score rates the completeness of the record - not the person it describes.",
           caps: capsOf("activity", [
             "Keyboard and mouse activity in 60-second windows",
             "Idle detection with prompt and countdown",
             "Evidence quality score, 0–100 per person",
             "Capture restricted to an active-hours window",
-            "Screenshots soft-deleted with a recorded reason",
-            "Admin analytics - coverage, quality, devices, alerts",
+            "Admin analytics - coverage, quality, devices, warnings",
           ]),
           mock: {
             kind: "score",
             label: "Evidence quality",
-            score: 88,
-            grade: "STRONG",
-            coverage: [
-  { label: "Screenshots", value: "34 captured" },
-  { label: "Activity windows", value: "412 of 420" },
-  { label: "Idle prompts", value: "2 · both answered" },
-  { label: "Device uptime", value: "7:40:00" },
-],
-foot: "60-second windows · idle prompted",
+            evidence: { tracked: "7:40", screenshots: 34, duplicates: 6, activity: 58, events: true, seenDaysAgo: 0 },
+            foot: "One person · Tuesday · admin view",
           },
         },
         {
           ref: "time",
           label: "The hours",
           heading: "Hours attached to work, not to a chair.",
-          body: "The timer runs against a task inside a client project, so an hour says what it was for. Expected hours are configurable per person, and every entry stays editable with its history - which is what makes a correction a correction rather than an accusation.",
+          body: "The timer runs against a task inside a client project, so an hour says what it was for. Expected hours are configurable per person, and idle time is never counted as work.",
           caps: capsOf("time", [
-            "Time logged against a task in a client project",
-            "Automatic pause past the idle threshold",
-            "Timesheets and entry history, editable",
+            "Time logged against a project and its task",
+            "The desktop agent pauses the timer when you go idle",
+            "Timesheets and entry history",
             "Configurable expected hours per person",
-            "Attendance and presence",
           ]),
           mock: {
             kind: "timer",
             running: { project: "Ridgeline · Tier 1", task: "Inbound queue", elapsed: "4:12:55" },
             entries: [
-              { task: "Idle · prompted at 11:04", duration: "0:06:20" },
+              { task: "Ridgeline · Team huddle", duration: "0:15:00" },
               { task: "Ridgeline · Escalations", duration: "1:18:40" },
             ],
-            foot: "Timesheet · today · editable",
+            foot: "Timesheet · today",
           },
         },
       ],
@@ -2707,58 +2749,62 @@ foot: "60-second windows · idle prompted",
         heading: "How an idle stretch is handled.",
         lines: [
           [
-            "The screen goes quiet for ",
-            fig("6 min"),
-            ". Past the ",
-            fig("3 min"),
-            " threshold the agent prompts, with a countdown, rather than deciding on its own.",
+            "The screen goes quiet at ",
+            fig("11:04"),
+            ". After ",
+            fig("10 min"),
+            " - the default idle timeout - the agent asks, with a ",
+            fig("60-second"),
+            " countdown, rather than deciding on its own.",
           ],
           [
-            "The person marks it as a call away from the desk. The entry remains annotated, and its history keeps both the prompt and the explanation.",
+            "The person answers “I'm back”. The idle minutes are not counted, and the timer carries on.",
           ],
           [
-            "Nothing was subtracted quietly, and nothing has to be argued about at review time. The record and the person agree.",
+            "Nothing idle was counted as work, and nothing has to be argued about at review time. The record and the person agree.",
           ],
         ],
         /* ⚠️ `idle` et non `timer` — c'était la même carte que le pilier 02,
            aux mêmes valeurs.
            La section décrit un ENCHAÎNEMENT (« How an idle stretch is
            handled »), et un chronomètre montre un instant : il ne pouvait pas
-           montrer ce qui est raconté. Les trois étapes portent leurs heures et
-           la durée du ralenti est DÉRIVÉE — 11:04 → 11:10 fait les « 6 min » du
-           texte, et le seuil de 3 min tombe visiblement à 11:07.
-           L'ancienne valeur `0:06:20` contredisait déjà « 6 min » : c'est
-           exactement le genre d'écart qu'un chiffre dérivé rend impossible. */
+           montrer ce qui est raconté. Les étapes portent leurs heures et la
+           durée du ralenti est DÉRIVÉE — 11:04 → 11:14 fait les « 10 min » du
+           texte, le délai d'inactivité par défaut. Les réponses sont celles du
+           produit (« I'm back » / « I'm not working ») : aucune annotation,
+           rien de stocké sur la réponse. L'ancienne version (seuil de 3 min,
+           « marked: call away from desk », historique) décrivait une fonction
+           qui n'existe pas. */
         mock: {
           kind: "idle",
           label: "Idle · Tuesday",
           steps: [
             { at: "11:04", event: "Input stops" },
-            { at: "11:07", event: "Threshold reached", note: "3 min · prompt shown with countdown" },
-            { at: "11:10", event: "Marked: call away from desk", note: "annotated, history kept" },
+            { at: "11:14", event: "Idle timeout reached", note: "10 min · prompt with 60 s countdown" },
+            { at: "11:14", event: "“I'm back”", note: "idle minutes dropped, timer carries on" },
           ],
-          outcome: "Prompted, not deduced",
-          foot: "3 min threshold · prompt and countdown",
+          outcome: "Asked, never counted",
+          foot: "10 min default timeout · 60 s countdown",
         },
       },
       objection: {
         eyebrow: "Consent",
         heading: "Nobody wants a productivity score on their back.",
-        body: "Then do not put one there. The evidence quality score grades the record, not the person: it shows how complete the week's data is and never changes the time counted. A visible indicator, prompted idle time, active-hours window and self-review keep the measure open.",
+        body: "Then do not put one there. The evidence quality score grades the record, not the person: it shows how complete the week's data is and never changes the time counted. A visible indicator, an idle prompt, an optional working-hours window for screenshots and self-review keep the measure open.",
         argument:
           "A measure the team can inspect is one it stops working around. When people can see what is recorded, when and why, the effort that went into looking busy goes back into the work.",
         guarantees: [
           "A visible indicator shows exactly when the timer is running",
-          "Idle detection prompts with a countdown, never a silent deduction",
+          "By default the agent asks before pausing for idle, and idle time is never counted",
           "Anyone can open and review their own recorded data",
-          "Screenshots are soft-deleted with a recorded reason, never silently erased",
+          "Screenshots can be switched off for the whole workspace",
         ],
       },
       cta: { title: "Start by telling the team what it measures.", note: FINE_PRINT },
       meta: {
         title: "DocuFlow for employee productivity - measured in the open",
         description:
-          "Activity in 60-second windows, idle time prompted rather than deduced, a visible running indicator, and a record anyone can open about themselves.",
+          "Activity measured with every screenshot, idle time asked about and never counted, a visible running indicator, and a record anyone can open about themselves.",
       },
     },
   },
@@ -2819,13 +2865,13 @@ foot: "60-second windows · idle prompted",
           ref: "clients",
           label: "The project",
           heading: "Budgeted versus actual, live on the record.",
-          body: "Every project carries its budget, stages and tasks. Logged hours move the actual figure as they arrive, while daily updates add status, blockers and KPIs before the month closes.",
+          body: "Every project carries its budget, stages and tasks. Logged hours move the actual figure as they arrive, while daily updates add status, blockers and next steps before the month closes.",
           caps: capsOf("clients", [
             "Budgeted vs actual hours, live",
             "Client projects with full stage-change history",
             "Kanban board across all projects",
             "Tasks - open / in progress / done / archived",
-            "Daily updates with status, blockers and KPIs",
+            "Daily updates with status and blockers",
             "Team assignment per project",
           ]),
           /* ⚠️ `project` et non `record` — le héros de cette page rendait DÉJÀ
@@ -2846,7 +2892,7 @@ foot: "60-second windows · idle prompted",
             at: 2,
             tasks: [
               { state: "Open", count: 12 },
-              { state: "Active", count: 5 },
+              { state: "In progress", count: 5 },
               { state: "Done", count: 31 },
               { state: "Archived", count: 4 },
             ],
@@ -2859,11 +2905,10 @@ foot: "60-second windows · idle prompted",
           heading: "Every hour that shapes the margin starts on the project.",
           body: "Time runs against a task inside the project, so the actual side of the comparison is not a reconstruction. Coordination, review and the calls nobody bills land on the job that caused them instead of disappearing into overhead.",
           caps: capsOf("time", [
-            "Time logged against a task in a client project",
+            "Time logged against a project and its task",
             "Web timer - start, pause, resume, stop",
-            "Timesheets and entry history, editable",
-            "Attendance and presence",
-            "Payroll-ready CSV export",
+            "Timesheets and entry history",
+            "CSV export of time entries for payroll",
           ]),
           mock: {
             kind: "timer",
@@ -2872,7 +2917,7 @@ foot: "60-second windows · idle prompted",
               { task: "Fairview · Coordination call", duration: "0:45:00" },
               { task: "Fairview · RFI 041", duration: "0:38:44" },
             ],
-            foot: "Timesheet · week 2 · editable",
+            foot: "Timesheet · week 2",
           },
         },
       ],
@@ -2890,11 +2935,11 @@ foot: "60-second windows · idle prompted",
             " of the budget, a third of the way through.",
           ],
           [
-            "The hours are already attributed, so the cause is on the same screen: ",
+            "The hours are already attributed to tasks: ",
             fig("62 h"),
-            " on submittals and RFIs, against ",
+            " of the 249 sit on submittals and RFIs - work the quote allowed ",
             fig("20 h"),
-            " budgeted for coordination across the whole phase.",
+            " for across the whole phase.",
           ],
           [
             "That is a variation you raise in week two, with the figures open - not a margin you explain at handover.",
@@ -2902,37 +2947,39 @@ foot: "60-second windows · idle prompted",
         ],
         /* ⚠️ `variance` et non `record` — troisième rendu de la même fiche sur
            la page, et surtout : la phrase centrale du scénario est « the hours
-           are already attributed, so THE CAUSE IS ON THE SAME SCREEN ». Une
-           jauge à 78 % ne montre aucune cause, et le seul chiffre qui la portait
-           (`coordination 62 h / 20 h`) était noyé dans le pied.
-           Les quatre lignes ci-dessous S'ADDITIONNENT sur les chiffres du
-           texte : 20+90+60+150 = 320 h budgétées, 62+71+54+62 = 249 h réelles,
-           soit 78 %. Les trois totaux sont dérivés, donc le lecteur peut faire
-           l'addition et vérifier — sur une page dont le H1 est « Every job was
-           profitable until somebody added it up », c'est le minimum. */
+           are already attributed to tasks ». Une jauge à 78 % ne montre aucune
+           cause.
+           UN SEUL budget, celui du projet (320 h) : les tâches n'ont pas
+           d'estimation dans DocuFlow, donc l'ancien budget par ligne était une
+           fonction inventée. Le « 20 h » du texte est le chiffre du DEVIS, celui
+           du client, et ne figure pas sur la carte.
+           Les quatre lignes S'ADDITIONNENT sur les chiffres du texte :
+           98+62+54+35 = 249 h réelles, soit 78 % de 320. Le réel et le
+           pourcentage sont dérivés, donc le lecteur peut faire l'addition. */
         mock: {
           kind: "variance",
           title: "Fairview · Phase 2",
           period: "Week 2 of 6",
+          budget: 320,
           lines: [
-            { label: "Coordination", budget: 20, actual: 62 },
-            { label: "Submittals", budget: 90, actual: 71 },
-            { label: "Site meetings", budget: 60, actual: 54 },
-            { label: "Fit-out", budget: 150, actual: 62 },
+            { label: "Fit-out", actual: 98 },
+            { label: "Submittals and RFIs", actual: 62, flag: true },
+            { label: "Site meetings", actual: 54 },
+            { label: "Estimating", actual: 35 },
           ],
-          foot: "logged against tasks on the project",
+          foot: "hours by task · admin analytics",
         },
       },
       objection: {
         eyebrow: "Pressure",
         heading: "Watching margin mid-job turns into watching people.",
-        body: "Only if the number is pointed at a person. Budgeted versus actual belongs to the project: it is a property of the job, not a score on anyone who worked it. Roles control who can see cost, and the hours behind it remain editable with their history.",
+        body: "Only if the number is pointed at a person. Budgeted versus actual belongs to the project: it is a property of the job, not a score on anyone who worked it. Owners and admins see every project; members see the projects they are assigned to.",
         argument:
           "Knowing in week two protects the team. An early overrun starts a client conversation about scope; the same overrun found at handover becomes a conversation with the team about why the work took so long.",
         guarantees: [
           "Budgeted vs actual hours sit on the project, not on a person",
-          "Admin and member roles, with per-capability visibility",
-          "Timesheets and entry history stay editable",
+          "Owners and admins see every project; members see the ones they are assigned to",
+          "Durations come from the timer, not from typing",
           "Time is logged against a task in a client project, never a free-text label",
         ],
       },
@@ -2953,12 +3000,12 @@ foot: "60-second windows · idle prompted",
     en: {
       eyebrow: "Onboarding documentation",
       h1: "The answer already exists. The new person cannot find it.",
-      lede: "New people search across written procedures and recorded walkthroughs instead of interrupting the team. Every answer links back to the page or call it came from.",
+      lede: "New people ask the assistant about written procedures and recorded walkthroughs instead of interrupting the team. Every answer links back to the page it came from.",
       hero: {
         kind: "source",
         question: "how do we handle a refund over $500?",
         answer: "Tier 2 approves anything above $500, and the reason goes on the client record. Walked through in the March onboarding session.",
-        sources: ["doc · Refunds policy", "call · Onboarding Mar 6"],
+        sources: ["doc · Refunds policy", "doc · Onboarding Mar 6 (Loom)"],
       },
       situation: {
         heading: "Onboarding is a queue of interruptions with a person at the front.",
@@ -2996,14 +3043,13 @@ foot: "60-second windows · idle prompted",
         {
           ref: "knowledge",
           label: "The library",
-          heading: "Written, recorded, and both searchable.",
-          body: "Write procedures in nested pages and templates; record walkthroughs and have them transcribed automatically. Search covers what was said and typed, and the assistant answers with the source it came from.",
+          heading: "Written, recorded, and both behind every answer.",
+          body: "Write procedures in the block editor, with nested pages and templates. Record walkthroughs in Loom or Fathom and embed them, and their transcripts are fetched on their own. The assistant answers from both, with the source it came from; search finds pages by title.",
           caps: capsOf("knowledge", [
             "Block editor with slash commands and nested pages",
-            "Page reordering, templates and duplication",
-            "Automatic video transcription, indexed",
+            "Loom and Fathom transcripts, indexed",
             "Video embeds - YouTube, Loom, Fathom",
-            "Full-text search across everything",
+            "Search by project, page and file name",
             "AI assistant over semantic search, cited",
             "Re-indexing skips unchanged content",
           ]),
@@ -3011,16 +3057,17 @@ foot: "60-second windows · idle prompted",
              déjà cette réponse citée, à la question, à la réponse et aux sources
              identiques. Trois exemplaires du même dessin sur une page dont le
              sujet est justement qu'on ne retrouve rien.
-             Ce bloc s'appelle « The library » et sa phrase distinctive est
-             « search covers WHAT WAS SAID AND TYPED » — la seule promesse de la
-             page qu'aucune autre surface ne porte. D'où deux natures de contenu
-             et un total indexé dérivé. */
+             Ce bloc s'appelle « The library » et sa phrase distinctive est que
+             l'assistant répond depuis ce qui a été ÉCRIT ET DIT (transcriptions
+             Loom / Fathom) — la seule promesse de la page qu'aucune autre
+             surface ne porte. D'où deux natures de contenu et un total indexé
+             dérivé. */
           mock: {
             kind: "library",
             label: "The library · one index",
             shelves: [
               { name: "Pages", note: "nested, from templates", count: 48 },
-              { name: "Recorded walkthroughs", note: "transcribed on upload", count: 12, spoken: true },
+              { name: "Recorded walkthroughs", note: "transcript from Loom or Fathom", count: 12, spoken: true },
             ],
             foot: "re-indexed as they are edited",
           },
@@ -3029,10 +3076,10 @@ foot: "60-second windows · idle prompted",
           ref: "clients",
           label: "The context",
           heading: "Procedures where the work is, not beside it.",
-          body: "Documentation lives inside the client project it belongs to, so a new person reads the account's rules on the account's record. Notes with @mentions pull in the one person who does know, and the answer stays where the next person will look.",
+          body: "Documentation lives inside the client project it belongs to, so a new person reads the account's rules on the account's record. The answer stays where the next person will look.",
           caps: capsOf("clients", [
             "Client projects with full stage-change history",
-            "Notes with @mentions that notify",
+            "Project notes",
             "Audio notes, transcribed automatically",
             "Reminders with due dates, in-app and email",
             "Team assignment per project",
@@ -3058,9 +3105,9 @@ foot: "60-second windows · idle prompted",
             " on day three. The old route is to ask the team lead, who is on a call.",
           ],
           [
-            "The answer returns with two sources: the refunds policy and the ",
+            "The answer returns with two sources: the refunds policy and the page holding the ",
             fig("March 6"),
-            " onboarding call, transcribed and indexed when it was recorded.",
+            " onboarding walkthrough, its Loom transcript indexed on its own.",
           ],
           [
             "The question took ",
@@ -3090,7 +3137,7 @@ foot: "60-second windows · idle prompted",
             },
             {
               name: "The new route",
-              steps: ["Search the library", "Answer with 2 sources", "Open either one"],
+              steps: ["Ask the assistant", "Answer with 2 sources", "Open either one"],
               outcome: "20 seconds",
             },
           ],
@@ -3105,8 +3152,8 @@ foot: "60-second windows · idle prompted",
           "Citations make decay visible. An uncited answer sounds equally confident whether its source changed last week or three years ago. That is how a team stops trusting the library and goes back to asking a person.",
         guarantees: [
           "The assistant answers over semantic search, with cited sources",
-          "Automatic video transcription, indexed and searchable",
-          "Full-text search across everything",
+          "Loom and Fathom transcripts, fetched and indexed on their own",
+          "Search finds pages and files by name",
           "Re-indexing skips unchanged content",
         ],
       },
@@ -3114,7 +3161,7 @@ foot: "60-second windows · idle prompted",
       meta: {
         title: "DocuFlow for onboarding documentation - cited answers",
         description:
-          "A block editor with nested pages, walkthroughs transcribed automatically, and an assistant that answers with the page it came from.",
+          "A block editor for procedures, Loom and Fathom walkthrough transcripts, and an assistant that answers with the page it came from.",
       },
     },
   },

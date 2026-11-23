@@ -78,7 +78,8 @@ chargement contre lequel `AGENTS.md` met déjà en garde.
 ### Les huit vignettes rayées
 
 `ScoreMock` posait son chiffre au-dessus d'une grille de grands rectangles rayés vides. Reproche reçu
-**deux fois**. La texture 45° reste légitime — elle est dans `DESIGN.md` — mais à petite échelle et
+**deux fois**. *(Depuis le 23 novembre 2026 la texture 45° est retirée de toutes les vignettes : elles
+rendent `CaptureThumb.astro`, voir `DESIGN.md`.)* La texture 45° restait légitime — mais à petite échelle et
 RATTACHÉE À QUELQUE CHOSE : deux vignettes sous un jour nommé, pas huit dalles flottantes. Elles sont
 remplacées par la couverture en clair, qui répond à la seule question qu'un score pose : *d'où sort
 ce chiffre ?*

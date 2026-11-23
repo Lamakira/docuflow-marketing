@@ -32,12 +32,17 @@ who are late in the buying cycle rather than in discovery.
 DocuFlow is an all-in-one operations platform for service businesses, built and run by **TECHMA**. It
 consolidates into one tool what these teams currently pay four vendors for:
 
-1. **Time** — web timer, timesheets, attendance, payroll-ready exports
+1. **Time** — web timer, timesheets, CSV export of time entries for payroll
 2. **Activity** — desktop agent (Windows / macOS / Linux) capturing screenshots, keyboard/mouse
    activity levels and idle time; analytics dashboards
 3. **Work and clients** — CRM (companies, contacts, pipeline, budgets), projects, tasks, daily updates
-4. **Knowledge** — Notion-style block documentation editor, company documents, automatic video
-   transcription, an AI assistant answering by semantic search across that corpus
+4. **Knowledge** — Notion-style block documentation editor, company documents, Loom and Fathom
+   transcripts fetched automatically, an AI assistant answering by semantic search across that corpus
+
+What the product does **not** do today — attendance, screenshot blur, money (rates, invoices, $
+budgets), full-text search, custom fields in v2, an MCP server for customers, among
+others — is listed with code evidence in `docs/claims-audit-2026-11-23.md`. Check it before writing
+any capability.
 
 The product exists and runs in production. It is used daily by the team that sells it, and it replaced
 Time Doctor for that team. (See Evidence on Hand — this is true, but its publishable form is not yet
@@ -82,13 +87,14 @@ This is not decoration — those are the actual stage values in the app. The ver
 information rather than ornamenting.
 
 Real artifacts and vocabulary that belong to the product and are legitimate material for any surface:
-CRM stages, companies, contacts and roles, project budgets with consumption, tags, reminders, timers
-and timesheets, screenshot thumbnails, activity histograms, idle time, block-editor pages with nested
-pages and templates, breadcrumbs, source-cited AI answers, payroll exports.
+CRM stages, companies, contacts and roles, project budgets in hours with consumption, tags, reminders,
+timers and timesheets, screenshot thumbnails, activity levels, idle time, block-editor pages,
+breadcrumbs, source-cited AI answers, the time-entry CSV export.
 
 Fictional-but-approved sample data used across the site: **Northwind**, **Meridian**, **Kaleido**,
-project **Ledger rebuild**, budget `$48,000`. These are consistent placeholders, not customer claims,
-and they carry over between surfaces.
+project **Ledger rebuild**, budget `116 h` (it was `$48,000` until 2026-11-23: the app budgets in hours
+and stores no money, so a dollar budget on a product card was a false claim). These are consistent
+placeholders, not customer claims, and they carry over between surfaces.
 
 Evaluation context: desktop-first buyer research, but mobile rendering matters and has not yet been
 visually verified. Structural reference is timedoctor.com; SEO playbook reference is agentiavocal.ca.
@@ -148,9 +154,9 @@ through **Masdouk**. Same for concept-level changes.
 
 **There is no publishable proof today.** *(Confirmed 2026-07-22.)* DocuFlow has no external customers.
 
-- `PROOF_STATS` in `src/data/site.ts` (184,200 hours · 2.6M screenshots · 11,400 documents · 1,340
-  projects) are **invented placeholders and must not ship.** They are removed or replaced with real,
-  sourced figures before any public launch. This is blocking.
+- `PROOF_STATS` (184,200 hours · 2.6M screenshots · 11,400 documents · 1,340 projects) were
+  **invented placeholders**. They were removed with the proof band on 2026-11-23; the band comes back
+  only with real, sourced figures.
 - **No invented statistics, customer logos, testimonials or trust counts.** In Canada, misleading
   representations fall under the *Competition Act*; a prospect who discovers a fabricated number is
   lost permanently.
