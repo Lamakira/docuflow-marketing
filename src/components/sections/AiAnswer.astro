@@ -17,25 +17,43 @@ const { reverse = false } = Astro.props;
   body="Documentation, company files and the transcripts of Loom and Fathom calls are indexed as they're written. Ask “what did we agree on the Ledger rebuild?” and get the answer with its source, not a list of files."
   reverse={reverse}
 >
-  {/* Question, réponse et sources : source unique dans `data/site.ts`
-      (`ANSWER_CARD`), partagée avec la maquette `/product` (`AnswerMock.astro`). */}
-  <div class="rounded-[8px] border border-rule bg-white p-5">
-    <p class="rounded-[6px] bg-paper px-3 py-2 font-mono text-[13px]">
-      {ANSWER_CARD.question}
-    </p>
+  {/* Dessiné d'après le vrai panneau « Ask DocuFlow » de l'application v2
+      (`client/src/v2/V2ContextPanel.tsx`) : même en-tête, question en bulle
+      sombre à droite, réponse, sources, champ de saisie. Ce n'est pas une
+      capture — l'assistant ne répond pas dans l'app locale faute de clé OpenAI,
+      et une fausse capture serait pire qu'un dessin honnête. Question, réponse
+      et sources : `ANSWER_CARD` dans `data/site.ts`, partagé avec `/product`. */}
+  <div class="ask-panel rounded-[8px] border border-rule bg-white">
+    <div class="border-b border-rule px-5 py-4">
+      <p class="font-mono text-[10px] text-slate">Ask DocuFlow</p>
+      <p class="mt-1 text-[15px] font-semibold">Answers from your records</p>
+    </div>
 
-    <p class="mt-4 text-[15px] leading-[1.6]">
-      {ANSWER_CARD.answer}
-    </p>
+    <div class="px-5 py-5">
+      <p class="ml-auto max-w-[80%] rounded-[6px] bg-ink px-3 py-2 text-[13px] text-paper">
+        {ANSWER_CARD.question}
+      </p>
 
-    <div class="mt-4 flex flex-wrap gap-2">
-      {
-        ANSWER_CARD.sources.map((source) => (
-          <span class="rounded-[3px] border border-live-on-light px-2 py-[3px] font-mono text-[11px] text-live-on-light">
-            {source}
-          </span>
-        ))
-      }
+      <p class="mt-4 text-[15px] leading-[1.6]">
+        {ANSWER_CARD.answer}
+      </p>
+
+      <div class="mt-4 flex flex-wrap gap-2">
+        {
+          ANSWER_CARD.sources.map((source) => (
+            <span class="rounded-[3px] border border-live-on-light px-2 py-[3px] font-mono text-[11px] text-live-on-light">
+              {source}
+            </span>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 border-t border-rule px-5 py-3" aria-hidden="true">
+      <span class="min-w-0 flex-1 truncate rounded-[6px] border border-rule px-3 py-2 text-[13px] text-slate">
+        Ask about a Project, Client, or policy…
+      </span>
+      <span class="grid h-[34px] w-[34px] flex-none place-items-center rounded-[6px] bg-paper text-slate">↑</span>
     </div>
   </div>
 </PillarSection>

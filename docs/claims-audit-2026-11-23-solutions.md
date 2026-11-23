@@ -139,3 +139,12 @@ Nested pages and templates exist in v2 (`PageTree.tsx` in the Project Dossier). 
 | page | before | after | reason |
 |---|---|---|---|
 | /product (Time, Clients, Knowledge) | drawn mockups | real v2 screenshots with caption "DocuFlow web app · demo workspace" | real UI; the caption says the data is demo data |
+
+## Home page, second pass — new strings for sign-off
+
+| section | new string(s) | reason |
+|---|---|---|
+| hero, client record, documentation | caption "DocuFlow web app · demo workspace" | real screenshots, demo data |
+| stack cards | "Northwind / Meridian / Kaleido" + "Won / Proposal / Lead" + "— h"; "Meeting / Dev work / Calls" + "no client"; "Project unknown"; "Onboarding / Client FAQ / Process v2 (old)" + "14 mo ago / 9 mo ago / 2 yr ago" | legible content instead of grey bars; each states what the generic tool lacks |
+| hours | tile captions "11:02 68%"…; bar legend "Keyboard and mouse activity · one bar per screenshot, today" | the app samples activity per screenshot |
+| AI answer | panel strings "Ask DocuFlow", "Answers from your records", "Ask about a Project, Client, or policy…" | copied from the real v2 panel |

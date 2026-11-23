@@ -567,7 +567,7 @@ Screenshot tiles are drawn, not textured. The 45° Cold Stock/white stripe that 
 Every capture tile now renders `CaptureThumb.astro`: the silhouette of a work screen (editor, sheet,
 document, design canvas) in Divider Grey marks — no text, no app name, no clock time, since the agent
 records the image and nothing more. Adjacent tiles rotate through the four variants, never repeat.
-The hero keeps its own drawn filmstrip. The 45° stripe survives only as redaction in `RedactedArt`.
+The 45° stripe survives only as redaction in `RedactedArt`. Where the app itself can be shown — the home hero, the client record and documentation pillars, the DocuFlow card of the stack, three `/product` pillars — the page uses a real capture of the v2 app instead (`AppScreen.astro`), flat, never Layered Paper.
 
 **The Squares-and-Circles Rule.** In data marks, shape carries meaning: a square marker is a task, a
 round marker is a document. Never assign these arbitrarily; the shapes are a legend.

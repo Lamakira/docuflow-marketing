@@ -16,6 +16,14 @@ const activity = [
   57, 42,
 ];
 
+/** Les quatre dernières captures : heure et activité de la minute précédente.
+ *  Les pourcentages sont ceux des quatre dernières barres de `activity`, pour
+ *  que la vignette et l'histogramme disent la même chose. */
+const SHOTS = activity.slice(-4).map((value, i) => ({
+  time: ["11:02", "11:07", "11:13", "11:18"][i],
+  activity: value,
+}));
+
 const tone = (value: number) =>
   value > 70 ? "var(--color-live)" : value > 40 ? "var(--color-hour)" : "var(--color-rule)";
 ---
@@ -33,12 +41,21 @@ const tone = (value: number) =>
       <p class="font-mono text-[12px] font-bold text-live-on-light">88% active</p>
     </div>
 
+    {/* Chaque vignette porte son heure et l'activité clavier/souris de la
+        minute qui la précède — ce qu'affiche la galerie Activity de l'app v2.
+        Sans ces deux valeurs, quatre écrans dessinés ne se lisaient pas. */}
     <div class="mt-4 grid grid-cols-4 gap-3">
       {
-        CAPTURE_VARIANTS.map((variant) => (
-          <span class="block aspect-[4/3] overflow-hidden rounded-[3px] border border-rule">
-            <CaptureThumb variant={variant} />
-          </span>
+        SHOTS.map((shot, i) => (
+          <figure class="m-0 min-w-0">
+            <span class="block aspect-[4/3] overflow-hidden rounded-[3px] border border-rule">
+              <CaptureThumb variant={CAPTURE_VARIANTS[i % CAPTURE_VARIANTS.length]} />
+            </span>
+            <figcaption class="mt-[6px] flex justify-between gap-1 font-mono text-[10px]">
+              <span class="text-ink">{shot.time}</span>
+              <span class="text-slate">{shot.activity}%</span>
+            </figcaption>
+          </figure>
         ))
       }
     </div>
@@ -53,6 +70,6 @@ const tone = (value: number) =>
         ))
       }
     </div>
-    <p class="mt-2 font-mono text-[10px] text-slate">Activity level · last 26 intervals</p>
+    <p class="mt-2 font-mono text-[10px] text-slate">Keyboard and mouse activity · one bar per screenshot, today</p>
   </div>
 </PillarSection>

@@ -44,6 +44,22 @@ restée hors champ.
 | Knowledge | `AnswerMock` (dessin) | `src/assets/screens/project-documentation.png` — arbre de pages et éditeur dans la fiche projet |
 | Activity | `EvidenceMock` | **gardé dessiné** : la démo n'a aucune capture ni mesure d'activité, l'écran réel est vide |
 
+**Accueil, deuxième passe (même jour, à la demande de l'utilisateur)** :
+
+| Section de l'accueil | Avant | Après |
+|---|---|---|
+| Héros | carte dessinée à couches, inspecteur au survol | vraie vue projet (`project-overview.png`), même inclinaison ; l'inspecteur est retiré |
+| Pile : 4 cartes d'outils | traits gris abstraits | lignes lisibles aux données d'exemple, et le trou de chaque outil en clair (« — h », « no client », « Project unknown », « 14 mo ago ») |
+| Pile : carte DocuFlow | 4 mini-glyphes | vrai écran Today (`today.png`), rogné par le haut quand la pile est épinglée |
+| Fiche client | maquette | vraie fiche client Northwind Logistics (`client-record.png`) |
+| Heures | 4 écrans dessinés + barres | mêmes écrans, chacun avec son heure et son activité ; légende des barres réécrite (une barre par capture) |
+| Documentation | maquette d'éditeur | vraie page de documentation du projet Ledger migration (`ledger-documentation.png`) |
+| Réponse IA | carte question / réponse | dessin du vrai panneau « Ask DocuFlow » (mêmes libellés que l'app) ; pas de capture : l'assistant ne répond pas en local |
+
+⚠️ Le héros affiche maintenant une vraie fiche à l'étape **ACTIVE** sous une accroche « LEAD - a new client
+project » : la contradiction existait déjà avec la maquette (`docs/copy-proposals.md` §1), elle se voit
+davantage. À trancher avec Masdouk.
+
 Limites : la réponse de l'assistant (« Ask DocuFlow ») n'a pas pu être capturée — l'app locale n'a
 pas de clé OpenAI (« Chat service is not configured »). Les captures font 708 à 754 px de large
 (limite du panneau de navigateur) : nettes en 1x, un peu douces sur écran Retina. Les vignettes de
