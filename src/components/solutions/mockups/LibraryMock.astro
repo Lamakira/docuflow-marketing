@@ -4,8 +4,11 @@
  * ─── Ce que la section demande ─────────────────────────────────────────────
  *
  * Le pilier « The library » d'`/solutions/onboarding-documentation` dit :
- * « Write procedures in nested pages and templates; record walkthroughs and
- * have them transcribed automatically. Search covers WHAT WAS SAID AND TYPED. »
+ * « Record walkthroughs in Loom or Fathom and embed them, and their transcripts
+ * are fetched on their own. The assistant answers from BOTH. »
+ * (⚠️ Pas « search covers what was said » : la recherche du produit ne trouve
+ * que des titres et des noms de fichier. C'est l'ASSISTANT qui lit les pages
+ * et les transcriptions.)
  *
  * Cette dernière phrase est la seule promesse de la page qu'aucune autre
  * surface ne porte. Et la carte y rendait une TROISIÈME copie de la réponse
@@ -22,7 +25,7 @@
  *
  * ⚠️ Elle ne dessine PAS d'arborescence. `PageTreeArt`, sur la même page, en
  * montre une : là-bas c'est la NAVIGATION (la page existe, on ne la trouve pas),
- * ici c'est l'INVENTAIRE (voilà ce qu'il y a, et tout est cherchable). Deux
+ * ici c'est l'INVENTAIRE (voilà ce qu'il y a, et l'assistant lit tout). Deux
  * questions, deux formes.
  */
 interface Props {
@@ -40,7 +43,7 @@ const { label, shelves, foot, warm = false, onDark = false } = Astro.props;
 if (!shelves.some((shelf) => shelf.spoken) || !shelves.some((shelf) => !shelf.spoken)) {
   throw new Error(
     `[solutions] LibraryMock attend au moins un rayon écrit ET un rayon parlé. ` +
-      `Sans les deux, la carte ne montre pas « search covers what was said and typed », qui est sa seule raison d'être.`
+      `Sans les deux, la carte ne montre pas que l'assistant lit ce qui a été dit ET tapé, qui est sa seule raison d'être.`
   );
 }
 

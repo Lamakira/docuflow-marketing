@@ -66,7 +66,9 @@ export const ANSWER_CARD = {
   question: "what did we agree on the Ledger rebuild?",
   answer:
     "Fixed scope: migration only, no new reporting. Northwind signed off on a two-sprint window at the April 3 call.",
-  sources: ["doc · Ledger SOW", "call · Apr 3"],
+  /* La source « appel » est la page qui porte le lien Loom de l'appel : l'assistant
+   *  cite des documents, jamais un appel en tant que tel (audit du 23/11/2026). */
+  sources: ["doc · Ledger SOW", "doc · Apr 3 call (Loom)"],
 };
 
 /** Les quatre abonnements que DocuFlow remplace. L'ordre est repris à l'identique
@@ -81,14 +83,9 @@ export const STACK = [
 export const STACK_TOTAL = STACK.reduce((sum, item) => sum + item.price, 0);
 export const DOCUFLOW_PRICE = 14;
 
-/** ⚠️ Chiffres provisoires — à remplacer par les valeurs réelles de la base
- *  avant toute mise en ligne. Le brief interdit les statistiques inventées. */
-export const PROOF_STATS = [
-  { value: "184,200", label: "hours tracked" },
-  { value: "2.6M", label: "screenshots processed" },
-  { value: "11,400", label: "documents indexed" },
-  { value: "1,340", label: "client projects managed" },
-];
+/* `PROOF_STATS` (184,200 heures, 2.6M captures…) est retiré le 23 novembre 2026 avec
+ * la bande qui l'affichait : chiffres inventés, et `PRODUCT.md` interdit de les
+ * publier. La bande revient avec des valeurs réelles et sourcées, pas avant. */
 
 /** `name` et `href` viennent du handoff validé (`docs/design-handoff/Homepage.dc.html`)
  *  et de la matrice de `docs/site-architecture.md` — ne pas les toucher sans Masdouk.
@@ -133,14 +130,14 @@ export const SECTORS = [
   {
     tag: "advisory",
     name: "Consulting firms",
-    blurb: "Show clients where the retainer actually went.",
+    blurb: "See where the retainer actually went.",
     icon: "lucide:presentation",
     href: "/solutions/consulting-firms",
   },
   {
     tag: "finance",
     name: "Accountants",
-    blurb: "Billable hours backed by what happened.",
+    blurb: "Client hours backed by what happened.",
     icon: "lucide:calculator",
     href: "/solutions/accounting-firms",
   },
@@ -168,24 +165,33 @@ export const SECTORS = [
   {
     tag: "placement",
     name: "Staffing agencies",
-    blurb: "What a mandate costs your desk to fill.",
+    blurb: "The hours your desk spends filling a mandate.",
     icon: "lucide:user-search",
     href: "/solutions/staffing-agencies",
   },
 ];
 
 /** Liste unique des fonctions listées sur les cartes de `/pricing`. Ordonnée du
- *  plus commun au plus avancé — c'est ce qui permet à `included` de n'être qu'un
- *  nombre plus bas. Libellés volontairement courts : la rangée est en
- *  `white-space: nowrap` et ne doit jamais passer à la ligne. Ne pas les rallonger. */
+ *  plus commun au plus avancé. Libellés volontairement courts : la rangée est en
+ *  `white-space: nowrap` et ne doit jamais passer à la ligne. Ne pas les rallonger.
+ *
+ *  Recontrôlée le 23 novembre 2026 contre `server/modules/billing/planRegistry.ts`
+ *  (registre v2) et `featureGate.ts` de l'application :
+ *   - « Screenshots & activity » est scindé : ce sont deux droits distincts, et
+ *     Starter a des captures sur UN projet mais aucune mesure d'activité.
+ *   - « SSO & residency » est retiré : la clé `sso` existe au registre mais
+ *     aucun code ne la lit — pas de SAML, de SCIM ni de région.
+ *   - « Payroll exports » passe à Business : l'API l'ouvre dès Growth, mais le
+ *     seul bouton de l'interface v2 vit sur la page Analytics, qui n'est servie
+ *     qu'à partir de Business. Revenir à Growth le jour où l'app déplace le bouton. */
 export const PLAN_FEATURES = [
   "Timer & timesheets",
-  "Screenshots & activity",
-  "Payroll exports",
+  "Screenshots",
+  "Activity & idle",
   "CRM & projects",
   "Docs & AI search",
   "Advanced analytics",
-  "SSO & residency",
+  "Payroll exports",
 ];
 
 /** Les quatre plans.
@@ -193,27 +199,31 @@ export const PLAN_FEATURES = [
  *  `monthly` / `annual` sont des **nombres**, jamais des libellés : le prix affiché
  *  est toujours dérivé (`planPrice`). `/pricing` bascule entre les deux, le reçu de
  *  l'accueil n'affiche que le mensuel — un seul endroit décide comment un prix s'écrit.
- *  `annual` est le tarif mensuel quand la facturation est annuelle (−20 %), pas le
- *  montant annuel : celui-ci vaut `annual × 12` (`planYearly`) et n'apparaît que sur
- *  la ligne « billed yearly ».
+ *  `annual` est le tarif mensuel quand la facturation est annuelle, pas le montant
+ *  annuel : celui-ci vaut `annual × 12` (`planYearly`) et n'apparaît que sur la
+ *  ligne « billed yearly ». ⚠️ Les montants eux-mêmes ne sont pas vérifiables dans
+ *  le code de l'app (ils vivent dans Stripe, par clé de prix) : à confirmer par
+ *  TECHMA avant mise en ligne.
  *
  *  Deux notes, deux handoffs validés : `note` est la copy de la souche du reçu
  *  (accueil), `pricingNote` celle des cartes de `/pricing`. Ne pas les fusionner
  *  sans repasser par Masdouk.
  *
- *  `included` : nombre d'entrées de `PLAN_FEATURES` cochées. Les paliers sont
- *  strictement cumulatifs aujourd'hui ; si un plan cesse d'être un préfixe de la
- *  liste, remplacer ce nombre par un tableau de booléens. */
+ *  `features` : une cellule par entrée de `PLAN_FEATURES`, dans le même ordre.
+ *  `true` inclus, `false` absent, une chaîne = inclus AVEC une limite, et la chaîne
+ *  remplace alors le libellé de la rangée (« Screenshots · 1 project »). Les
+ *  paliers ne sont plus des préfixes de la liste depuis que Starter a des captures
+ *  sans activité — d'où les booléens au lieu de l'ancien compte `included`. */
 export const PLANS = [
   {
     name: "Starter",
     monthly: 7,
     annual: 6,
-    note: "Solo & very small teams. Timer, screenshots, one client.",
+    note: "Solo & very small teams. Timer, and screenshots on one project.",
     pricingNote: "Solo & very small teams getting off spreadsheets.",
     cta: "Start free trial",
     featured: false,
-    included: 3,
+    features: [true, "Screenshots · 1 project", false, false, false, false, false],
   },
   {
     name: "Growth",
@@ -223,29 +233,38 @@ export const PLANS = [
     pricingNote: "The full stack - replaces all four vendors.",
     cta: "Start free trial",
     featured: true,
-    included: 5,
+    features: [true, true, true, true, true, false, false],
   },
   {
     name: "Business",
     monthly: 22,
     annual: 18,
-    note: "Advanced analytics, roles and payroll exports.",
+    note: "Analytics, evidence scores and payroll exports.",
     pricingNote: "Scaling ops that need control and reporting.",
     cta: "Start free trial",
     featured: false,
-    included: 6,
+    features: [true, true, true, true, true, true, true],
   },
   {
     name: "Enterprise",
     monthly: null,
     annual: null,
-    note: "SSO, data residency and a dedicated contact.",
-    pricingNote: "Custom terms, security and residency.",
+    note: "Custom terms and seat counts, set with us.",
+    pricingNote: "Custom terms, set with us.",
     cta: "Talk to us",
     featured: false,
-    included: 7,
+    features: [true, true, true, true, true, true, true],
   },
-];
+] satisfies {
+  name: string;
+  monthly: number | null;
+  annual: number | null;
+  note: string;
+  pricingNote: string;
+  cta: string;
+  featured: boolean;
+  features: (boolean | string)[];
+}[];
 
 export type Plan = (typeof PLANS)[number];
 
@@ -274,8 +293,7 @@ export const COMPARISON_GROUPS: {
     title: "Time",
     rows: [
       { name: "Web timer & timesheets", cells: [true, true, true, true] },
-      { name: "Attendance & presence", cells: [true, true, true, true] },
-      { name: "Payroll-ready exports", cells: [false, true, true, true] },
+      { name: "Payroll-ready exports", cells: [false, false, true, true] },
     ],
   },
   {
@@ -284,7 +302,7 @@ export const COMPARISON_GROUPS: {
       { name: "Desktop agent (Win/Mac/Linux)", cells: [true, true, true, true] },
       { name: "Screenshots", cells: ["1 proj", true, true, true] },
       { name: "Activity & idle detection", cells: [false, true, true, true] },
-      { name: "Advanced analytics", cells: [false, false, true, true] },
+      { name: "Analytics & evidence score", cells: [false, false, true, true] },
     ],
   },
   {
@@ -292,16 +310,14 @@ export const COMPARISON_GROUPS: {
     rows: [
       { name: "CRM & contacts", cells: [false, true, true, true] },
       { name: "Projects, tasks & budgets", cells: [false, true, true, true] },
-      { name: "Profitability dashboards", cells: [false, false, true, true] },
     ],
   },
   {
     title: "Knowledge",
     rows: [
       { name: "Block documentation editor", cells: [false, true, true, true] },
-      { name: "Video transcription", cells: [false, true, true, true] },
+      { name: "Loom & Fathom transcripts", cells: [false, true, true, true] },
       { name: "AI semantic search", cells: [false, true, true, true] },
-      { name: "SSO, SCIM & data residency", cells: [false, false, false, true] },
     ],
   },
 ];
@@ -312,23 +328,23 @@ export const COMPARISON_GROUPS: {
 export const PRICING_FAQ = [
   {
     q: "Do I really replace four subscriptions?",
-    a: "Yes. Time tracking, the monitoring agent, CRM/projects and documentation all live in DocuFlow, on one bill. Most teams cancel their time tracker, monitoring tool, project board and wiki when they move over.",
+    a: "On Growth and above, yes. Time tracking, the monitoring agent, CRM and projects, and documentation all live in DocuFlow, on one bill. Starter covers time and screenshots only.",
   },
   {
     q: "What does the desktop agent actually record?",
-    a: "Screenshots, keyboard and mouse activity levels, and idle time - filed against whatever project the timer is running on. Your team sees exactly what is captured and when, and screenshots can be blurred or limited to working hours.",
+    a: "Screenshots, keyboard and mouse activity levels, and idle time - filed against whatever project the timer is running on, and only while it runs. Each person can review their own screenshots and entries. Screenshots can be limited to the working hours you set, or switched off for the whole workspace.",
   },
   {
     q: "Is this compliant with Quebec Law 25?",
-    a: "The product is built for transparent monitoring: employees can review their own data, capture is configurable and disclosed. We provide a DPA and keep monitoring visible by design rather than hidden.",
+    a: "The product is built for transparent monitoring: employees can review their own data, the agent shows when the timer is running, and capture is configurable. Tell your team what is captured and when. Ask us about a data processing agreement.",
   },
   {
     q: "What happens after the free trial?",
-    a: "No credit card is needed to start. When the trial ends you pick a plan; your tracked data, clients and documents stay in place.",
+    a: "No credit card is needed to start, and the trial lasts 14 days. When it ends, your workspace turns read-only until you pick a plan; your tracked data, clients and documents stay in place.",
   },
   {
     q: "Why is pricing marked beta?",
-    a: "DocuFlow currently runs TECHMA's own operations and is opening to outside teams. Prices may change as the product matures - anyone who joins during beta keeps their rate through the beta period.",
+    a: "DocuFlow is opening to outside teams. Prices may change as the product matures.",
   },
 ];
 

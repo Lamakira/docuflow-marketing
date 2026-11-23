@@ -26,9 +26,13 @@
  * comparer. Le canevas est autorisé ici parce qu'il y a bien DEUX objets
  * positionnés indépendamment ; une carte seule n'y aurait pas droit.
  *
- * ⚠️ Les valeurs viennent de la page (`solutions.ts`, `remote-teams`) : 38 h et
- * 11 h du scénario, 84/STRONG du héros, 38/WEAK du scénario. Quatre endroits,
- * une seule vérité — si l'un bouge, les autres mentent.
+ * ⚠️ Corrigé le 23 novembre 2026. Les deux cartes portaient « 84 STRONG » et
+ * « 38 WEAK » : la formule réelle du score (`postgresStorage.ts`) ne peut pas
+ * séparer ces deux semaines — elle ne note que ce qui est ARRIVÉ, et les onze
+ * heures reçues sont bien couvertes. Ce qui les sépare dans l'application, c'est
+ * la page Devices : dernier contact du poste et statut Online / Offline. Le pied
+ * de chaque carte montre donc ce relevé-là, aux valeurs du scénario de la page
+ * (`solutions.ts`, `remote-teams` : 38 h, 11 h, « last seen Tue 14:38 »).
  */
 
 /** Cinq jours. `null` = aucun événement reçu, et c'est un état, pas un zéro :
@@ -39,16 +43,16 @@ const WEEKS = [
   {
     label: "Week 31",
     hours: "38 h",
-    score: 84,
-    grade: "STRONG",
+    seen: "Fri 17:52",
+    status: "ONLINE",
     days: [70, 88, 64, 92, 76],
     note: null,
   },
   {
     label: "Week 32",
     hours: "11 h",
-    score: 38,
-    grade: "WEAK",
+    seen: "Tue 14:38",
+    status: "OFFLINE",
     /* ⚠️ Lundi et mardi sont des jours NORMAUX, du même ordre que ceux de la
        semaine 31. Deux barres basses suivies de vides raconteraient « peu de
        travail puis plus rien » — soit exactement la lecture que la section
@@ -61,16 +65,16 @@ const WEEKS = [
 const [full, thin] = WEEKS;
 ---
 
-{/* THESIS: two weeks that look alike on a dashboard are told apart by the score
-    on the record, never by the size of the week. OWN-WORLD: two paper timesheets
+{/* THESIS: two weeks that look alike on a dashboard are told apart by when the
+    device last checked in, never by the size of the week. OWN-WORLD: two paper timesheets
     laid side by side on a warm desk. STORY: read the full week, read the thin
-    one, find the empty slots, then read the grade. FIRST VIEWPORT: the full week
+    one, find the empty slots, then read the last check-in. FIRST VIEWPORT: the full week
     sits back-left, the questioned week rises in front on the right. FORM: two
     overlapping records, paired with the billing desk illustration but composed
     around comparison rather than lineage. */}
 <div class="week-desk" data-art>
   <header class="desk-head" data-art-in>
-    <span class="desk-label">Evidence coverage</span>
+    <span class="desk-label">Device check-in</span>
     <span class="desk-ref">One person · two weeks</span>
   </header>
 
@@ -78,7 +82,7 @@ const [full, thin] = WEEKS;
     <span class="sheet-backing backing-one" aria-hidden="true"></span>
     <span class="sheet-backing backing-two" aria-hidden="true"></span>
 
-    <section class="week-card card-full" aria-label={`${full.label}, evidence quality ${full.score} out of 100`}>
+    <section class="week-card card-full" aria-label={`${full.label}, device last seen ${full.seen}`}>
       <div class="week-head" data-art-in>
         <span class="section-label">{full.label}</span>
         <span class="week-hours">{full.hours}</span>
@@ -89,14 +93,12 @@ const [full, thin] = WEEKS;
       </div>
 
       <footer class="week-foot" data-art-in>
-        <span class="score" data-art-pop>
-          {full.score}<span class="of">/100</span>
-        </span>
-        <span class="grade grade-strong">{full.grade}</span>
+        <span class="score" data-art-pop>{full.seen}</span>
+        <span class="grade grade-strong">{full.status}</span>
       </footer>
     </section>
 
-    <section class="week-card card-thin" aria-label={`${thin.label}, evidence quality ${thin.score} out of 100`}>
+    <section class="week-card card-thin" aria-label={`${thin.label}, device last seen ${thin.seen}`}>
       <div class="week-head" data-art-in>
         <span class="section-label">{thin.label}</span>
         <span class="week-hours">{thin.hours}</span>
@@ -115,13 +117,11 @@ const [full, thin] = WEEKS;
       </div>
 
       <footer class="week-foot" data-art-in>
-        <span class="score" data-art-pop>
-          {thin.score}<span class="of">/100</span>
-        </span>
+        <span class="score" data-art-pop>{thin.seen}</span>
         {/* Le seul ambre de l'écran — l'oeil-de-boeuf de cette section est en
             `ink`, donc la « One Amber Rule » laisse la place à celui-ci. Il
             marque l'état à vérifier : le poste, pas la personne. */}
-        <span class="grade grade-weak">{thin.grade}</span>
+        <span class="grade grade-weak">{thin.status}</span>
       </footer>
 
       {/* La ligne qui désamorce la lecture « semaine vide = personne absente ».
@@ -283,18 +283,13 @@ const [full, thin] = WEEKS;
 
   .score {
     font-family: var(--font-mono);
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 700;
     line-height: 1;
     color: var(--color-ink);
     font-variant-numeric: tabular-nums;
   }
 
-  .of {
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--color-paper-label);
-  }
 
   .grade {
     border-radius: 3px;

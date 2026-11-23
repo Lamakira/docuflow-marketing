@@ -1,7 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Hero from "../components/sections/Hero.astro";
-import ProofBand from "../components/sections/ProofBand.astro";
 import StackFold from "../components/sections/StackFold.astro";
 import ClientRecord from "../components/sections/ClientRecord.astro";
 import Hours from "../components/sections/Hours.astro";
@@ -38,7 +37,6 @@ const PILLARS = [ClientRecord, Hours, Documentation, AiAnswer];
 
 <Layout title={title} description={description}>
   <Hero />
-  <ProofBand />
   <StackFold />
   {PILLARS.map((Pillar, i) => <Pillar reverse={i % 2 === 0} />)}
   <Transparency />

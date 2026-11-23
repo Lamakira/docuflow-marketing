@@ -1,0 +1,288 @@
+---
+/**
+ * Une capture d'écran du poste, dessinée à l'échelle de la vignette.
+ *
+ * Remplace la rayure 45° « image retenue » que `DESIGN.md` réservait aux
+ * vignettes de capture : chez un prospect sceptique elle se lisait « rien à
+ * montrer », et le héros l'avait déjà abandonnée pour des écrans dessinés. Ce
+ * composant généralise ce dessin pour qu'aucune maquette n'ait à en recopier un.
+ *
+ * Ce que le dessin montre : la FORME d'un écran de travail (éditeur, tableur,
+ * document, maquette), jamais son contenu. Aucun texte, aucun nom
+ * d'application, aucune heure — l'agent enregistre l'image, pas le titre de la
+ * fenêtre, et une vignette ne doit rien promettre de plus que ce qu'il fait.
+ *
+ * Contrat : le composant remplit son parent (100 % × 100 %). Le parent garde la
+ * taille, le filet et le rayon qu'il avait déjà ; il ne fait que remplacer son
+ * `background` rayé par ce composant. Les couleurs viennent de trois variables
+ * héritées, pour que les bandes chaudes et sombres n'aient qu'à les poser :
+ *
+ *   --cap-surface  fond de l'écran           (blanc par défaut)
+ *   --cap-chrome   barre de fenêtre, panneau (paper)
+ *   --cap-mark     traits et blocs           (rule)
+ *
+ * `size="sm"` est pour les vignettes de moins de ~24 px de haut : le dessin y
+ * garde sa silhouette (barre + deux masses) mais perd le détail, qui ne serait
+ * plus qu'un bruit de pixels.
+ *
+ * Quatre variantes, et c'est le point : une rangée de vignettes identiques a été
+ * refusée en revue (`docs/mockup-corrections.md`). Un appelant qui en pose
+ * plusieurs les fait tourner avec `CAPTURE_VARIANTS` (`./captures.ts`).
+ */
+import type { CaptureVariant } from "./captures";
+
+interface Props {
+  variant: CaptureVariant;
+  size?: "sm" | "md";
+}
+
+const { variant, size = "md" } = Astro.props;
+
+/** Largeurs de lignes par variante — fixes, pour que deux rendus soient identiques. */
+const CODE = [
+  { indent: 0, w: 58 },
+  { indent: 1, w: 70 },
+  { indent: 2, w: 46 },
+  { indent: 2, w: 62 },
+  { indent: 1, w: 34 },
+  { indent: 0, w: 22 },
+];
+const DOC = [92, 84, 88, 52];
+---
+
+<span class:list={["cap", `cap--${variant}`, `cap--${size}`]} aria-hidden="true">
+  <span class="cap-bar"><i></i><i></i><i></i></span>
+  <span class="cap-body">
+    {
+      variant === "code" && (
+        <>
+          <span class="cap-gutter" />
+          <span class="cap-col">
+            {CODE.map((line) => (
+              <i style={`margin-left:${line.indent * 9}%;width:${line.w}%`} />
+            ))}
+          </span>
+        </>
+      )
+    }
+    {
+      variant === "sheet" && (
+        <span class="cap-grid">
+          {Array.from({ length: 15 }).map((_, i) => (
+            <i class:list={{ head: i < 3 }} />
+          ))}
+        </span>
+      )
+    }
+    {
+      variant === "doc" && (
+        <span class="cap-col cap-page">
+          <b />
+          {DOC.map((w) => (
+            <i style={`width:${w}%`} />
+          ))}
+          <span class="cap-figure" />
+        </span>
+      )
+    }
+    {
+      variant === "split" && (
+        <>
+          <span class="cap-list">
+            <i />
+            <i />
+            <i />
+            <i />
+          </span>
+          <span class="cap-canvas">
+            <span />
+          </span>
+        </>
+      )
+    }
+  </span>
+</span>
+
+<style>
+  .cap {
+    --surface: var(--cap-surface, #fff);
+    --chrome: var(--cap-chrome, var(--color-paper));
+    --mark: var(--cap-mark, var(--color-rule));
+    display: flex;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: inherit;
+    background: var(--surface);
+  }
+
+  .cap-bar {
+    display: flex;
+    height: 9px;
+    flex: none;
+    align-items: center;
+    gap: 2px;
+    border-bottom: 1px solid var(--mark);
+    background: var(--chrome);
+    padding-inline: 3px;
+  }
+
+  .cap-bar i {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--mark);
+  }
+
+  .cap-body {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+  }
+
+  .cap-col {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 3px;
+    padding: 4px 5px;
+  }
+
+  .cap-col > i,
+  .cap-list > i {
+    display: block;
+    height: 2px;
+    flex: none;
+    border-radius: 1px;
+    background: var(--mark);
+  }
+
+  /* Éditeur : une gouttière de numéros de ligne, puis du code indenté. */
+  .cap-gutter {
+    width: 9px;
+    flex: none;
+    border-right: 1px solid var(--mark);
+    background: var(--chrome);
+  }
+
+  /* Tableur : une rangée d'en-tête pleine, puis des cellules filetées. */
+  .cap-grid {
+    display: grid;
+    flex: 1;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    grid-auto-rows: minmax(0, 1fr);
+    gap: 1px;
+    background: var(--mark);
+    padding: 0;
+  }
+
+  .cap-grid > i {
+    display: block;
+    background: var(--surface);
+  }
+
+  .cap-grid > i.head {
+    background: var(--chrome);
+  }
+
+  /* Document : un titre épais, un paragraphe, une figure. */
+  .cap-page {
+    padding-inline: 14%;
+  }
+
+  .cap-page > b {
+    display: block;
+    width: 48%;
+    height: 4px;
+    flex: none;
+    margin-bottom: 1px;
+    border-radius: 1px;
+    background: var(--mark);
+  }
+
+  .cap-figure {
+    display: block;
+    min-height: 6px;
+    flex: 1;
+    margin-top: 1px;
+    border-radius: 1px;
+    background: var(--chrome);
+    box-shadow: inset 0 0 0 1px var(--mark);
+  }
+
+  /* Maquette : une liste de calques à gauche, un plan de travail à droite. */
+  .cap-list {
+    display: flex;
+    width: 30%;
+    flex: none;
+    flex-direction: column;
+    gap: 3px;
+    border-right: 1px solid var(--mark);
+    background: var(--chrome);
+    padding: 4px 3px;
+  }
+
+  .cap-canvas {
+    display: grid;
+    flex: 1;
+    place-items: center;
+    padding: 4px;
+  }
+
+  .cap-canvas > span {
+    display: block;
+    width: 62%;
+    height: 64%;
+    border: 1px solid var(--mark);
+    border-radius: 2px;
+    background: var(--chrome);
+  }
+
+  /* ── Petite taille : la silhouette, sans le détail ─────────────────────── */
+
+  .cap--sm .cap-bar {
+    height: 4px;
+    border-bottom-width: 0;
+    padding: 0;
+  }
+
+  .cap--sm .cap-bar i {
+    display: none;
+  }
+
+  .cap--sm .cap-col {
+    gap: 2px;
+    padding: 2px 3px;
+  }
+
+  .cap--sm .cap-col > i:nth-child(n + 3),
+  .cap--sm .cap-page > i:nth-of-type(n + 2),
+  .cap--sm .cap-figure,
+  .cap--sm .cap-list > i:nth-child(n + 3) {
+    display: none;
+  }
+
+  .cap--sm .cap-grid > i:nth-child(n + 7) {
+    display: none;
+  }
+
+  .cap--sm .cap-gutter {
+    width: 4px;
+  }
+
+  .cap--sm .cap-page > b {
+    height: 2px;
+  }
+
+  .cap--sm .cap-list {
+    gap: 2px;
+    padding: 2px;
+  }
+
+  .cap--sm .cap-canvas {
+    padding: 2px;
+  }
+</style>

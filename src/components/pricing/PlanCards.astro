@@ -40,7 +40,7 @@ const EAR = 30;
 
         <input class="sr-only seg-input" type="radio" name="billing" id="billing-annual" />
         <label class="seg-tab" for="billing-annual">
-          Annual <span class="seg-off">−20%</span>
+          Annual <span class="seg-off">up to −21%</span>
         </label>
       </fieldset>
     </div>
@@ -109,8 +109,11 @@ const EAR = 30;
               {/* Même liste sur les quatre cartes : ce qui se compare, c'est la
                   colonne de pastilles, pas des arguments différents par plan. */}
               <ul class="feats">
-                {PLAN_FEATURES.map((feature, i) => {
-                  const on = i < plan.included;
+                {PLAN_FEATURES.map((label, i) => {
+                  const cell = plan.features[i];
+                  const on = cell !== false;
+                  // Une chaîne = inclus avec une limite, et elle remplace le libellé.
+                  const feature = typeof cell === "string" ? cell : label;
                   return (
                     <li class:list={["feat", { "feat--off": !on }]}>
                       {/* Même icône que les garanties de l'accueil : un seul langage

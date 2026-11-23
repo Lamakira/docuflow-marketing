@@ -562,9 +562,12 @@ section dividers, `2px dotted` dot leaders, a `2px dashed` perforation across th
 Ink so the tear line reads as harder than the folds above it. Dashes and dots exist nowhere else in
 the system; solid hairlines separate every other surface.
 
-Screenshot placeholders share one recurring texture — a 45° repeating stripe of Cold Stock and white
-at 4px intervals. It reads as "image withheld" without inventing fake screen content, and it is used
-identically in the hero, the hours card and the documentation code block.
+Screenshot tiles are drawn, not textured. The 45° Cold Stock/white stripe that used to stand for
+"image withheld" read as "nothing to show" to a sceptical buyer, and was retired on 23 November 2026.
+Every capture tile now renders `CaptureThumb.astro`: the silhouette of a work screen (editor, sheet,
+document, design canvas) in Divider Grey marks — no text, no app name, no clock time, since the agent
+records the image and nothing more. Adjacent tiles rotate through the four variants, never repeat.
+The hero keeps its own drawn filmstrip. The 45° stripe survives only as redaction in `RedactedArt`.
 
 **The Squares-and-Circles Rule.** In data marks, shape carries meaning: a square marker is a task, a
 round marker is a document. Never assign these arbitrarily; the shapes are a legend.

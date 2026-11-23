@@ -1,5 +1,8 @@
 ---
-/** La semaine qui s'arrête — le relevé coupé net, et la suite retenue.
+import CaptureThumb from "../../CaptureThumb.astro";
+import { CAPTURE_VARIANTS } from "../../captures";
+import { evidenceRows, evidenceScore, type Evidence } from "../../../data/solutions";
+/** La semaine qui s'arrête — le relevé coupé net.
  *
  * ─── Pourquoi elle n'est pas un réglage de `ScoreMock` ──────────────────────
  *
@@ -13,12 +16,18 @@
  *   2. L'arrêt est un INSTANT, pas une pente. Un graphique qui s'éteint
  *      progressivement raconte « de moins en moins de travail » — soit
  *      exactement la lecture que la section existe pour empêcher.
- *   3. « …and queued four days of events IT NEVER SENT. » — c'est le fait le
- *      plus rassurant du paragraphe, et le plus propre au produit. Les jours
- *      manquants ne sont pas vides : ils sont RETENUS quelque part.
+ *   3. Après la coupure, le serveur n'a RIEN REÇU. ⚠️ Il ne peut pas savoir
+ *      ce que le poste a peut-être mis en file : il ne voit que le dernier
+ *      contact (`last seen`). L'ancienne étiquette « 4 days queued · never
+ *      sent » affirmait une chose que le produit ne sait pas ; elle est
+ *      remplacée par « nothing received » et l'heure du dernier contact.
  *
- * D'où un axe de cinq jours, une coupure franche dedans, et une pile de feuilles
- * posée SUR les jours manquants. Les trois faits sont dessinés, pas suggérés.
+ * D'où un axe de cinq jours, une coupure franche dedans, et une pile posée SUR
+ * les jours sans données. Les trois faits sont dessinés, pas suggérés.
+ *
+ * Le score est CALCULÉ (`evidenceScore()`) sur ce qui est arrivé, et ses
+ * entrées sont affichées. Il est fort : le relevé reçu est sain, il s'arrête —
+ * c'est le dernier contact du poste qui explique le trou, pas le score.
  *
  * ⚠️ Une tentative précédente amincissait la grille et l'histogramme de
  * `ScoreMock` à mesure que le score baissait. Le diagnostic était juste, le
@@ -28,15 +37,14 @@
  *
  * ─── Ce qui est dérivé ─────────────────────────────────────────────────────
  *
- * Le nombre de jours retenus se CALCULE depuis `cut` et `days`. Déplacer la
- * coupure ne peut donc pas laisser une étiquette « 4 days queued » en face de
- * trois jours vides — la faute classique d'un dessin dont les chiffres sont
- * retapés. Même principe que le total de `InvoiceArt`.
+ * L'intervalle sans données se CALCULE depuis `cut` et `days`. Déplacer la
+ * coupure ne peut donc pas laisser une étiquette `TUE – FRI` en face de trois
+ * jours vides — la faute classique d'un dessin dont les chiffres sont retapés.
+ * Même principe que le total de `InvoiceArt`.
  */
 interface Props {
   label: string;
-  score: number;
-  grade: string;
+  evidence: Evidence;
   days: string[];
   cut: number;
   lastEvent: string;
@@ -47,8 +55,14 @@ interface Props {
   onDark?: boolean;
 }
 
-const { label, score, grade, days, cut, lastEvent, foot, warm = false, onDark = false } =
+const { label, evidence, days, cut, lastEvent, foot, warm = false, onDark = false } =
   Astro.props;
+
+const { score, grade } = evidenceScore(evidence);
+const graded = evidenceRows(evidence);
+/** Même seuil que `ScoreMock` : seul STRONG est confirmé (vert), le reste
+ *  avertit (ambre). */
+const confirmed = grade === "STRONG";
 
 if (days.length < 3) {
   throw new Error(
@@ -67,12 +81,11 @@ if (cut <= 0 || cut >= 100) {
 
 const dayWidth = 100 / days.length;
 
-/** ⚠️ RÈGLE DE COMPTAGE — le jour de la coupure compte comme RETENU.
+/** ⚠️ RÈGLE DE COMPTAGE — le jour de la coupure compte comme SANS DONNÉES.
  *
  *  Le poste se tait au milieu de mardi : la fin de mardi n'est jamais arrivée,
  *  donc mardi est un jour incomplet, pas un jour enregistré. `MON TUE WED THU
- *  FRI` coupé dans mardi fait donc QUATRE jours retenus — c'est le compte du
- *  scénario, « queued four days of events it never sent ».
+ *  FRI` coupé dans mardi fait donc l'intervalle `TUE – FRI`.
  *
  *  Ça se relit comme une faute d'un cran, et ça l'était à l'écran : mardi était
  *  peint comme un jour plein à côté de lundi, donc le dessin montrait trois
@@ -83,7 +96,6 @@ const dayWidth = 100 / days.length;
  *       le chiffre se vérifie sur l'axe au lieu de se croire.
  *  Sans la seconde, le lecteur qui compte les jours pâles trouve toujours trois. */
 const cutDay = Math.floor(cut / dayWidth);
-const queuedDays = days.length - cutDay;
 const queuedFrom = days[cutDay];
 const queuedTo = days[days.length - 1];
 
@@ -103,20 +115,17 @@ const ACTIVITY = [64, 82, 71, 88, 59, 76, 91, 68, 84, 73, 62, 79];
  *  de la coupure. Un seul vert, des hauteurs qui varient : « il s'est passé des
  *  choses, elles sont toutes au dossier ».
  *
- *  L'ambre ne sort jamais de cette carte : la bande `ink` du scénario dépense
- *  déjà le sien sur l'oeil-de-boeuf « Tuesday ». */
+ *  L'ambre des marques ne sort jamais de cette carte : la bande `ink` du
+ *  scénario dépense déjà le sien sur l'oeil-de-boeuf « Tuesday ». */
 
-/** Vignettes de capture par jour enregistré, pour que la rangée suive le même
- *  axe que les marques au lieu de faire deux dalles rayées en travers — deux
- *  grands rectangles rayés, c'est le squelette de chargement, encore. */
+/** Vignettes de capture par jour enregistré — un ÉCHANTILLON, le compte réel
+ *  est dans les lignes du score. Elles suivent le même axe que les marques au
+ *  lieu de faire deux dalles rayées en travers — deux grands rectangles rayés,
+ *  c'est le squelette de chargement, encore. */
 const SHOTS_PER_DAY = 2;
 const recordedDays = Math.max(1, cutDay + 1);
 const shots = recordedDays * SHOTS_PER_DAY;
 
-/** La texture « image retenue » du système — rayure 45°, 4 px. */
-const SHOT_TEXTURE = warm
-  ? "repeating-linear-gradient(45deg,var(--color-paper-chip) 0 4px,var(--color-paper-surface) 4px 8px)"
-  : "repeating-linear-gradient(45deg,#F3F5F7 0 4px,#fff 4px 8px)";
 ---
 
 <div
@@ -130,15 +139,29 @@ const SHOT_TEXTURE = warm
       chiffre produit que le héros de la page, et le lecteur doit le reconnaître.
       Le PANNEAU reste neutre — une seule marque d'alerte par carte, sinon le
       badge ne ressort plus de son propre fond. */}
-  <div class="score-panel flex items-start justify-between gap-4 rounded-[6px] border border-rule bg-paper px-4 py-[14px]">
+  <div
+    class:list={[
+      "score-panel flex items-start justify-between gap-4 rounded-[6px] border px-4 py-[14px]",
+      confirmed ? "border-live-on-light bg-band-mint" : "score-panel--weak border-rule bg-paper",
+    ]}
+  >
     <div>
-      <p class="score-label label-mono text-[10px] text-slate">{label}</p>
+      <p
+        class:list={[
+          "score-label label-mono text-[10px]",
+          confirmed ? "text-live-on-light" : "text-slate",
+        ]}
+      >
+        {label}
+      </p>
       <p class="mt-[6px] font-mono text-[36px] font-bold leading-none tracking-[-0.02em]">
         {score}<span class="score-total font-mono text-[14px] font-medium text-slate">/100</span>
       </p>
     </div>
 
-    {/* ⚠️ LE VERDICT FAIBLE EST AMBRE, et ce n'est pas un détail de goût.
+    {/* Le verdict suit le score calculé : vert s'il est STRONG, ambre sinon.
+
+        ⚠️ LE VERDICT FAIBLE EST AMBRE, et ce n'est pas un détail de goût.
         Il était en `ink` : un badge noir se lit comme du chrome, pas comme un
         avertissement, et rien à l'écran ne disait que 38/100 demandait une
         action. Arbitré le 30 juillet 2026, sur demande.
@@ -147,17 +170,17 @@ const SHOT_TEXTURE = warm
         chromatiques — ambre pour l'état présent qui appelle une action, vert
         pour le résultat confirmé. Un rouge en serait une troisième, donc un
         jeton de plus et une décision de site. L'ambre dit déjà ce qu'il faut,
-        et surtout c'est DÉJÀ le badge WEAK de `ThinWeekArt` : les deux cartes
-        de cette page portent le même 38/100, elles doivent porter la même
-        couleur.
+        et c'est DÉJÀ le badge WEAK de `ThinWeekArt`.
 
-        ⚠️ Coût assumé : l'oeil-de-boeuf « Tuesday » de `ScenarioBand` est
-        amber lui aussi, donc ce viewport en contient deux — la « One Amber
-        Rule » est entamée ici. Le badge est le signal, l'oeil-de-boeuf n'est
-        qu'une étiquette de section : si l'un des deux doit céder, c'est lui.
-        À trancher avec Saïd. */}
+        Depuis le 23 novembre 2026 le score de cette carte est calculé sur ce
+        qui a été reçu, et il sort STRONG : le badge est donc vert ici, et la
+        question des deux ambres dans la bande `ink` ne se pose plus pour
+        cette page. */}
     <span
-      class="score-grade shrink-0 rounded-[3px] bg-hour px-[10px] py-[5px] font-mono text-[11px] font-bold text-ink"
+      class:list={[
+        "score-grade shrink-0 rounded-[3px] px-[10px] py-[5px] font-mono text-[11px] font-bold",
+        confirmed ? "bg-live-on-light text-white" : "bg-hour text-ink",
+      ]}
     >
       {grade}
     </span>
@@ -178,29 +201,28 @@ const SHOT_TEXTURE = warm
 
       <div class="shots" style={`--shots:${shots}`} aria-hidden="true">
         {
-          Array.from({ length: shots }).map(() => (
-            <span class="shot" style={`background:${SHOT_TEXTURE}`} />
+          Array.from({ length: shots }).map((_, n) => (
+            <span class="shot">
+              <CaptureThumb variant={CAPTURE_VARIANTS[n % CAPTURE_VARIANTS.length]} />
+            </span>
           ))
         }
       </div>
     </div>
 
-    {/* Les jours retenus : une PILE, pas un vide. Deux feuilles de calage et une
-        face — la même grammaire que les cartes Layered Paper, ce qui fait lire
-        les événements comme des documents mis de côté plutôt que perdus. */}
+    {/* Les jours sans données : une PILE, pas un vide. Deux feuilles de calage
+        et une face — la même grammaire que les cartes Layered Paper. */}
     <div class="held">
       <span class="held-sheet held-sheet--one" aria-hidden="true"></span>
       <span class="held-sheet held-sheet--two" aria-hidden="true"></span>
 
-      {/* Le compte ET l'intervalle. Les deux sont dérivés de la coupure, donc
-          ils ne peuvent pas se contredire — et surtout l'intervalle rend le
-          compte VÉRIFIABLE sur l'axe juste au-dessus, ce qu'un chiffre seul ne
-          fait pas. C'est ce qui manquait quand mardi passait pour un jour
-          plein. */}
+      {/* L'intervalle est dérivé de la coupure, donc il se vérifie sur l'axe
+          juste au-dessus. « Nothing received » est ce que le serveur sait ;
+          ce que le poste a pu garder en file, il ne le voit pas. */}
       <div class="held-face">
-        <span class="held-count">{queuedDays} days queued</span>
+        <span class="held-count">Nothing received</span>
         <span class="held-range">{queuedFrom} – {queuedTo}</span>
-        <span class="held-note">never sent</span>
+        <span class="held-note">device offline</span>
       </div>
     </div>
 
@@ -210,6 +232,18 @@ const SHOT_TEXTURE = warm
   </div>
 
   <p class="last-event">{lastEvent}</p>
+
+  {/* Ce que le score a noté : les entrées de la formule, sur ce qui est arrivé. */}
+  <dl class="graded">
+    {
+      graded.map((row) => (
+        <div class="graded-row">
+          <dt>{row.label}</dt>
+          <dd>{row.value}</dd>
+        </div>
+      ))
+    }
+  </dl>
 
   <p class="silence-foot mt-2 font-mono text-[10px] text-slate">{foot}</p>
 </div>
@@ -237,7 +271,63 @@ const SHOT_TEXTURE = warm
     box-shadow: var(--shadow-paper-inset);
   }
 
-  .silence-mock--warm .score-label,
+  /* Verdict confirmé : la famille sage, comme sur `ScoreMock`. */
+  .silence-mock--warm .score-panel:not(.score-panel--weak) {
+    background: var(--color-paper-sage);
+  }
+
+  .silence-mock--warm .score-panel:not(.score-panel--weak) .score-label {
+    color: var(--color-paper-sage-text);
+  }
+
+  .silence-mock--warm .score-grade:not(.bg-hour) {
+    background: var(--color-paper-sage-text);
+  }
+
+  .graded {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px 16px;
+    margin: 12px 0 0;
+    border-top: 1px solid var(--color-rule);
+    padding: 10px 2px 2px;
+  }
+
+  .silence-mock--warm .graded {
+    border-top-color: var(--color-paper-rule);
+  }
+
+  .graded-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+
+  .graded-row dt {
+    color: var(--color-slate);
+  }
+
+  .silence-mock--warm .graded-row dt {
+    color: var(--color-paper-label);
+  }
+
+  .graded-row dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 560px) {
+    .graded {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .silence-mock--warm .score-panel--weak .score-label,
   .silence-mock--warm .score-total,
   .silence-mock--warm .silence-foot {
     color: var(--color-paper-label);
@@ -362,12 +452,16 @@ const SHOT_TEXTURE = warm
   }
 
   .shot {
+    overflow: hidden;
     border: 1px solid var(--color-rule);
     border-radius: 3px;
   }
 
   .silence-mock--warm .shot {
     border-color: var(--color-paper-rule);
+    --cap-surface: var(--color-paper-surface);
+    --cap-chrome: var(--color-paper-chip);
+    --cap-mark: var(--color-paper-layer-light);
   }
 
   /* ── La coupure ────────────────────────────────────────────────────────── */
@@ -395,7 +489,7 @@ const SHOT_TEXTURE = warm
     color: var(--color-paper-label);
   }
 
-  /* ── Les jours retenus ─────────────────────────────────────────────────── */
+  /* ── Les jours sans données ─────────────────────────────────────────────────── */
 
   /* ⚠️ Une PILE, pas une boîte pleine largeur.
      La première version étalait une face bordée sur toute la zone muette : ça
@@ -494,7 +588,7 @@ const SHOT_TEXTURE = warm
   }
 
   /* La colonne se resserre avant la carte : sous 1100px, la retenue latérale de
-     21 % laisse « 4 days queued » bord à bord dans sa feuille. La feuille cède,
+     21 % laisse « Nothing received » bord à bord dans sa feuille. La feuille cède,
      jamais le libellé — même arbitrage que la gouttière de la nav. */
   @media (max-width: 1100px) {
     .held-sheet,

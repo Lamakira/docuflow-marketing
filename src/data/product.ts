@@ -14,8 +14,19 @@
  * (`/product/time-tracking`, …) liront cette source, pas une copie.
  *
  * ⚠️ Copy en attente de signature Masdouk (le handoff les signale comme nouvelles) :
- * le H2 de Knowledge, le libellé « THE ARGUMENT » et les cinq phrases de
+ * le H2 de Knowledge, le libellé « THE ARGUMENT » et les phrases de
  * `PRODUCT_ARGUMENT`. Tout le reste vient du brief validé (§6).
+ *
+ * ⚠️ Passe d'audit du 23 novembre 2026 : chaque rangée a été recontrôlée contre
+ * le code de l'app (v2, seule interface servie aux clients). Retirées : présence,
+ * suppression motivée des captures (réservée à une adresse interne en v2), export
+ * CSV d'activité, modules et champs personnalisés (absents de v2), @mentions,
+ * serveur MCP. (Modèles, réordonnancement, duplication et sous-pages avaient été
+ * retirés à tort par l'audit : la v2 les sert via `PageTree` dans la fiche projet,
+ * et l'éditeur enregistre l'audio — rétablis le même jour, vérifiés à l'écran.) Réécrites :
+ * pause d'inactivité (agent seul, 10 min par défaut), transcription (récupération
+ * des transcriptions Loom et Fathom, pas de transcription audio), recherche (par
+ * nom, pas en plein texte). Détail et preuves : `docs/claims-audit-2026-11-23.md`.
  */
 
 /** Les quatre piliers du produit, et rien d'autre : la clé du registre de
@@ -90,7 +101,7 @@ const PILLAR_DEFINITIONS: PillarDefinition[] = [
     index: "01",
     name: "Time",
     heading: "Hours that already know what they were for.",
-    body: "The timer runs against a task inside a client project, so a timesheet is a by-product rather than a chore. It survives multiple browser tabs, pauses itself when the screen goes idle, and exports clean enough for payroll.",
+    body: "The timer runs against a project and its task, so a timesheet is a by-product rather than a chore. It survives multiple browser tabs, the desktop agent pauses it when you go idle, and the hours export to CSV for payroll.",
     band: "bg-paper",
     eyebrowTone: "hour",
     rows: [
@@ -99,8 +110,8 @@ const PILLAR_DEFINITIONS: PillarDefinition[] = [
         capability: "Web timer - start, pause, resume, stop",
       },
       {
-        bullet: "Time logged against a task in a client project",
-        capability: "Time logged against a task",
+        bullet: "Time logged against a project and its task",
+        capability: "Time logged against a project",
         qualifier: "never a free-text label",
       },
       {
@@ -109,26 +120,25 @@ const PILLAR_DEFINITIONS: PillarDefinition[] = [
         qualifier: "leader election, no double counting",
       },
       {
-        bullet: "Automatic pause past the idle threshold",
+        bullet: "The desktop agent pauses the timer when you go idle",
         capability: "Automatic idle pause",
-        qualifier: "past the idle threshold",
+        qualifier: "desktop agent, after 1–60 min",
       },
-      {
-        bullet: "Timesheets and entry history, editable",
-        capability: "Timesheets and entry history",
-        qualifier: "editable",
-      },
-      { bullet: "Attendance and presence", capability: "Attendance and presence" },
+      { bullet: "Timesheets and entry history", capability: "Timesheets and entry history" },
       {
         bullet: "Configurable expected hours per person",
         capability: "Expected hours per person",
         qualifier: "configurable",
       },
-      { bullet: "Payroll-ready CSV export", capability: "Payroll-ready CSV export" },
+      {
+        bullet: "CSV export of time entries for payroll",
+        capability: "Time-entry CSV export",
+        qualifier: "date, person, project, task, hours",
+      },
     ],
     spec: [
       { value: "60s", label: "heartbeat" },
-      { value: "3 min", label: "idle threshold" },
+      { value: "10 min", label: "default idle pause" },
       { value: "8h", label: "default day" },
       { value: "CSV", label: "export" },
     ],
@@ -138,7 +148,7 @@ const PILLAR_DEFINITIONS: PillarDefinition[] = [
     index: "02",
     name: "Activity",
     heading: "Evidence, and a score telling you how good it is.",
-    body: "A desktop agent on Windows, macOS and Linux records screenshots, keyboard and mouse activity and idle time in the background. It keeps working offline. And it grades its own coverage, so you know when the record is thin instead of assuming it is complete.",
+    body: "A desktop agent on Windows, macOS and Linux records screenshots, keyboard and mouse activity and idle time in the background. It keeps working offline. And DocuFlow grades the coverage, so you know when tracked hours have too little evidence behind them.",
     band: "bg-band-mint",
     eyebrowTone: "live",
     rows: [
@@ -177,27 +187,21 @@ const PILLAR_DEFINITIONS: PillarDefinition[] = [
         qualifier: "remote revocation",
       },
       {
-        bullet: "Screenshots soft-deleted with a recorded reason",
-        capability: "Screenshots soft-deleted with reason",
-        qualifier: "never silently erased",
-      },
-      {
         bullet: "Evidence quality score, 0–100 per person",
         key: true,
         capability: "Evidence quality score, 0–100",
         qualifier: "strong / moderate / weak / insufficient",
       },
       {
-        bullet: "Admin analytics - coverage, quality, devices, alerts",
+        bullet: "Admin analytics - coverage, quality, devices, warnings",
         capability: "Admin analytics",
-        qualifier: "coverage, quality, devices, alerts",
+        qualifier: "coverage, quality, devices, warnings",
       },
       {
-        bullet: "Screenshot review with a timezone selector",
+        bullet: "Screenshot review by person and date",
         capability: "Screenshot review",
-        qualifier: "timezone selector",
+        qualifier: "by person and date",
       },
-      { bullet: "CSV export", capability: "CSV export" },
     ],
     spec: [
       { value: "3–15m", label: "capture" },
@@ -210,7 +214,7 @@ const PILLAR_DEFINITIONS: PillarDefinition[] = [
     id: "clients",
     index: "03",
     name: "Clients",
-    heading: "A CRM that knows what the work cost.",
+    heading: "A CRM that knows what the work took.",
     body: "Clients, contacts, projects, stages, budgets, tasks and daily updates. Because the hours live in the same place, budget consumed is a live number rather than a month-end reconstruction.",
     band: "bg-paper",
     eyebrowTone: "hour",
@@ -232,6 +236,7 @@ const PILLAR_DEFINITIONS: PillarDefinition[] = [
       },
       {
         bullet: "Budgeted vs actual hours, live",
+        key: true,
         capability: "Budgeted vs actual hours",
         qualifier: "consumption live",
       },
@@ -242,11 +247,7 @@ const PILLAR_DEFINITIONS: PillarDefinition[] = [
       },
       { bullet: "Team assignment per project", capability: "Team assignment per project" },
       { bullet: "Coloured tags", capability: "Coloured tags" },
-      {
-        bullet: "Notes with @mentions that notify",
-        capability: "Notes with @mentions",
-        qualifier: "notifies the person named",
-      },
+      { bullet: "Project notes", capability: "Project notes" },
       {
         bullet: "Audio notes, transcribed automatically",
         capability: "Audio notes",
@@ -258,22 +259,16 @@ const PILLAR_DEFINITIONS: PillarDefinition[] = [
         qualifier: "in-app and email",
       },
       {
-        bullet: "Custom modules and fields - 12 field types",
-        key: true,
-        capability: "Custom modules and fields",
-        qualifier: "12 field types",
-      },
-      {
-        bullet: "Daily updates with status, blockers and KPIs",
+        bullet: "Daily updates with status and blockers",
         capability: "Daily updates",
-        qualifier: "one per person / project / day + KPIs",
+        qualifier: "status and blockers, team totals",
       },
       { bullet: "Project cloning", capability: "Project cloning" },
     ],
     spec: [
-      { value: "12", label: "field types" },
-      { value: "5", label: "project stages" },
-      { value: "1/day", label: "per person" },
+      { value: "5", label: "board columns" },
+      { value: "4", label: "task states" },
+      { value: "hours", label: "budget unit" },
       { value: "full", label: "stage history" },
     ],
   },
@@ -283,8 +278,8 @@ const PILLAR_DEFINITIONS: PillarDefinition[] = [
     name: "Knowledge",
     /** Volontairement différent du H2 de l'accueil (« Ask your own company a
      *  question. ») : deux pages ne doivent pas se répéter mot pour mot. */
-    heading: "Search covers what was said, not just what was written.",
-    body: "A block editor inside the client project, company files in folders, and meeting videos transcribed automatically. All of it indexed as it is written, so the assistant answers with a source instead of a list of files.",
+    heading: "Ask covers what was said, not just what was written.",
+    body: "A block editor inside the client project, company files in folders, and the transcripts of Loom and Fathom recordings, fetched on their own. All of it indexed as it is written, so the assistant answers with a source instead of a list of files.",
     band: "bg-band-warm",
     eyebrowTone: "hour",
     rows: [
@@ -307,10 +302,10 @@ const PILLAR_DEFINITIONS: PillarDefinition[] = [
         qualifier: "YouTube, Loom, Fathom",
       },
       {
-        bullet: "Automatic video transcription, indexed",
+        bullet: "Loom and Fathom transcripts, indexed",
         key: true,
-        capability: "Automatic video transcription",
-        qualifier: "indexed and searchable",
+        capability: "Meeting transcripts",
+        qualifier: "Loom and Fathom, fetched automatically",
       },
       {
         bullet: "Company files in folders - PDF, Word, text",
@@ -318,8 +313,9 @@ const PILLAR_DEFINITIONS: PillarDefinition[] = [
         qualifier: "PDF, Word, text extracted",
       },
       {
-        bullet: "Full-text search across everything",
-        capability: "Full-text search across everything",
+        bullet: "Search by project, page and file name",
+        capability: "Search",
+        qualifier: "project, page and file names",
       },
       {
         bullet: "AI assistant over semantic search, cited",
@@ -336,7 +332,7 @@ const PILLAR_DEFINITIONS: PillarDefinition[] = [
     spec: [
       { value: "~800", label: "char chunks" },
       { value: "1536", label: "dim embeddings" },
-      { value: "3", label: "video providers" },
+      { value: "3", label: "video embeds" },
       { value: "PDF·W·txt", label: "extracted" },
     ],
   },
@@ -362,24 +358,25 @@ export const PRODUCT_PILLARS: ProductPillar[] = PILLAR_DEFINITIONS.map((pillar) 
  *  rien et ne casse pas le build**, donc ça se vérifie en comptant les `<svg>`
  *  livrés.
  *
- *  `featured` n'existe que pour MCP : le brief présente le serveur MCP comme
- *  unique dans la catégorie — revendication à substantifier avant publication —
- *  et demande donc une carte entière plutôt qu'une note de bas de page. */
+ *  ⚠️ La carte « Claude Desktop integration » (serveur MCP, « 22 tools ») est
+ *  retirée le 23 novembre 2026 : `mcp-server/index.ts` n'expose que 6 outils,
+ *  aucun ne lit les documents, et rien ne le package ni ne l'explique à un
+ *  client. Elle revient le jour où TECHMA le distribue — avec les vrais noms. */
 export const PLATFORM_CARDS = [
   {
     icon: "shield-check",
     title: "Roles and permissions",
-    body: "Admin and member roles, with per-capability visibility.",
+    body: "Owner, administrator and member roles, plus capabilities granted per person.",
   },
   {
     icon: "users",
-    title: "Teams",
-    body: "Grouping with owner / admin / member roles and expiring invite codes.",
+    title: "Invitations",
+    body: "Email invitations with the role chosen up front. They expire.",
   },
   {
     icon: "bell",
     title: "Notifications",
-    body: "Mentions and system alerts, in-app and by email.",
+    body: "In-app notifications, and email for assignments, reminders and billing.",
   },
   {
     icon: "refresh-cw",
@@ -391,25 +388,8 @@ export const PLATFORM_CARDS = [
     title: "Device security",
     body: "Device tokens stored only as hashes, revocable at any time.",
   },
-  {
-    icon: "share-2",
-    title: "Claude Desktop integration",
-    body: "An MCP server exposing 22 tools, so an AI assistant can query projects, documents, clients and time entries directly.",
-    featured: true,
-  },
 ];
 
-/** Six des 22 outils exposés, plus le reste compté. Les noms sont ceux du
- *  serveur — les afficher tels quels est l'argument : ils existent. */
-export const MCP_TOOLS = [
-  "list_projects",
-  "get_client",
-  "search_documents",
-  "query_time_entries",
-  "create_task",
-  "get_budget",
-  "+16 more",
-];
 
 /** La réponse directe à « pourquoi pas Hubstaff ». Le seul moment de la page qui
  *  argumente au lieu de spécifier — tout le reste est une fiche technique.
@@ -418,27 +398,17 @@ export const PRODUCT_ARGUMENT = [
   {
     n: "01",
     title: "An evidence quality score",
-    body: "The monitoring data grades its own completeness, so a thin record announces itself.",
+    body: "The monitoring data grades its own completeness, so hours with too little evidence behind them show up instead of passing as complete.",
   },
   {
     n: "02",
     title: "Meetings that answer questions",
-    body: "Recorded calls are transcribed and indexed, so the assistant can answer from what was said.",
+    body: "Loom and Fathom recordings bring their transcripts in, so the assistant can answer from what was said.",
   },
   {
     n: "03",
-    title: "A CRM you can reshape",
-    body: "12 custom field types across custom modules, not a fixed schema.",
-  },
-  {
-    n: "04",
     title: "An agent that survives the network",
     body: "Work queues locally and reconciles without duplicates when the connection returns.",
-  },
-  {
-    n: "05",
-    title: "An MCP server",
-    body: "Query your operations from Claude Desktop through 22 exposed tools.",
   },
 ];
 

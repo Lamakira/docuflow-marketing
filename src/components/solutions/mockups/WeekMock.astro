@@ -1,4 +1,7 @@
 ---
+import CaptureThumb from "../../CaptureThumb.astro";
+import { CAPTURE_VARIANTS } from "../../captures";
+import { evidenceRows, evidenceScore, minutesOf } from "../../../data/solutions";
 /** La semaine enregistrée, jour par jour — le relevé qu'on peut compter.
  *
  * ─── Pourquoi elle remplace `ScoreMock` sur le héros ───────────────────────
@@ -31,12 +34,23 @@
  * seule vérité. Changer une journée change le total ; retaper le total à côté
  * de journées qui ne l'atteignent pas est exactement la faute que ce calcul
  * rend impossible.
+ *
+ * ⚠️ Le SCORE aussi est dérivé (23 novembre 2026). Le temps suivi, les
+ * captures et l'activité moyenne viennent des journées ; les doublons et le
+ * dernier contact du poste sont passés à part ; `evidenceScore()` applique la
+ * formule du produit. Les anciennes semaines portaient 2 ou 3 captures par
+ * jour sous un « 84 » : 13 captures pour 38 h plafonnent le score vers 62, et
+ * l'agent en prend en réalité une toutes les 3 à 5 minutes par défaut. Les
+ * vignettes sont donc un ÉCHANTILLON, et le compte est écrit en chiffres.
  */
 interface Props {
   label: string;
-  score: number;
-  grade: string;
-  days: { day: string; hours: string; activity: number; shots: number; tag?: string }[];
+  /** `hours` en `H:MM`, `activity` en %, `shots` = captures de la journée. */
+  days: { day: string; hours: string; activity: number; shots: number }[];
+  /** Part de captures en double sur la semaine, en %. */
+  duplicates: number;
+  /** Jours depuis le dernier contact du poste. 0 = aujourd'hui. */
+  seenDaysAgo: number;
   foot: string;
   /** Traitement Layered Paper — voir `DESIGN.md`, « Layered Paper Card ». */
   warm?: boolean;
@@ -44,40 +58,36 @@ interface Props {
   onDark?: boolean;
 }
 
-const { label, score, grade, days, foot, warm = false, onDark = false } = Astro.props;
+const { label, days, duplicates, seenDaysAgo, foot, warm = false, onDark = false } =
+  Astro.props;
 
-/** `H:MM` → minutes. Lève plutôt que de rendre `NaN h` : un total muet dans une
- *  maquette de relevé est pire qu'un build cassé. */
-const toMinutes = (value: string) => {
-  const match = /^(\d+):([0-5]\d)$/.exec(value);
-  if (!match) {
-    throw new Error(
-      `[solutions] WeekMock : durée « ${value} » illisible, format attendu \`H:MM\`. ` +
-        `Le total de la semaine en est dérivé, donc une valeur hors format le rendrait faux en silence.`
-    );
-  }
-  return Number(match[1]) * 60 + Number(match[2]);
-};
-
-const totalMinutes = days.reduce((sum, entry) => sum + toMinutes(entry.hours), 0);
+/** `minutesOf` lève sur une durée hors format : un total muet dans une maquette
+ *  de relevé est pire qu'un build cassé. */
+const totalMinutes = days.reduce((sum, entry) => sum + minutesOf(entry.hours), 0);
 const hours = Math.floor(totalMinutes / 60);
 const minutes = totalMinutes % 60;
+const tracked = `${hours}:${String(minutes).padStart(2, "0")}`;
 /** `38 h` quand la semaine tombe juste, `37:45` sinon — jamais « 37.75 h ». */
-const total = minutes === 0 ? `${hours} h` : `${hours}:${String(minutes).padStart(2, "0")}`;
+const total = minutes === 0 ? `${hours} h` : tracked;
 
-/** Le seuil de `ScoreMock`, repris tel quel : vert confirme, ambre avertit. */
-const confirmed = score >= 70;
+/** Les entrées du score, toutes dérivées des journées sauf deux. L'activité
+ *  moyenne est pondérée par les heures : une journée de deux heures ne pèse
+ *  pas autant qu'une de huit. */
+const screenshots = days.reduce((sum, entry) => sum + entry.shots, 0);
+const activity = Math.round(
+  days.reduce((sum, entry) => sum + minutesOf(entry.hours) * entry.activity, 0) / totalMinutes
+);
+const evidence = { tracked, screenshots, duplicates, activity, events: screenshots > 0, seenDaysAgo };
+const { score, grade } = evidenceScore(evidence);
+/** « Tracked » est déjà le total du pied : pas deux fois. */
+const graded = evidenceRows(evidence).filter((row) => row.label !== "Tracked");
 
-/** La colonne de lieu n'existe que si les journées en portent un. Une colonne
- *  vide réservée « au cas où » décale la grille de toutes les autres pages pour
- *  rien — et une grille qui bouge sans raison est la première chose qu'on
- *  remarque en comparant deux pages côte à côte. */
-const hasTags = days.some((entry) => entry.tag);
+/** Le seuil de `ScoreMock`, repris tel quel : seul STRONG est confirmé. */
+const confirmed = grade === "STRONG";
 
-/** La texture « image retenue » du système — rayure 45°, 4 px. */
-const SHOT_TEXTURE = warm
-  ? "repeating-linear-gradient(45deg,var(--color-paper-chip) 0 4px,var(--color-paper-surface) 4px 8px)"
-  : "repeating-linear-gradient(45deg,#F3F5F7 0 4px,#fff 4px 8px)";
+/** Vignettes d'échantillon par journée. Le compte réel est écrit à côté. */
+const SAMPLE = 3;
+
 ---
 
 <div
@@ -118,30 +128,44 @@ const SHOT_TEXTURE = warm
 
   {/* Le registre. Une rangée par journée : c'est ce qui manquait — des jours
       qu'on peut nommer et des heures qu'on peut additionner. */}
-  <ul class:list={["days", { "days--tagged": hasTags }]}>
+  <ul class="days">
     {
-      days.map((entry) => (
+      days.map((entry, index) => (
         <li class="day" data-use-case-motion-row>
           <span class="day-name">{entry.day}</span>
-          {hasTags && <span class="day-tag">{entry.tag}</span>}
           <span class="day-hours">{entry.hours}</span>
 
           <span class="day-activity" aria-hidden="true">
             <span class="day-fill" style={`width:${entry.activity}%`} />
           </span>
 
-          {/* Les captures de la journée, une par une. Un compte se vérifie ;
-              huit vignettes identiques posées en grille ne se rattachent à
-              aucun jour et ne se vérifient donc pas. */}
-          <span class="day-shots" aria-hidden="true">
-            {Array.from({ length: entry.shots }).map(() => (
-              <span class="shot" style={`background:${SHOT_TEXTURE}`} />
+          {/* Les captures de la journée : un échantillon de vignettes et le
+              compte en chiffres. Un compte se vérifie ; cent vignettes en
+              rangée ne se lisent plus. */}
+          <span class="day-shots">
+            {Array.from({ length: Math.min(SAMPLE, entry.shots) }).map((_, n) => (
+              <span class="shot" aria-hidden="true">
+                <CaptureThumb variant={CAPTURE_VARIANTS[(index + n) % CAPTURE_VARIANTS.length]} size="sm" />
+              </span>
             ))}
+            <span class="shot-count">{entry.shots}</span>
           </span>
         </li>
       ))
     }
   </ul>
+
+  {/* Ce que le score a noté : les entrées de la formule, en clair. */}
+  <dl class="graded">
+    {
+      graded.map((row) => (
+        <div class="graded-row">
+          <dt>{row.label}</dt>
+          <dd>{row.value}</dd>
+        </div>
+      ))
+    }
+  </dl>
 
   <footer class="week-foot">
     <span class="week-total">{total}</span>
@@ -201,33 +225,6 @@ const SHOT_TEXTURE = warm
     padding: 9px 2px;
   }
 
-  /* Une piste de plus quand les journées portent un lieu. Déclarée ici et non
-     par un `auto` implicite : une piste implicite se dimensionne sur son
-     min-content, ce qui ferait varier la largeur de la colonne d'un jour à
-     l'autre selon la longueur du mot. */
-  .days--tagged .day {
-    grid-template-columns: 34px 52px 46px minmax(0, 1fr) auto;
-  }
-
-  /* Le lieu est une annotation collée sur la journée, pas une mesure : capsule
-     `paper-chip`, jamais une couleur. `OFFICE` et `HOME` sont deux faits
-     également neutres — en teinter un ferait de l'autre une exception. */
-  .day-tag {
-    justify-self: start;
-    border-radius: 3px;
-    background: var(--color-paper);
-    padding: 2px 6px;
-    font-family: var(--font-mono);
-    font-size: 8.5px;
-    letter-spacing: 0.06em;
-    color: var(--color-slate);
-  }
-
-  .week-mock--warm .day-tag {
-    background: var(--color-paper-chip);
-    color: var(--color-paper-label);
-  }
-
   .week-mock--warm .day {
     border-top-color: var(--color-paper-rule);
   }
@@ -277,18 +274,74 @@ const SHOT_TEXTURE = warm
   .day-shots {
     display: flex;
     flex: none;
+    align-items: center;
     gap: 3px;
+  }
+
+  .shot-count {
+    min-width: 26px;
+    margin-left: 4px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-slate);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .week-mock--warm .shot-count {
+    color: var(--color-paper-label);
+  }
+
+  .graded {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px 16px;
+    margin: 2px 0 0;
+    border-top: 1px solid var(--color-rule);
+    padding: 10px 2px 8px;
+  }
+
+  .week-mock--warm .graded {
+    border-top-color: var(--color-paper-rule);
+  }
+
+  .graded-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+
+  .graded-row dt {
+    color: var(--color-slate);
+  }
+
+  .week-mock--warm .graded-row dt {
+    color: var(--color-paper-label);
+  }
+
+  .graded-row dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
   }
 
   .shot {
     height: 14px;
     width: 18px;
+    overflow: hidden;
     border: 1px solid var(--color-rule);
     border-radius: 2px;
   }
 
   .week-mock--warm .shot {
     border-color: var(--color-paper-rule);
+    --cap-surface: var(--color-paper-surface);
+    --cap-chrome: var(--color-paper-chip);
+    --cap-mark: var(--color-paper-layer-light);
   }
 
   .week-foot {
@@ -308,6 +361,8 @@ const SHOT_TEXTURE = warm
      ce pied qui compte : c'est lui qui prouve que les cinq journées font bien
      une semaine. */
   .week-total {
+    flex: none;
+    white-space: nowrap;
     font-family: var(--font-mono);
     font-size: 15px;
     font-weight: 700;
@@ -321,20 +376,20 @@ const SHOT_TEXTURE = warm
     color: var(--color-slate);
   }
 
-  /* Sous 560px les vignettes passent avant les heures : le compte de captures
-     est secondaire, l'heure de la journée ne l'est pas. */
+  /* Sous 560px les vignettes partent, le compte reste : c'est une entrée du
+     score, l'échantillon n'est qu'une illustration. */
   @media (max-width: 560px) {
     .day {
-      grid-template-columns: 30px 44px minmax(0, 1fr);
+      grid-template-columns: 30px 44px minmax(0, 1fr) auto;
       gap: 8px;
     }
 
-    .days--tagged .day {
-      grid-template-columns: 30px 48px 44px minmax(0, 1fr);
+    .shot {
+      display: none;
     }
 
-    .day-shots {
-      display: none;
+    .graded {
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 </style>

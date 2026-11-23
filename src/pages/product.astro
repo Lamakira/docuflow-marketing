@@ -7,11 +7,13 @@ import PlatformBand from "../components/product/PlatformBand.astro";
 import ArgumentSection from "../components/product/ArgumentSection.astro";
 import CapabilityList from "../components/product/CapabilityList.astro";
 import FinalCta from "../components/sections/FinalCta.astro";
-import TimerMock from "../components/product/mockups/TimerMock.astro";
 import EvidenceMock from "../components/product/mockups/EvidenceMock.astro";
-import ClientMock from "../components/product/mockups/ClientMock.astro";
-import AnswerMock from "../components/product/mockups/AnswerMock.astro";
 import PaperStage from "../components/product/mockups/PaperStage.astro";
+import AppScreen from "../components/product/AppScreen.astro";
+import type { ImageMetadata } from "astro";
+import timeEntries from "../assets/screens/time-entries.png";
+import projectDossier from "../assets/screens/project-dossier.png";
+import projectDocumentation from "../assets/screens/project-documentation.png";
 import { PRODUCT_PILLARS, type PillarId } from "../data/product";
 
 const title = "DocuFlow product - time, activity, clients and knowledge";
@@ -24,11 +26,33 @@ const description =
  *  renommé dans `product.ts` sans son entrée ici échoue à la vérification des
  *  types (`astro check` / build) au lieu de planter au rendu sur un mockup
  *  `undefined`. */
-const MOCKUPS: Record<PillarId, typeof TimerMock> = {
-  time: TimerMock,
-  activity: EvidenceMock,
-  clients: ClientMock,
-  knowledge: AnswerMock,
+type Visual =
+  | { kind: "screen"; src: ImageMetadata; alt: string }
+  | { kind: "mock"; Mockup: typeof EvidenceMock };
+
+/* Trois piliers montrent l'interface réelle depuis le 23 novembre 2026 (voir
+ * `AppScreen.astro`). Activity reste dessiné : le Workspace de démonstration
+ * n'a aucune capture d'écran ni mesure d'activité — `seed-demo.ts` n'en sème
+ * pas — donc l'écran réel serait vide, et le remplir montrerait le poste d'une
+ * vraie personne. `TimerMock`, `ClientMock` et `AnswerMock` restent dans le
+ * dépôt mais ne sont plus rendus ici. */
+const VISUALS: Record<PillarId, Visual> = {
+  time: {
+    kind: "screen",
+    src: timeEntries,
+    alt: "DocuFlow Time Tracking screen: the timer above a list of stopped time entries, each filed against a client project and a task, with its duration.",
+  },
+  activity: { kind: "mock", Mockup: EvidenceMock },
+  clients: {
+    kind: "screen",
+    src: projectDossier,
+    alt: "DocuFlow project record for Atlas warehouse rollout: client, stage, project manager, 23.0 h tracked of a 120 h budget, next tasks and the budget meter.",
+  },
+  knowledge: {
+    kind: "screen",
+    src: projectDocumentation,
+    alt: "DocuFlow project documentation: the page tree of the client project beside the block editor and its toolbar.",
+  },
 };
 
 /** Rythme des bandes, même règle que l'accueil et `/pricing` : deux sections
@@ -61,7 +85,7 @@ const MOCKUPS: Record<PillarId, typeof TimerMock> = {
 
   {
     PRODUCT_PILLARS.map((pillar, i) => {
-      const Mockup = MOCKUPS[pillar.id];
+      const visual = VISUALS[pillar.id];
       return (
         <ProductPillar pillar={pillar} reverse={i % 2 === 1}>
           {/* ⚠️ Les quatre visuels passent par `PaperStage` — l'habillage
@@ -73,9 +97,13 @@ const MOCKUPS: Record<PillarId, typeof TimerMock> = {
               of records, not a live product panel ». Ces quatre cartes sont des
               illustrations de relevés, exactement comme celles des pages
               secteur. */}
-          <PaperStage>
-            <Mockup />
-          </PaperStage>
+          {visual.kind === "screen" ? (
+            <AppScreen src={visual.src} alt={visual.alt} />
+          ) : (
+            <PaperStage>
+              <visual.Mockup />
+            </PaperStage>
+          )}
         </ProductPillar>
       );
     })

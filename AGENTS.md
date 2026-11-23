@@ -80,7 +80,7 @@ Trois règles à ne pas casser :
 3. **Son débord peint dépasse le bord de ~7,8 px** : c'est le coin de l'inclinaison de 1,6°,
    pas un désalignement. Sa boîte de mise en page est exacte.
 
-Un bloc dont le contenu ne remplit pas sa colonne (les chiffres de la bande de preuve)
+Un bloc dont le contenu ne remplit pas sa colonne (les chiffres de l'ancienne bande de preuve)
 doit être dimensionné sur son contenu et calé à droite — sinon la section paraît courte
 alors que son conteneur, lui, est bien aligné.
 
@@ -350,6 +350,13 @@ barre. Trois conséquences à ne pas défaire :
 sur `<html>`, que `global.css` lit en `scroll-padding-top: var(--scroll-pad, 80px)`. Un style global
 déclaré depuis une page peut se retrouver dans une feuille partagée au regroupement ; une variable
 inline, non.
+
+**Trois piliers montrent l'interface réelle** (23 novembre 2026) : Time, Clients et Knowledge
+rendent `product/AppScreen.astro` avec une capture de l'app v2 (`src/assets/screens/`, WebP généré
+par `astro:assets`), à plat et légendée « demo workspace » — « The Layered Paper Boundary » interdit
+le papier chaud sur un vrai panneau produit. Activity reste dessiné (`EvidenceMock`) : la démo n'a
+aucune capture d'écran. Règles et procédure de reprise dans l'en-tête d'`AppScreen.astro` ; la
+principale : **aucune personne réelle à l'écran**, le nom du membre de démo est remplacé avant capture.
 
 **Une piste de grille implicite se dimensionne sur son min-content** — mesuré à 410 px pour la
 colonne d'un pilier, soit une barre horizontale garantie dès 360 px. Les grilles qui passent à une
@@ -649,8 +656,16 @@ vérifié), et `prefers-reduced-motion` coupe l'animation entièrement plutôt q
       points de douleur, les scénarios, les objections, **les six pages cas d'usage entières** (H1,
       dix-huit symptômes, scénarios, objections) — et surtout les
       **deux `blurb` corrigés** de Construction et Staffing dans `site.ts`.
-- [ ] **Remplacer les chiffres de la bande de preuve** (`src/data/site.ts`, `PROOF_STATS`) par
-      les valeurs réelles de la base. Bloquant avant toute mise en ligne.
+- [x] ~~Remplacer les chiffres de la bande de preuve~~ — **bande retirée** le 23 novembre 2026
+      avec `PROOF_STATS` (chiffres inventés) et sa phrase d'usage interne (non approuvée, voir
+      `PRODUCT.md`). Elle revient avec des valeurs réelles et sourcées.
+- [ ] **Faire signer la passe d'audit des claims du 23 novembre 2026** par Masdouk : toutes les
+      phrases réécrites ou retirées sont listées dans `docs/claims-audit-2026-11-23.md`, avec la
+      preuve dans le code de l'app. Règle qui en sort : **une capacité ne s'écrit sur le site que
+      si un client peut s'en servir dans l'app v2 ou l'agent** — une clé de plan, une route d'API
+      sans écran v2 ou un écran v1 ne comptent pas.
+- [ ] **Confirmer les montants des plans** (7 / 14 / 22 $) et l'existence d'un DPA : ni l'un ni
+      l'autre n'est vérifiable dans le code de l'app (les prix vivent dans Stripe).
 - [ ] **Faire signer la copy neuve de `/product`** par Masdouk : le H2 de Knowledge, le libellé
       « THE ARGUMENT » et les cinq phrases de `PRODUCT_ARGUMENT` (signalées dans `product.ts`).
 - [ ] **Faire signer la copy des maquettes de `/solutions/remote-teams`** — table complète dans
@@ -695,6 +710,7 @@ vérifié), et `prefers-reduced-motion` coupe l'animation entièrement plutôt q
 |---|---|
 | `docs/design-brief.md` | Brief initial — ⚠️ décrit l'ancien concept « journée de travail » |
 | `docs/landing-corrections.md` | Le delta qui a corrigé le concept — **c'est la version qui fait foi** |
+| `docs/claims-audit-2026-11-23.md` | Ce que l'app ne fait pas et que le site annonçait — **fait foi sur ce qu'on a le droit d'écrire**, preuves dans le code de l'app |
 | `docs/mockup-corrections.md` | Revue des maquettes cas d'usage — **fait foi sur leur style**, approches refusées incluses |
 | `docs/site-architecture.md` | Arborescence complète, matrice SEO, fondations techniques |
 | `docs/design-handoff/` | Maquettes HTML de référence — ouvrir dans un navigateur |

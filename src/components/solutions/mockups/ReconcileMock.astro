@@ -1,5 +1,9 @@
 ---
-/** La journée coupée en deux qui se recolle — deux lieux, une feuille.
+/** La journée coupée en deux qui se recolle — une coupure, une feuille.
+ *
+ * ⚠️ Pas de colonne de lieu (`OFFICE` / `HOME`) : DocuFlow n'enregistre aucun
+ * lieu, ni dans les entrées de temps ni dans les événements de l'agent. Retirée
+ * le 23 novembre 2026.
  *
  * ─── Ce que la section demande ─────────────────────────────────────────────
  *
@@ -32,7 +36,7 @@
  */
 interface Props {
   label: string;
-  blocks: { at: string; place: string; task: string; hours: string; offline?: boolean }[];
+  blocks: { at: string; task: string; hours: string; offline?: boolean }[];
   reconnected: string;
   foot: string;
   /** Traitement Layered Paper — voir `DESIGN.md`, « Layered Paper Card ». */
@@ -90,7 +94,6 @@ if (!blocks.some((block) => block.offline)) {
           data-use-case-motion-row
         >
           <span class="at">{block.at}</span>
-          <span class="place">{block.place}</span>
           <span class="task">{block.task}</span>
           <span class="hours">{block.hours}</span>
           {block.offline && <span class="queued-note">queued locally</span>}
@@ -135,8 +138,7 @@ if (!blocks.some((block) => block.offline)) {
 
   .reconcile-mock--warm .label,
   .reconcile-mock--warm .note,
-  .reconcile-mock--warm .at,
-  .reconcile-mock--warm .place {
+  .reconcile-mock--warm .at {
     color: var(--color-paper-label);
   }
 
@@ -163,7 +165,7 @@ if (!blocks.some((block) => block.offline)) {
 
   .block {
     display: grid;
-    grid-template-columns: 44px 54px minmax(0, 1fr) auto;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
     align-items: baseline;
     gap: 10px;
     border-top: 1px solid var(--color-rule);
@@ -196,16 +198,11 @@ if (!blocks.some((block) => block.offline)) {
     background: var(--color-paper-chip);
   }
 
-  .at,
-  .place {
+  .at {
     font-family: var(--font-mono);
     font-size: 9.5px;
     color: var(--color-slate);
     font-variant-numeric: tabular-nums;
-  }
-
-  .place {
-    letter-spacing: 0.06em;
   }
 
   .task {
@@ -293,7 +290,7 @@ if (!blocks.some((block) => block.offline)) {
 
   @media (max-width: 560px) {
     .block {
-      grid-template-columns: 40px 48px minmax(0, 1fr) auto;
+      grid-template-columns: 40px minmax(0, 1fr) auto;
       gap: 7px;
     }
 

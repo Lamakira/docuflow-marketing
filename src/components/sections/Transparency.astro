@@ -1,10 +1,15 @@
 ---
 import { Icon } from "astro-icon/components";
 
+/* Recontrôlées le 23 novembre 2026 contre l'application : le flou des captures
+   n'existe nulle part (agent, serveur, politique de suivi), et la fenêtre
+   d'heures de travail est optionnelle, désactivée par défaut, et ne concerne
+   que les captures. Les deux garanties qui le promettaient sont réécrites sur ce
+   que le produit fait : aucune capture hors chrono, et l'interrupteur global. */
 const guarantees = [
   "A visible indicator shows the team exactly when the timer is running.",
-  "Screenshots can be blurred so content is never legible.",
-  "Capture is scheduled to working hours only.",
+  "No screenshot is taken while the timer is stopped.",
+  "Screenshots can be limited to working hours, or switched off entirely.",
   "Anyone can open and review their own recorded data.",
 ];
 ---
@@ -23,9 +28,9 @@ const guarantees = [
           Monitoring people can live with.
         </h2>
         <p class="mt-5 max-w-[48ch] text-[18px] leading-[1.55] text-slate">
-          Employees see exactly what's recorded and when the timer is running. Screenshots can be
-          blurred, capture can be scheduled to working hours, and anyone can review their own data.
-          Configure it once, tell your team, keep it visible.
+          Employees see when the timer is running, and screenshots stop when it does. Capture can
+          be limited to working hours, and anyone can review their own data. Configure it once,
+          tell your team, keep it visible.
         </p>
       </div>
 

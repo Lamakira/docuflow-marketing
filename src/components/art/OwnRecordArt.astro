@@ -6,7 +6,8 @@
  *
  * « Monitoring has to be visible or it is not worth having. A running
  * indicator, active-hours window, blurred screenshots and self-review make the
- * record inspectable by the person it describes. »
+ * record inspectable by the person it describes. » — citation de l'ANCIENNE
+ * copy : le floutage n'existe pas et la section a été réécrite sans lui.
  *
  * Donc le dessin n'est pas « un relevé existe » — c'est le relevé VU DEPUIS LA
  * PLACE DE LA PERSONNE QU'IL DÉCRIT. Volontairement PAS un tableau de bord
@@ -42,7 +43,14 @@
  * s'assied jamais dans une autre carte ; les deux feuilles derrière elle SONT
  * la profondeur.
  *
- * ⚠️ Durées et heure de ralenti reprises des maquettes de la page
+ * ⚠️ Corrigé le 23 novembre 2026, contre le code de l'application : pas de
+ * captures floutées (le floutage n'existe pas), pas de ligne « Idle · you were
+ * prompted » (le ralenti n'est jamais une entrée de la feuille de temps — il est
+ * retiré, pas compté), la fenêtre d'heures actives ne coupe que les CAPTURES (et
+ * non « nothing recorded »), et une entrée ne se corrige pas en v2 (« correct »
+ * retiré du pied). Les points 3 et 4 ci-dessus décrivent l'ancienne version.
+ *
+ * ⚠️ Durées reprises des maquettes de la page
  * (`solutions.ts`, `remote-teams`) : mêmes tâches Atlas que le pilier « the
  * week », même `14:20`. Si l'une bouge, l'autre ment.
  */
@@ -60,16 +68,10 @@ const ENTRIES = [
     task: "Atlas · Code review",
     duration: "1:04:22",
     running: true,
-    note: "3 screenshots · blurred",
+    note: "16 screenshots · yours to open",
   },
   { at: "11:30", task: "Atlas · Standup", duration: "0:12:00", running: false, note: null },
-  {
-    at: "14:20",
-    task: "Idle · you were prompted",
-    duration: "0:08:10",
-    running: false,
-    note: null,
-  },
+  { at: "14:20", task: "Atlas · Bug fixes", duration: "1:46:10", running: false, note: null },
 ];
 ---
 
@@ -119,14 +121,14 @@ const ENTRIES = [
         ligne qui parle de ce qui n'existe pas, et c'est celle qui répond le
         plus directement à l'objection. */}
     <p class="window" data-art-in>
-      Before {WINDOW.from} and after {WINDOW.to} · nothing recorded
+      Before {WINDOW.from} and after {WINDOW.to} · no screenshots
     </p>
 
     {/* La ligne qui porte l'argument : la vue appartient à la personne, et pas
         seulement en lecture — « review » et « correct » sont des actions. */}
     <footer class="foot" data-art-pop>
       <span class="tick" aria-hidden="true"></span>
-      Yours to open, review and correct
+      Yours to open and review
     </footer>
   </section>
 </div>
