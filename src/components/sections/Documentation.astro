@@ -1,5 +1,7 @@
 ---
 import PillarSection from "../PillarSection.astro";
+import AppScreen from "../product/AppScreen.astro";
+import ledgerDocumentation from "../../assets/screens/ledger-documentation.png";
 
 interface Props {
   /** Posé par `index.astro` d'après le rang du pilier — jamais en dur ici. */
@@ -17,41 +19,6 @@ const { reverse = false } = Astro.props;
   band="bg-band-warm"
   reverse={reverse}
 >
-  {/* Maquette d'éditeur de blocs. La poignée à six points signale un vrai éditeur —
-      c'est le détail qui distingue d'un simple champ de texte. */}
-  <div class="rounded-[8px] border border-rule bg-white p-5">
-    <p class="font-mono text-[11px] text-slate">Northwind / Ledger rebuild / Technical spec</p>
-
-    <div class="mt-4 space-y-3">
-      <div class="group relative">
-        <span
-          class="absolute -left-5 top-1/2 -translate-y-1/2 font-mono text-[12px] leading-none text-rule"
-          aria-hidden="true">⠿</span
-        >
-        <h3 class="text-[22px] font-bold">Migration scope</h3>
-      </div>
-
-      <p class="text-[14px] leading-[1.7] text-slate">
-        Move the existing ledger to the new schema. No new reporting surface in this phase - the
-        April 3 call fixed the scope to a two-sprint window.
-      </p>
-
-      <label class="flex items-center gap-2 text-[14px]">
-        <span
-          class="grid h-[18px] w-[18px] place-items-center rounded-[3px] bg-live-on-light text-[11px] text-white"
-          >✓</span
-        >
-        <span class="text-slate line-through">Sign off migration plan with Elena</span>
-      </label>
-
-      <label class="flex items-center gap-2 text-[14px]">
-        <span class="h-[18px] w-[18px] rounded-[3px] border border-rule"></span>
-        <span>Draft rollback procedure</span>
-      </label>
-
-      <div class="rounded-[6px] bg-paper p-3 font-mono text-[12px] text-slate">
-        <span class="rounded-[3px] bg-white px-2 py-1">migrate --dry-run --schema=v2</span>
-      </div>
-    </div>
-  </div>
+  {/* La vraie documentation de projet (23 novembre 2026) : l'onglet Documentation de la fiche projet, l'arbre de pages et l'éditeur de blocs. Un autre projet que la capture de `/product`, pour ne pas montrer deux fois le même écran. */}
+  <AppScreen src={ledgerDocumentation} alt="DocuFlow project documentation inside the Ledger migration client project: the Documentation tab, the page tree and the block editor with its toolbar." />
 </PillarSection>

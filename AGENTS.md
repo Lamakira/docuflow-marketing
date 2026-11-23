@@ -351,6 +351,8 @@ sur `<html>`, que `global.css` lit en `scroll-padding-top: var(--scroll-pad, 80p
 déclaré depuis une page peut se retrouver dans une feuille partagée au regroupement ; une variable
 inline, non.
 
+**L'accueil aussi** (23 novembre 2026, deuxième passe) : le héros, la fiche client, la documentation et la carte DocuFlow de la pile sont de vraies captures ; les cartes d'outils de la pile, les heures et la réponse IA restent dessinées, mais lisibles. L'inspecteur au survol du héros n'existe plus. Détail dans `docs/claims-audit-2026-11-23.md`.
+
 **Trois piliers montrent l'interface réelle** (23 novembre 2026) : Time, Clients et Knowledge
 rendent `product/AppScreen.astro` avec une capture de l'app v2 (`src/assets/screens/`, WebP généré
 par `astro:assets`), à plat et légendée « demo workspace » — « The Layered Paper Boundary » interdit
