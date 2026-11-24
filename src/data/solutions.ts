@@ -72,301 +72,11 @@ export type Figure = { fig: string };
 export type Line = (string | Figure)[];
 export const fig = (value: string): Figure => ({ fig: value });
 
-/** Les maquettes schématiques, paramétrées. Union discriminée : chaque
- *  variante ne porte que ses propres champs, et `SectorMockup.astro` ne peut pas
- *  rendre un dessin dont les données manquent. Dessinées en éléments de page —
- *  jamais d'illustration, jamais de capture d'écran. */
-export type Mockup =
-  /** Le dossier CRM : identité, jauge de budget, étiquettes. */
-  | {
-      kind: "record";
-      title: string;
-      chip: string;
-      people?: boolean;
-      meter?: { label: string; value: string; percent: number; read: string };
-      foot?: string;
-      tags?: string[];
-    }
-  /** Le chronomètre en cours, plus la feuille de temps du jour. */
-  | {
-      kind: "timer";
-      running: { project: string; task: string; elapsed: string };
-      entries: { task: string; duration: string }[];
-      foot: string;
-    }
-  /** La question d'un client sur une ligne de SA facture, en face des entrées
-   *  du projet qui y répondent. DocuFlow n'écrit aucune facture et ne stocke
-   *  aucun montant : la ligne est le libellé que le client cite, jamais une
-   *  donnée du produit. Le total d'heures est dérivé des tâches. */
-  | {
-      kind: "query";
-      client: string;
-      line: string;
-      /** `hours` en heures décimales. Le total en est dérivé. */
-      tasks: { name: string; hours: number }[];
-      foot: string;
-    }
-  /** Le score de qualité de la preuve. Note le RELEVÉ, jamais la personne.
-   *
-   *  Ne porte que les ENTRÉES RÉELLES du score (`Evidence`) : le chiffre et le
-   *  verdict en sont calculés par `evidenceScore()`, et les lignes « What was
-   *  graded » sont ces mêmes entrées. Un score retapé à côté de lignes qui ne
-   *  l'atteignent pas n'est donc plus possible. */
-  | {
-      kind: "score";
-      label: string;
-      evidence: Evidence;
-      foot: string;
-    }
-  /** LA SEMAINE ENREGISTRÉE, jour par jour — le relevé qu'on peut compter.
-   *
-   *  Distinct de `score`, qui montre le même chiffre au-dessus de vingt-quatre
-   *  fenêtres anonymes et de huit vignettes identiques. C'était le reproche, et
-   *  il était juste : rien là-dedans ne ressemble au relevé DE JOURNÉES. Un
-   *  histogramme sans axe est une texture ; on ne peut ni le compter, ni s'y
-   *  reconnaître, et un opérateur méfiant ne croit pas une texture.
-   *
-   *  Ici les jours sont nommés, chacun porte ses heures, son activité et ses
-   *  captures, et le total se DÉDUIT des journées. Le score cesse d'être un
-   *  chiffre posé sur un décor : il est CALCULÉ (`evidenceScore()`) sur la
-   *  semaine que le lecteur vient de compter lui-même. */
-  | {
-      kind: "week";
-      label: string;
-      /** `hours` en `H:MM`, `activity` en %. Le temps suivi, le nombre de
-       *  captures et l'activité moyenne de la semaine en sont dérivés.
-       *
-       *  Pas de lieu par journée : DocuFlow n'enregistre aucun lieu (ni dans les
-       *  entrées de temps, ni dans les événements de l'agent). La colonne
-       *  `OFFICE` / `HOME` de `hybrid-teams` a été retirée le 23 novembre 2026. */
-      days: { day: string; hours: string; activity: number; shots: number }[];
-      /** Les deux entrées du score que les journées ne portent pas. */
-      duplicates: number;
-      seenDaysAgo: number;
-      foot: string;
-    }
-  /** CE QUI S'ATTACHE AU DOSSIER — heures, tâches, notes, documents.
-   *
-   *  Le pilier « The line » de `client-billing` dit : « Hours, tasks, notes and
-   *  documents ATTACH TO THE CLIENT PROJECT as work happens. » Quatre natures
-   *  nommées, et la carte y rendait la fiche `record` du héros, aux mêmes
-   *  valeurs. (DocuFlow n'écrit pas la facture : la carte montre le dossier
-   *  d'où les lignes sont tirées, jamais une facture.)
-   *
-   *  Le total est dérivé : c'est ce qui rend « one record » vérifiable au lieu
-   *  d'être une figure de style. */
-  | {
-      kind: "attach";
-      title: string;
-      note: string;
-      rows: { label: string; count: number; unit: string }[];
-      foot: string;
-    }
-  /** LA BIBLIOTHÈQUE — ce qui est écrit, ce qui est dit, et le fait que
-   *  l'assistant lit les deux.
-   *
-   *  Le pilier « The library » d'`onboarding-documentation` dit que l'assistant
-   *  répond depuis les pages ET les transcriptions Loom / Fathom. (La RECHERCHE,
-   *  elle, ne trouve que des titres et des noms de fichier : elle ne couvre pas
-   *  ce qui a été dit.) La carte y rendait une TROISIÈME copie de la réponse
-   *  citée, identique au héros et au scénario, question et sources comprises.
-   *
-   *  Le total indexé est dérivé : deux natures de contenu, un seul index. */
-  | {
-      kind: "library";
-      label: string;
-      /** `spoken` distingue ce qui a été DIT de ce qui a été TAPÉ. C'est l'axe
-       *  entier de la carte. */
-      shelves: { name: string; note: string; count: number; spoken?: boolean }[];
-      foot: string;
-    }
-  /** DEUX ROUTES POUR UNE MÊME QUESTION — celle qui bloque, celle qui répond.
-   *
-   *  Le scénario s'appelle « How a question stops being an interruption », et
-   *  son arc est un CONTRASTE : l'ancienne route passe par une personne
-   *  occupée, la nouvelle par l'assistant. Une carte de réponse citée ne
-   *  montre que la seconde — elle ne peut pas montrer ce qu'on évite.
-   *
-   *  ⚠️ Aucune durée inventée : `20 seconds` et `$740` sont dans la copy de la
-   *  section, `March 6` aussi. Une carte qui chiffrerait un gain de
-   *  productivité non écrit serait une allégation, pas une maquette. */
-  | {
-      kind: "route";
-      label: string;
-      routes: { name: string; steps: string[]; outcome: string; blocked?: boolean }[];
-      foot: string;
-    }
-  /** LE PROJET COMME OBJET — étapes, tâches, mises à jour.
-   *
-   *  Le pilier « The project » de `/solutions/project-profitability` décrit un
-   *  CONTENANT : « Every project carries its budget, stages and tasks. » La
-   *  carte `record` y montrait la même jauge que le héros, aux mêmes valeurs —
-   *  le budget consommé, pas la structure qui le porte.
-   *
-   *  Les étapes sont celles du produit (`LEAD → COMPLETED`), c'est-à-dire le
-   *  rail de l'accueil : la page secteur et l'accueil décrivent le même cycle,
-   *  ils ne peuvent pas le nommer différemment. */
-  | {
-      kind: "project";
-      title: string;
-      chip: string;
-      /** Le cycle de vie, dans l'ordre. `at` marque l'étape courante. */
-      stages: string[];
-      at: number;
-      /** Comptes par état de tâche. Le total est dérivé. */
-      tasks: { state: string; count: number }[];
-      foot: string;
-    }
-  /** LE BUDGET DU PROJET ET LE RÉEL PAR TÂCHE — et la tâche qui pèse.
-   *
-   *  Le scénario dit « the hours are already attributed to tasks ». Une jauge à
-   *  78 % ne montre aucune cause : elle montre un pourcentage. Il faut les
-   *  lignes, et il faut qu'elles s'additionnent.
-   *
-   *  ⚠️ UN SEUL budget, celui du projet, en heures. Les tâches n'ont pas
-   *  d'estimation dans DocuFlow : un budget par ligne serait une fonction
-   *  inventée. Le réel par tâche, lui, existe (analytique admin).
-   *
-   *  ⚠️ Le réel total et le pourcentage sont DÉRIVÉS des lignes : le lecteur
-   *  peut additionner la colonne et retrouver les `249 h` et `78 %` que cite le
-   *  texte. `flag` marque la ligne que nomme la copy — une seule. */
-  | {
-      kind: "variance";
-      title: string;
-      period: string;
-      /** Le budget du projet, en heures entières. */
-      budget: number;
-      /** `actual` en heures entières. */
-      lines: { label: string; actual: number; flag?: boolean }[];
-      foot: string;
-    }
-  /** LES CAPTURES D'UNE HEURE, chacune avec son activité — l'atome de la
-   *  mesure, comptable.
-   *
-   *  L'agent n'enregistre pas une série minute par minute : il prend une
-   *  capture à intervalle aléatoire et y joint l'activité clavier / souris de
-   *  la minute qui précède. La carte montre donc ce que montre la galerie du
-   *  produit — des vignettes horodatées, chacune avec son pourcentage — et le
-   *  ralenti comme un TROU entre deux captures, pas comme des cases vides.
-   *
-   *  L'indicateur visible est SUR la carte, pas en légende : sur une page dont
-   *  le H1 est « Measure openly », la visibilité de la mesure doit être une
-   *  chose qu'on voit, pas une chose qu'on lit. */
-  | {
-      kind: "windows";
-      label: string;
-      /** Le libellé de l'indicateur visible — « Recording », jamais un verbe
-       *  passif. C'est la garantie no 1 de la page. */
-      indicator: string;
-      /** Une entrée par capture, dans l'ordre. `at` en `HH:MM`, `activity` en %.
-       *  Le compte et l'activité moyenne sont DÉRIVÉS. */
-      captures: { at: string; activity: number }[];
-      /** Le ralenti de l'heure, s'il y en a un. Sa durée est dérivée. */
-      idle?: { from: string; to: string };
-      foot: string;
-    }
-  /** UN RALENTI, PAS À PAS — l'agent demande avant de mettre en pause.
-   *
-   *  Le scénario d'`employee-productivity` s'appelle « How an idle stretch is
-   *  handled » : c'est un ENCHAÎNEMENT, pas un état. Chaque étape porte son
-   *  heure, et la durée non comptée se DÉDUIT de la première et de la dernière
-   *  — le chiffre ne peut donc pas être arrondi en faveur du produit. Les
-   *  seules réponses du produit sont « I'm back » et « I'm not working » :
-   *  aucune annotation, rien de stocké sur la réponse.
-   *
-   *  Distinct de `windows`, qui montre la mesure en continu : ici on est zoomé
-   *  sur un seul événement. Même écart de focale qu'entre `week` et `silence`
-   *  sur `remote-teams`, et c'est ce qui empêche les deux cartes d'une même
-   *  page de se ressembler. */
-  | {
-      kind: "idle";
-      label: string;
-      steps: { at: string; event: string; note?: string }[];
-      /** Ce qu'il advient du temps. Le libellé est écrit, la durée du ralenti
-       *  est dérivée des étapes — donc elle ne peut pas flatter le produit. */
-      outcome: string;
-      foot: string;
-    }
-  /** LA JOURNÉE COUPÉE EN DEUX QUI SE RECOLLE — deux lieux, une feuille.
-   *
-   *  Le miroir de `silence`, et c'est voulu : là-bas une coupure qui ne se
-   *  referme jamais, ici une coupure qui se referme. Les deux pages parlent
-   *  d'un trou dans un relevé, mais elles n'en disent pas la même chose —
-   *  `remote-teams` dit « le trou s'annonce », `hybrid-teams` dit « le trou se
-   *  comble sans compter deux fois ». Un même dessin sur les deux mentirait sur
-   *  l'une des deux.
-   *
-   *  Le total est DÉRIVÉ des segments : c'est ce qui prouve à l'oeil qu'aucune
-   *  heure n'a été comptée deux fois, ce qui est l'objection exacte du
-   *  scénario. */
-  | {
-      kind: "reconcile";
-      label: string;
-      /** Les blocs de la journée, dans l'ordre. `offline` marque ceux qui ont
-       *  été mis en file au lieu d'être envoyés tout de suite. Pas de lieu :
-       *  DocuFlow n'en enregistre aucun. */
-      blocks: { at: string; task: string; hours: string; offline?: boolean }[];
-      /** L'heure de reconnexion. La bascule du dessin tombe dessus. */
-      reconnected: string;
-      foot: string;
-    }
-  /** LE POSTE qui produit le relevé — enregistré, vivant, révocable.
-   *
-   *  Distinct de `score`, qui montre le RÉSULTAT. Les deux se disputaient la
-   *  même page : le héros de `/solutions/remote-teams` et son premier pilier
-   *  rendaient la même carte de score, aux mêmes valeurs, à un écran d'écart.
-   *  Deux dessins identiques ne disent rien deux fois — ils disent au lecteur
-   *  qu'il a déjà vu cette page.
-   *
-   *  Le partage est net : le héros porte le chiffre qu'on LIT (« you can read
-   *  the record »), le pilier porte la MACHINE qui le fabrique, ce qui est
-   *  exactement ce que son corps énumère — agent de bureau, registre
-   *  révocable. Les lignes ne montrent que ce que la page Devices du produit
-   *  affiche : OS, dernier contact, statut, révocation (ni taille de file, ni
-   *  état de synchronisation, qui ne remontent pas au web). Et c'est ce
-   *  poste-là que le scénario fait taire deux sections plus bas : le lecteur
-   *  l'a vu battre avant de le voir s'arrêter. */
-  | {
-      kind: "device";
-      label: string;
-      name: string;
-      platform: string;
-      status: string;
-      /** Les trois plateformes de l'agent. `active` marque celle du poste. */
-      platforms: { short: string; active?: boolean }[];
-      rows: { label: string; value: string }[];
-      foot: string;
-    }
-  /** La semaine QUI S'ARRÊTE — un relevé coupé net.
-   *
-   *  Variante distincte de `score` et non un réglage de celle-ci. Un relevé
-   *  interrompu n'est pas un relevé pâle : baisser l'opacité d'un histogramme
-   *  donne « la page charge », pas « le poste s'est tu mardi ». Il faut deux
-   *  choses qu'un graphique de score ne porte pas — un AXE DE TEMPS pour que
-   *  « mardi » existe à l'écran, et une COUPURE nette.
-   *
-   *  ⚠️ Le serveur ne voit pas ce qu'un poste n'a pas envoyé : les jours après
-   *  la coupure sont « rien reçu », jamais « N jours en file ». Ce que le
-   *  produit sait, c'est le dernier contact du poste. Le score est calculé sur
-   *  ce qui EST arrivé (`evidence`). */
-  | {
-      kind: "silence";
-      label: string;
-      evidence: Evidence;
-      /** Les jours de la semaine, dans l'ordre. Ils portent l'axe. */
-      days: string[];
-      /** Position de la coupure en pourcentage de la semaine. Elle DOIT tomber
-       *  dans le jour que nomme `lastEvent` — c'est ce qui rend le dessin
-       *  vérifiable : à 34 % sur cinq jours, la coupure est dans le deuxième
-       *  jour, donc mardi. L'intervalle sans données en est DÉRIVÉ, jamais
-       *  écrit à la main : déplacer la coupure ne peut pas faire mentir
-       *  l'étiquette. */
-      cut: number;
-      lastEvent: string;
-      foot: string;
-    }
-  /** La réponse de l'assistant, avec ses sources citées. */
-  | { kind: "source"; question: string; answer: string; sources: string[] };
+/** Une vraie capture de l'application v2, prise sur une instance locale isolée
+ *  remplie de données fictives (24 novembre 2026). `src` nomme un fichier de
+ *  `src/assets/screens/solutions/` sans extension ; `ScreenShot.astro` lève au
+ *  build s'il n'existe pas. Plus aucune maquette dessinée sur `/solutions`. */
+export type Screen = { src: string; alt: string };
 
 /** Un bloc pilier d'une page secteur. `ref` désigne le pilier produit — il donne
  *  l'ancre `/product#…`, la bande de specs et la liste dans laquelle `caps` est
@@ -380,13 +90,14 @@ interface PillarBlock {
   heading: string;
   body: string;
   caps: Capability[];
-  mock: Mockup;
+  /** `clip` : un geste filmé (`src/assets/clips/`) à la place de la capture. Piliers seulement. */
+  mock: Screen & { clip?: string };
 }
 
 interface SectorCopy {
   h1: string;
   lede: string;
-  hero: Mockup;
+  hero: Screen;
   problem: {
     heading: string;
     points: { title: string; body: string }[];
@@ -396,7 +107,8 @@ interface SectorCopy {
     eyebrow: string;
     heading: string;
     lines: Line[];
-    mock: Mockup;
+    /** Absente quand aucun écran réel ne montre ce que dit la section. */
+    mock?: Screen;
   };
   objection: {
     eyebrow: string;
@@ -444,7 +156,7 @@ interface UseCaseCopy {
   /** Oeil-de-boeuf du héros. Les cas d'usage n'ont pas de `tag` de domaine :
    *  c'est le pilier qui répond qui sert de repère (`ACTIVITY`, `TIME`…). */
   eyebrow: string;
-  hero: Mockup;
+  hero: Screen;
   /** L'équivalent de `problem`, mais transverse : ces symptômes doivent se
    *  reconnaître dans plusieurs métiers, sinon la page double un secteur. */
   situation: {
@@ -458,7 +170,8 @@ interface UseCaseCopy {
     eyebrow: string;
     heading: string;
     lines: Line[];
-    mock: Mockup;
+    /** Absente quand aucun écran réel ne montre ce que dit la section. */
+    mock?: Screen;
   };
   objection: {
     eyebrow: string;
@@ -476,86 +189,6 @@ interface UseCaseCopy {
   cta: { title: string; note?: string };
   meta: { title: string; description: string };
 }
-
-/* ─────────────────── Le score de qualité de la preuve ─────────────────────── */
-
-/** Les ENTRÉES RÉELLES du score de qualité de la preuve, telles que l'app les
- *  lit : par personne, sur une période choisie, page Analytics, admins
- *  seulement, plan Business. Une maquette de score ne porte QUE ces valeurs, et
- *  le chiffre affiché en est calculé — il ne peut donc pas être retapé à côté de
- *  lignes qui ne l'atteignent pas (c'était le cas de quatre cartes sur six :
- *  38 captures pour 40 h plafonnent à 66, pas à 84). */
-export interface Evidence {
-  /** Temps suivi sur la période, `H:MM`. */
-  tracked: string;
-  screenshots: number;
-  /** Part de captures en double, en %. */
-  duplicates: number;
-  /** Moyenne des pourcentages clavier et souris, en %. */
-  activity: number;
-  /** Au moins un événement d'activité reçu sur la période. */
-  events: boolean;
-  /** Jours depuis le dernier contact du poste. 0 = aujourd'hui. */
-  seenDaysAgo: number;
-}
-
-export type EvidenceGrade = "STRONG" | "MODERATE" | "WEAK" | "INSUFFICIENT";
-
-/** `H:MM` → minutes. Lève plutôt que de rendre `NaN` : un score muet dans une
- *  maquette de relevé est pire qu'un build cassé. */
-export const minutesOf = (value: string): number => {
-  const match = /^(\d+):([0-5]\d)$/.exec(value);
-  if (!match) {
-    throw new Error(`[solutions] durée « ${value} » illisible, format attendu \`H:MM\`.`);
-  }
-  return Number(match[1]) * 60 + Number(match[2]);
-};
-
-/** La formule du produit, terme à terme :
- *    couverture 0–40  = 40 × min(1, captures / captures attendues), 1 attendue par 10 min suivies
- *    qualité    0–30  = 30 − pénalité doublons (15 × min(1, 2 × part)) − pénalité activité (15 × max(0, 1 − activité/20))
- *    événements 0–20  = 20 si au moins un événement d'activité
- *    poste      0–10  = 10 si vu depuis ≤ 1 jour, 5 si ≤ 7 jours, sinon 0
- *  Verdict : ≥ 75 strong, ≥ 50 moderate, ≥ 25 weak, sinon insufficient. */
-export const evidenceScore = (evidence: Evidence) => {
-  const expected = Math.ceil((minutesOf(evidence.tracked) * 60) / 600);
-  const coverage = Math.round(40 * Math.min(1, evidence.screenshots / expected));
-  const duplicatePenalty = Math.round(15 * Math.min(1, (2 * evidence.duplicates) / 100));
-  const activityPenalty = Math.round(15 * Math.max(0, 1 - evidence.activity / 20));
-  const quality = 30 - duplicatePenalty - activityPenalty;
-  const events = evidence.events ? 20 : 0;
-  const device = evidence.seenDaysAgo <= 1 ? 10 : evidence.seenDaysAgo <= 7 ? 5 : 0;
-  const score = coverage + quality + events + device;
-  const grade: EvidenceGrade =
-    score >= 75 ? "STRONG" : score >= 50 ? "MODERATE" : score >= 25 ? "WEAK" : "INSUFFICIENT";
-
-  return { expected, score, grade };
-};
-
-/** Les lignes « What was graded » : les entrées elles-mêmes, en clair. Le
- *  lecteur peut refaire le calcul avec ce qu'il voit. */
-export const evidenceRows = (evidence: Evidence): { label: string; value: string }[] => {
-  const { expected } = evidenceScore(evidence);
-  const seen = evidence.seenDaysAgo;
-
-  return [
-    { label: "Tracked", value: evidence.tracked },
-    {
-      label: "Screenshots",
-      value:
-        evidence.screenshots <= expected
-          ? `${evidence.screenshots} of ${expected} expected`
-          : `${evidence.screenshots} · ${expected} expected`,
-    },
-    { label: "Duplicates", value: `${evidence.duplicates}%` },
-    { label: "Average activity", value: `${evidence.activity}%` },
-    { label: "Activity events", value: evidence.events ? "yes" : "none" },
-    {
-      label: "Device seen",
-      value: seen === 0 ? "today" : seen === 1 ? "yesterday" : `${seen} days ago`,
-    },
-  ];
-};
 
 /* ───────────────────────── Sélection des capacités ────────────────────────── */
 
@@ -599,14 +232,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
     en: {
       h1: "See the retainer burn while you can still do something about it.",
       lede: "Contacts, budget, hours, tasks and documents all sit on the same client project - so budget consumed is a live number, not a month-end reconstruction. When a retainer starts running hot, you find out in week two.",
-      hero: {
-        kind: "record",
-        title: "Northwind Systems",
-        chip: "In progress",
-        meter: { label: "Budget", value: "300 h", percent: 62, read: "62% used" },
-        foot: "Day 11 of 30",
-        tags: ["retainer", "Q2"],
-      },
+      hero: { src: "agencies-hero", alt: "DocuFlow project record for the Northwind Systems Q2 retainer: 186.0 h tracked of a 300 h budget, 62% used, with next tasks, the latest daily update and the project documents." },
       problem: {
         heading: "The retainer is fixed. The scope isn't.",
         points: [
@@ -637,14 +263,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Project notes",
             "Reminders with due dates, in-app and email",
           ]),
-          mock: {
-            kind: "record",
-            title: "Northwind Systems",
-            chip: "In progress",
-            people: true,
-            meter: { label: "Budget", value: "300 h", percent: 62, read: "62% used" },
-            tags: ["retainer", "Q2"],
-          },
+          mock: { src: "agencies-projects", alt: "DocuFlow Projects list: three client projects with their status, project manager, budget used and hours tracked this month. The Q2 retainer is at 62%." },
         },
         {
           ref: "time",
@@ -658,16 +277,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Timesheets and entry history",
             "CSV export of time entries for payroll",
           ]),
-          mock: {
-            kind: "timer",
-            running: { project: "Northwind · Ledger rebuild", task: "Migration scripts", elapsed: "1:47:12" },
-            entries: [
-              { task: "Northwind · Client call", duration: "0:48:20" },
-              { task: "Acme · Second round of edits", duration: "1:12:05" },
-              { task: "Northwind · Deck for Thursday", duration: "2:03:40" },
-            ],
-            foot: "Timesheet · today",
-          },
+          mock: { src: "agencies-time", alt: "DocuFlow Time Tracking screen: a timer running on the Q2 retainer above today's time entries, each on a client project and a task." },
         },
         {
           ref: "knowledge",
@@ -681,12 +291,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Search by project, page and file name",
             "AI assistant over semantic search, cited",
           ]),
-          mock: {
-            kind: "source",
-            question: "was the reporting module in the Ledger scope?",
-            answer: "No. The signed statement of work covers migration only. Reporting was raised on the April 3 call and left for a separate quote.",
-            sources: ["doc · Ledger SOW", "page · Apr 3 call (Loom)"],
-          },
+          mock: { src: "agencies-docs", alt: "DocuFlow project documentation: the statement of work open in the block editor, beside the project's nested pages." },
         },
       ],
       scenario: {
@@ -703,7 +308,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             ", which is high for the date - so you open the record before the standup instead of after the invoice.",
           ],
           [
-            "The entries on the project show ",
+            "Analytics shows ",
             fig("38.5 h"),
             " logged to the Ledger rebuild and ",
             fig("21 h"),
@@ -713,13 +318,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "That is a scope conversation you can have on the 11th, with the document open - not a write-off you absorb on the 30th.",
           ],
         ],
-        mock: {
-          kind: "record",
-          title: "Northwind Systems",
-          chip: "In progress",
-          meter: { label: "Budget", value: "300 h", percent: 62, read: "62% used" },
-          foot: "Day 11 of 30",
-        },
+        mock: { src: "agencies-analytics", alt: "DocuFlow Analytics, hours recorded per task: Ledger rebuild and client calls are listed with their totals." },
       },
       objection: {
         eyebrow: "Transparency",
@@ -749,16 +348,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
     en: {
       h1: "The estimate said forty hours. The sprint says sixty-one.",
       lede: "The timer runs against a task inside the client project, so estimate against actual is something you read mid-sprint rather than argue about at the retro. When a change request lands, the record already says whether it was in scope.",
-      hero: {
-        kind: "timer",
-        running: { project: "Atlas · Sprint 14", task: "DF-482 Auth refactor", elapsed: "2:14:38" },
-        entries: [
-          { task: "DF-477 · Rate limiter", duration: "3:12:40" },
-          { task: "DF-482 · Auth refactor", duration: "6:48:05" },
-          { task: "Sprint 14 · Ceremonies", duration: "1:20:00" },
-        ],
-        foot: "Timesheet · sprint 14",
-      },
+      hero: { src: "software-hero", alt: "DocuFlow: Time Tracking screen with a timer running on DF-482 in Sprint 14, above today's time entries." },
       problem: {
         heading: "Estimates are guesses. Actuals are evidence.",
         points: [
@@ -789,16 +379,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "The desktop agent pauses the timer when you go idle",
             "Timesheets and entry history",
           ]),
-          mock: {
-            kind: "timer",
-            running: { project: "Atlas · Sprint 14", task: "DF-482 Auth refactor", elapsed: "2:14:38" },
-            entries: [
-              { task: "DF-477 · Rate limiter", duration: "3:12:40" },
-              { task: "DF-482 · Auth refactor", duration: "6:48:05" },
-              { task: "DF-461 · Review", duration: "0:44:15" },
-            ],
-            foot: "Timesheet · sprint 14",
-          },
+          mock: { src: "software-entries", alt: "DocuFlow: The Time tab of the Sprint 14 project: each entry on a task, with the person, the day and the hours." },
         },
         {
           ref: "clients",
@@ -813,14 +394,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Team assignment per project",
             "Daily updates with status and blockers",
           ]),
-          mock: {
-            kind: "record",
-            title: "Atlas · Sprint 14",
-            chip: "In progress",
-            meter: { label: "Budget", value: "40 h", percent: 100, read: "61 h actual" },
-            foot: "Two tickets added on day three",
-            tags: ["fixed bid", "sprint 14"],
-          },
+          mock: { src: "software-record", alt: "DocuFlow: Project record for Sprint 14: 61.0 h tracked of a 40 h budget, 153% used, with tasks, the latest daily update and documents." },
         },
         {
           ref: "knowledge",
@@ -834,12 +408,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Search by project, page and file name",
             "AI assistant over semantic search, cited",
           ]),
-          mock: {
-            kind: "source",
-            question: "when did token rotation enter sprint 14?",
-            answer: "Day three, on the March 9 call. The sprint scope signed on March 2 covers the auth refactor only.",
-            sources: ["doc · Sprint 14 scope", "page · Mar 9 call (Loom)"],
-          },
+          mock: { src: "software-docs", alt: "DocuFlow: Project documentation: the Sprint 14 scope in the block editor, with what is in and not in scope." },
         },
       ],
       scenario: {
@@ -849,9 +418,9 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
           [
             "Sprint 14 was estimated at ",
             fig("40 h"),
-            ". On Thursday the board reads ",
+            ". On Thursday the record reads ",
             fig("61 h"),
-            ", and the entries show ",
+            ", and Analytics shows ",
             fig("9.5 h"),
             " logged to DF-482 - a task that entered on day three.",
           ],
@@ -862,13 +431,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "That is a change-order conversation you have on Thursday with the transcript open - not an overrun you explain at the retro.",
           ],
         ],
-        mock: {
-          kind: "record",
-          title: "Atlas · Sprint 14",
-          chip: "In progress",
-          meter: { label: "Budget", value: "40 h", percent: 100, read: "61 h actual" },
-          foot: "DF-482 added on day three",
-        },
+        mock: { src: "software-tasks", alt: "DocuFlow: Analytics, hours recorded per task: DF-482 Auth refactor at 9.5 h." },
       },
       objection: {
         eyebrow: "Monitoring",
@@ -893,17 +456,12 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
     },
   },
 
-  /* ══ Conseil — mène par la PREUVE : le score de qualité du relevé ══ */
+  /* ══ Conseil — mène par la PREUVE : la capture sous politique publiée ══ */
   "consulting-firms": {
     en: {
       h1: "Answer “what did you do for these forty hours?” from the record.",
-      lede: "Hours attach to an engagement, activity and screenshots attach to the hours, and admins see a score for how complete that record is. When a client questions an invoice, the answer is a record with a score on it rather than a recollection.",
-      hero: {
-        kind: "score",
-        label: "Evidence quality",
-        evidence: { tracked: "40:00", screenshots: 236, duplicates: 9, activity: 47, events: true, seenDaysAgo: 0 },
-        foot: "Meridian · week 32 · one consultant",
-      },
+      lede: "Hours attach to an engagement, and activity and screenshots attach to the hours. When a client questions an invoice, the answer is a record rather than a recollection.",
+      hero: { src: "consulting-hero", alt: "DocuFlow: Project record for the Operating model engagement: 284.0 h tracked of a 400 h budget, 71% used." },
       problem: {
         heading: "The invoice is a claim. The record is the proof.",
         points: [
@@ -925,22 +483,16 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
         {
           ref: "activity",
           label: "The evidence",
-          heading: "The record grades its own completeness.",
-          body: "A desktop agent on Windows, macOS and Linux records screenshots, activity levels and idle time in the background. Admins see an evidence-quality score from 0 to 100 per person, so hours with too little evidence behind them show before a client asks.",
+          heading: "Captured under a policy your team can read.",
+          body: "A desktop agent on Windows, macOS and Linux records screenshots, activity levels and idle time in the background. Admins set what is captured and when, and every member can read that policy.",
           caps: capsOf("activity", [
-            "Evidence quality score, 0–100 per person",
             "Desktop agent for Windows, macOS and Linux",
             "Screenshots at randomised, configurable intervals",
             "Keyboard and mouse activity in 60-second windows",
             "Capture restricted to an active-hours window",
-            "Admin analytics - coverage, quality, devices, warnings",
+            "Admin analytics - recorded time, activity, warnings",
           ]),
-          mock: {
-            kind: "score",
-            label: "Evidence quality",
-            evidence: { tracked: "40:00", screenshots: 236, duplicates: 9, activity: 47, events: true, seenDaysAgo: 0 },
-            foot: "Meridian · week 32 · one consultant",
-          },
+          mock: { src: "consulting-policy", alt: "DocuFlow: Administration, Tracking Policy: capture interval, active hours, low-activity threshold, idle timeout and the idle prompt." },
         },
         {
           ref: "time",
@@ -954,16 +506,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Configurable expected hours per person",
             "CSV export of time entries for payroll",
           ]),
-          mock: {
-            kind: "timer",
-            running: { project: "Meridian · Operating model", task: "Board pack revisions", elapsed: "1:32:07" },
-            entries: [
-              { task: "Meridian · Workshop prep", duration: "2:10:00" },
-              { task: "Meridian · Stakeholder calls", duration: "1:45:30" },
-              { task: "Harborline · Diagnostic", duration: "3:05:12" },
-            ],
-            foot: "Timesheet · week 32",
-          },
+          mock: { src: "consulting-time", alt: "DocuFlow: Time Tracking screen with a timer running on the Board pack task, above today's entries on two engagements." },
         },
         {
           ref: "clients",
@@ -977,14 +520,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Tasks - open / in progress / done / archived",
             "Daily updates with status and blockers",
           ]),
-          mock: {
-            kind: "record",
-            title: "Meridian Group",
-            chip: "In progress",
-            people: true,
-            meter: { label: "Budget", value: "400 h", percent: 71, read: "71% used" },
-            tags: ["advisory", "SOW-2026-04"],
-          },
+          mock: { src: "consulting-client", alt: "DocuFlow: Client record for Meridian Group: client details, contacts and the engagement." },
         },
         {
           ref: "knowledge",
@@ -998,12 +534,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Search by project, page and file name",
             "AI assistant over semantic search, cited",
           ]),
-          mock: {
-            kind: "source",
-            question: "what did we deliver in week 32?",
-            answer: "The operating model draft and the August board pack. Both were walked through on the August 14 workshop.",
-            sources: ["doc · Operating model v3", "page · Aug 14 workshop (Fathom)"],
-          },
+          mock: { src: "consulting-docs", alt: "DocuFlow: Project documentation: the operating model deliverable in the block editor, beside the engagement's pages." },
         },
       ],
       scenario: {
@@ -1018,26 +549,19 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             " described as “advisory support”.",
           ],
           [
-            "The entries on the engagement put those hours against three deliverables - ",
+            "Analytics puts those hours against three deliverables - ",
             fig("18 h"),
             " on the operating model, ",
             fig("14 h"),
             " on the board pack, ",
             fig("8 h"),
-            " on workshops - and the week's evidence quality reads ",
-            fig("96/100"),
-            ".",
+            " on workshops.",
           ],
           [
             "The breakdown goes back the same afternoon. The conversation turns out to be about scope, not about whether the work happened.",
           ],
         ],
-        mock: {
-          kind: "score",
-          label: "Evidence quality",
-          evidence: { tracked: "40:00", screenshots: 236, duplicates: 9, activity: 47, events: true, seenDaysAgo: 0 },
-          foot: "Meridian · week 32 · 40 h",
-        },
+        mock: { src: "consulting-tasks", alt: "DocuFlow: Analytics, hours recorded per task: Operating model draft 18.0 h, Board pack 14.0 h, Workshops 8.0 h." },
       },
       objection: {
         eyebrow: "Confidentiality",
@@ -1057,7 +581,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
       meta: {
         title: "DocuFlow for consulting firms - evidence behind the invoice",
         description:
-          "Hours against an engagement, screenshots and activity behind the hours, and an evidence quality score from 0 to 100 that tells you when the hours have too little evidence behind them.",
+          "Hours against an engagement, with the screenshots and activity behind them on the same record.",
       },
     },
   },
@@ -1067,16 +591,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
     en: {
       h1: "In busy season, the hour you forget to write down is the hour you write off.",
       lede: "The timer runs against an engagement inside a client record, so moving from one small file to the next costs a click rather than a memory. Realisation stops depending on what anyone can reconstruct on Friday afternoon.",
-      hero: {
-        kind: "timer",
-        running: { project: "Kestrel Foods · T2 return", task: "Year-end adjustments", elapsed: "0:26:14" },
-        entries: [
-          { task: "Bramble Cafe · Bookkeeping", duration: "0:41:20" },
-          { task: "Ridgeway Ltd · T2 return", duration: "1:05:55" },
-          { task: "Novak · Payroll", duration: "0:18:32" },
-        ],
-        foot: "Timesheet · March 14",
-      },
+      hero: { src: "accounting-hero", alt: "DocuFlow: Time Tracking screen with a timer running on a T2 return, above entries on several small files." },
       problem: {
         heading: "A dozen files a day, one timesheet from memory.",
         points: [
@@ -1108,35 +623,20 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Timesheets and entry history",
             "CSV export of time entries for payroll",
           ]),
-          mock: {
-            kind: "timer",
-            running: { project: "Kestrel Foods · T2 return", task: "Year-end adjustments", elapsed: "0:26:14" },
-            entries: [
-              { task: "Bramble Cafe · Bookkeeping", duration: "0:41:20" },
-              { task: "Ridgeway Ltd · T2 return", duration: "1:05:55" },
-              { task: "Novak · Payroll", duration: "0:18:32" },
-            ],
-            foot: "Timesheet · March 14",
-          },
+          mock: { src: "accounting-entries", alt: "DocuFlow: The Time tab of the Kestrel Foods T2 return: 21.0 h of a 24 h budget, with each entry on its task." },
         },
         {
           ref: "activity",
           label: "The record",
           heading: "Hours with something behind them.",
-          body: "While the timer runs, the desktop agent records screenshots and activity levels in the background, and admins see a coverage score per person. A week that was barely captured says so, rather than looking identical to one that was.",
+          body: "While the timer runs, the desktop agent records screenshots and activity levels in the background, under a policy every member can read: how often it captures, and when it pauses.",
           caps: capsOf("activity", [
             "Desktop agent for Windows, macOS and Linux",
             "Screenshots at randomised, configurable intervals",
             "Capture restricted to an active-hours window",
             "Screenshot review by person and date",
-            "Evidence quality score, 0–100 per person",
           ]),
-          mock: {
-            kind: "score",
-            label: "Evidence quality",
-            evidence: { tracked: "46:30", screenshots: 301, duplicates: 3, activity: 44, events: true, seenDaysAgo: 0 },
-            foot: "Busy season · week of March 10 · one accountant",
-          },
+          mock: { src: "accounting-policy", alt: "DocuFlow: Activity page, Tracking Policy: capture every 3 to 5 minutes, pause after 10 idle minutes, low activity below 10%." },
         },
         {
           ref: "clients",
@@ -1151,14 +651,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Reminders with due dates, in-app and email",
             "Daily updates with status and blockers",
           ]),
-          mock: {
-            kind: "record",
-            title: "Kestrel Foods",
-            chip: "In progress",
-            meter: { label: "Budgeted", value: "24 h", percent: 88, read: "21 h logged" },
-            foot: "T2 return · filing deadline in 9 days",
-            tags: ["T2", "busy season"],
-          },
+          mock: { src: "accounting-files", alt: "DocuFlow: Projects list for an accounting firm: each client file with its status, budget used, hours and due date." },
         },
       ],
       scenario: {
@@ -1184,16 +677,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "The write-off conversation in April is then about scope on two files, rather than about eleven hours nobody can account for.",
           ],
         ],
-        mock: {
-          kind: "timer",
-          running: { project: "Kestrel Foods · T2 return", task: "Year-end adjustments", elapsed: "0:26:14" },
-          entries: [
-            { task: "Bramble Cafe · Bookkeeping", duration: "0:41:20" },
-            { task: "Novak · Payroll call", duration: "0:04:11" },
-            { task: "Ridgeway Ltd · T2 return", duration: "1:05:55" },
-          ],
-          foot: "14 engagements · March 14",
-        },
+        mock: { src: "accounting-day", alt: "DocuFlow: One day of time entries across many client files, from a four-minute payroll call to a block of just over an hour." },
       },
       objection: {
         eyebrow: "Client data",
@@ -1223,14 +707,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
     en: {
       h1: "Docket the time while you still remember the matter.",
       lede: "Time runs against a matter, and the documents, notes and recorded calls sit on the same file. Months later the record still says what was done, when and by whom - which is the only version that holds up.",
-      hero: {
-        kind: "record",
-        title: "Halvorsen · Matter 2026-0184",
-        chip: "In progress",
-        meter: { label: "Budget", value: "60 h", percent: 41, read: "41% used" },
-        foot: "Docketed today · 3.4 h",
-        tags: ["litigation", "retainer"],
-      },
+      hero: { src: "legal-hero", alt: "DocuFlow: Project record for Matter 2026-0184: 24.6 h tracked of a 60 h budget, 41% used, with tasks and documents." },
       problem: {
         heading: "The docket is only as good as the day it was written.",
         points: [
@@ -1261,16 +738,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "The desktop agent pauses the timer when you go idle",
             "Timesheets and entry history",
           ]),
-          mock: {
-            kind: "timer",
-            running: { project: "Halvorsen · 2026-0184", task: "Review of production", elapsed: "0:42:18" },
-            entries: [
-              { task: "Halvorsen · Correspondence", duration: "0:18:00" },
-              { task: "Whitlock estate · Drafting", duration: "1:24:36" },
-              { task: "Halvorsen · Client call", duration: "0:36:12" },
-            ],
-            foot: "Docket · March 11",
-          },
+          mock: { src: "legal-time", alt: "DocuFlow: Time Tracking screen with a timer running on Review of production, above the day's entries on two matters." },
         },
         {
           ref: "knowledge",
@@ -1285,12 +753,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Search by project, page and file name",
             "AI assistant over semantic search, cited",
           ]),
-          mock: {
-            kind: "source",
-            question: "what was agreed on scope of production?",
-            answer: "Documents from January 2024 onward only. Confirmed on the March 11 call and recorded in the file note the same day.",
-            sources: ["doc · File note Mar 11", "page · Mar 11 call (Fathom)"],
-          },
+          mock: { src: "legal-docs", alt: "DocuFlow: Project documentation: the March 11 file note in the block editor, with the call page nested under it." },
         },
         {
           ref: "clients",
@@ -1304,14 +767,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Project notes",
             "Reminders with due dates, in-app and email",
           ]),
-          mock: {
-            kind: "record",
-            title: "Halvorsen · Matter 2026-0184",
-            chip: "In progress",
-            people: true,
-            meter: { label: "Budget", value: "60 h", percent: 41, read: "41% used" },
-            tags: ["litigation", "retainer"],
-          },
+          mock: { src: "legal-client", alt: "DocuFlow: Client record for Halvorsen: client details, contacts and the matter." },
         },
       ],
       scenario: {
@@ -1332,12 +788,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             " instead of an afternoon, and it is the record's version rather than anyone's recollection.",
           ],
         ],
-        mock: {
-          kind: "source",
-          question: "what was done on the Halvorsen file on March 11?",
-          answer: "Review of the production sent on March 8, a file note, and a 36-minute call with the client. 3.4 h docketed.",
-          sources: ["doc · File note Mar 11", "page · Mar 11 call (Fathom)"],
-        },
+        mock: { src: "legal-entries", alt: "DocuFlow: The Time tab of the matter: client call, correspondence and review of production, with hours and dates." },
       },
       objection: {
         eyebrow: "Privilege",
@@ -1366,13 +817,8 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
   "bpo-call-centers": {
     en: {
       h1: "Prove the seats were staffed, without asking anyone for a status update.",
-      lede: "Recorded time per agent and per account, and evidence quality per agent, for any date range - so coverage is something you show a client rather than something you assert. Built to be read across a floor, not one desk.",
-      hero: {
-        kind: "score",
-        label: "Evidence quality",
-        evidence: { tracked: "40:00", screenshots: 588, duplicates: 4, activity: 31, events: true, seenDaysAgo: 0 },
-        foot: "Seat 14 · nights, week 12 · one agent",
-      },
+      lede: "Recorded time per agent and per account, for any date range - so coverage is something you show a client rather than something you assert. Built to be read across a floor, not one desk.",
+      hero: { src: "bpo-hero", alt: "DocuFlow: Analytics, recorded time per member: hours, idle time and number of entries for each agent." },
       problem: {
         heading: "The client isn't buying hours. They are buying coverage.",
         points: [
@@ -1395,7 +841,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
           ref: "activity",
           label: "Coverage",
           heading: "Coverage you can show, per agent.",
-          body: "The desktop agent records screenshots, activity levels and idle time in the background, keeps working offline, and each agent's record gets an evidence-quality score. The Analytics page lists the exceptions when an admin opens it - timers running with no screenshot, agents mostly idle, devices silent for a week - instead of leaving them to be found at month end.",
+          body: "The desktop agent records screenshots, activity levels and idle time in the background, and keeps working offline. The Analytics page lists the exceptions when an admin opens it - timers running with no screenshot, agents mostly idle, devices silent for a week - instead of leaving them to be found at month end.",
           caps: capsOf("activity", [
             "Desktop agent for Windows, macOS and Linux",
             "Keyboard and mouse activity in 60-second windows",
@@ -1403,16 +849,10 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Capture restricted to an active-hours window",
             "Offline-first - events queue and sync on reconnect",
             "Device registry with remote revocation",
-            "Evidence quality score, 0–100 per person",
-            "Admin analytics - coverage, quality, devices, warnings",
+            "Admin analytics - recorded time, activity, warnings",
             "Screenshot review by person and date",
           ]),
-          mock: {
-            kind: "score",
-            label: "Evidence quality",
-            evidence: { tracked: "40:00", screenshots: 588, duplicates: 4, activity: 31, events: true, seenDaysAgo: 0 },
-            foot: "Seat 14 · nights, week 12 · one agent",
-          },
+          mock: { src: "bpo-warnings", alt: "DocuFlow: Analytics, Warnings: members whose timer is running without evidence, with when it started." },
         },
         {
           ref: "time",
@@ -1426,16 +866,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "The desktop agent pauses the timer when you go idle",
             "CSV export of time entries for payroll",
           ]),
-          mock: {
-            kind: "timer",
-            running: { project: "Ridgeline account · Tier 1", task: "Inbound queue", elapsed: "4:12:55" },
-            entries: [
-              { task: "Seat 14 · Inbound queue", duration: "7:58:20" },
-              { task: "Seat 15 · Inbound queue", duration: "8:02:10" },
-              { task: "Seat 16 · Escalations", duration: "7:44:05" },
-            ],
-            foot: "Night shift · 23:00 to 07:00",
-          },
+          mock: { src: "bpo-people", alt: "DocuFlow: People screen: each member with their workspace role, capabilities and status." },
         },
         {
           ref: "clients",
@@ -1449,14 +880,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Tasks - open / in progress / done / archived",
             "Daily updates with status and blockers",
           ]),
-          mock: {
-            kind: "record",
-            title: "Ridgeline · Tier 1 support",
-            chip: "In progress",
-            meter: { label: "Budget", value: "336 h", percent: 92, read: "309 h logged" },
-            foot: "42 agents assigned",
-            tags: ["SLA", "inbound"],
-          },
+          mock: { src: "bpo-record", alt: "DocuFlow: Project record for Tier 1 support: 309.0 h tracked of a 336 h budget, 92% used." },
         },
         {
           ref: "knowledge",
@@ -1469,12 +893,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Search by project, page and file name",
             "AI assistant over semantic search, cited",
           ]),
-          mock: {
-            kind: "source",
-            question: "what is the escalation path for a Ridgeline billing dispute?",
-            answer: "Tier 1 collects the account number and the disputed period, then escalates to the Ridgeline duty lead within 15 minutes.",
-            sources: ["doc · Ridgeline runbook", "doc · Escalation matrix"],
-          },
+          mock: { src: "bpo-docs", alt: "DocuFlow: Project documentation: the Ridgeline runbook with the billing dispute steps." },
         },
       ],
       scenario: {
@@ -1485,13 +904,9 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             fig("42"),
             " seats rostered from ",
             fig("23:00"),
-            ". By ",
-            fig("02:00"),
-            " the Devices page shows ",
-            fig("41"),
-            " online: one device dropped off at ",
+            ". At ",
             fig("01:12"),
-            " and queued its events locally.",
+            " one device drops off the network and queues its events locally.",
           ],
           [
             "It reconnects at 02:40 and its events reconcile without double counting, so the shift total doesn't need a correction and nobody files an exception for it.",
@@ -1499,15 +914,10 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
           [
             "At ",
             fig("07:00"),
-            " the account's hours and each agent's evidence quality are on the Analytics page - and not one supervisor was asked for a status update.",
+            " the account's hours are on the project, agent by agent - and not one supervisor was asked for a status update.",
           ],
         ],
-        mock: {
-          kind: "score",
-          label: "Evidence quality",
-          evidence: { tracked: "7:55", screenshots: 118, duplicates: 3, activity: 16, events: true, seenDaysAgo: 0 },
-          foot: "Seat 27 · night of March 11 · reconnected 02:40",
-        },
+        mock: { src: "bpo-entries", alt: "DocuFlow: The Time tab of the account: each agent's entries on the queue, with the hours." },
       },
       objection: {
         eyebrow: "Scale",
@@ -1527,7 +937,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
       meta: {
         title: "DocuFlow for BPO teams - coverage you can show a client",
         description:
-          "Recorded time per agent and per account, evidence quality per agent, and an offline-first desktop agent. Coverage evidence for outsourced teams.",
+          "Recorded time per agent and per account, screenshots under a published policy, and an offline-first desktop agent for outsourced teams.",
       },
     },
   },
@@ -1538,12 +948,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
     en: {
       h1: "The office side of the job, on the project it belongs to.",
       lede: "Drawings, RFIs, meeting notes, subcontractor contacts and the coordination hours your project administrators spend chasing them all sit on the same project record. This is built for the office and the trailer - not for a phone on a scaffold.",
-      hero: {
-        kind: "source",
-        question: "which revision did the electrical sub build to?",
-        answer: "Revision C, issued March 14. Walked through on the March 21 coordination call, whose Fathom recording is on the project page.",
-        sources: ["doc · E-201 rev C", "page · Mar 21 call (Fathom)"],
-      },
+      hero: { src: "construction-hero", alt: "DocuFlow: Project documentation: drawing E-201 revision C and what changed, beside the project's pages." },
       problem: {
         heading: "The build is on site. The disputes are on paper.",
         points: [
@@ -1575,12 +980,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Search by project, page and file name",
             "AI assistant over semantic search, cited",
           ]),
-          mock: {
-            kind: "source",
-            question: "which revision did the electrical sub build to?",
-            answer: "Revision C, issued March 14. Walked through on the March 21 coordination call, whose Fathom recording is on the project page.",
-            sources: ["doc · E-201 rev C", "page · Mar 21 call (Fathom)"],
-          },
+          mock: { src: "construction-tasks", alt: "DocuFlow: The Tasks tab of the fit-out project: RFIs, submittals and calls, each with its status." },
         },
         {
           ref: "clients",
@@ -1595,14 +995,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Reminders with due dates, in-app and email",
             "Project cloning",
           ]),
-          mock: {
-            kind: "record",
-            title: "Fairview · Phase 2 fit-out",
-            chip: "In progress",
-            people: true,
-            foot: "14 open RFIs · 3 submittals due",
-            tags: ["fit-out", "phase 2"],
-          },
+          mock: { src: "construction-record", alt: "DocuFlow: Project record for the Phase 2 fit-out: budget, next actions, the latest daily update and project documents." },
         },
         {
           ref: "time",
@@ -1615,16 +1008,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Timesheets and entry history",
             "CSV export of time entries for payroll",
           ]),
-          mock: {
-            kind: "timer",
-            running: { project: "Fairview · Phase 2", task: "RFI 041 - electrical", elapsed: "0:38:44" },
-            entries: [
-              { task: "Fairview · Submittal review", duration: "1:52:10" },
-              { task: "Fairview · Coordination call", duration: "0:45:00" },
-              { task: "Brookline · Estimating", duration: "2:20:35" },
-            ],
-            foot: "Office timesheet · March 22",
-          },
+          mock: { src: "construction-time", alt: "DocuFlow: Time Tracking screen with a timer running on RFI 041, above the day's office entries." },
         },
       ],
       scenario: {
@@ -1649,12 +1033,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             " your administrator spent chasing that submittal are on the job too.",
           ],
         ],
-        mock: {
-          kind: "source",
-          question: "when was revision C issued and who confirmed it?",
-          answer: "Issued March 14 and confirmed by the electrical sub on the March 21 coordination call.",
-          sources: ["doc · E-201 rev C", "page · Mar 21 call (Fathom)"],
-        },
+        mock: { src: "construction-call", alt: "DocuFlow: Project documentation: the March 21 coordination call page, nested under revision C." },
       },
       objection: {
         eyebrow: "The site",
@@ -1685,14 +1064,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
     en: {
       h1: "The margin on a placement is decided at your desk, not at the client's.",
       lede: "Mandates, client contacts, recruiter hours and the documents behind every placement sit on one record, so what a role costs to fill is visible while you are still filling it. Contractors you place work on the client's hardware, and this doesn't reach there.",
-      hero: {
-        kind: "record",
-        title: "Ridgeway Logistics · 3 roles",
-        chip: "In progress",
-        meter: { label: "Budgeted", value: "60 h", percent: 44, read: "26 h to date" },
-        foot: "Two roles filled · one re-opened",
-        tags: ["contract", "warehouse"],
-      },
+      hero: { src: "staffing-hero", alt: "DocuFlow: Project record for three warehouse roles: 26.4 h tracked of a 60 h budget, 44% used." },
       problem: {
         heading: "Filling the role is the cost. The fee is the easy part.",
         points: [
@@ -1724,14 +1096,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Tasks - open / in progress / done / archived",
             "Reminders with due dates, in-app and email",
           ]),
-          mock: {
-            kind: "record",
-            title: "Ridgeway Logistics · 3 roles",
-            chip: "In progress",
-            people: true,
-            meter: { label: "Budgeted", value: "60 h", percent: 44, read: "26 h to date" },
-            tags: ["contract", "warehouse"],
-          },
+          mock: { src: "staffing-mandates", alt: "DocuFlow: Projects list: three mandates with their status, budget used and hours." },
         },
         {
           ref: "time",
@@ -1744,16 +1109,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Timesheets and entry history",
             "CSV export of time entries for payroll",
           ]),
-          mock: {
-            kind: "timer",
-            running: { project: "Ridgeway · Role 3", task: "Screening calls", elapsed: "0:51:26" },
-            entries: [
-              { task: "Ridgeway · Shortlist review", duration: "1:14:00" },
-              { task: "Ridgeway · Client debrief", duration: "0:32:40" },
-              { task: "Ardent · New mandate intake", duration: "0:58:15" },
-            ],
-            foot: "Desk timesheet · week 12",
-          },
+          mock: { src: "staffing-time", alt: "DocuFlow: Time Tracking screen with a timer running on Screening calls, above the desk's entries." },
         },
         {
           ref: "knowledge",
@@ -1767,12 +1123,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Search by project, page and file name",
             "AI assistant over semantic search, cited",
           ]),
-          mock: {
-            kind: "source",
-            question: "why did the rate on Ridgeway role 3 move?",
-            answer: "The spec was revised on April 8 to add a forklift certification. Agreed on the call the same day and reflected in the amended mandate.",
-            sources: ["doc · Mandate 0412 rev B", "doc · Call notes Apr 8"],
-          },
+          mock: { src: "staffing-docs", alt: "DocuFlow: Project documentation: mandate 0412 revision B and what changed." },
         },
       ],
       scenario: {
@@ -1795,13 +1146,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "When the client asks in October why the rate moved, the file has the two rejections, the revised spec and the call where it was agreed.",
           ],
         ],
-        mock: {
-          kind: "record",
-          title: "Ridgeway Logistics · 3 roles",
-          chip: "In progress",
-          meter: { label: "Budgeted", value: "60 h", percent: 44, read: "26 h to date" },
-          foot: "Role 3 re-opened twice",
-        },
+        mock: { src: "staffing-updates", alt: "DocuFlow: The Updates tab of the mandate: role 3 re-opened, role 2 filled, role 1 filled." },
       },
       objection: {
         eyebrow: "Placed staff",
@@ -1812,7 +1157,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
         guarantees: [
           "The desktop agent runs only on machines paired with your workspace",
           "The web timer runs in a browser, on your recruiters' hours",
-          "Any device can be revoked from the Devices page",
+          "Each person can revoke their own devices from the Devices page",
           "Anyone can open and review their own recorded data",
         ],
       },
@@ -1853,9 +1198,9 @@ export const USE_CASES = [
      *  l'enterrait : « rather than letting a quiet week look like an absent one »
      *  demandait au lecteur de déplier une double comparaison pour trouver
      *  l'argument. Il tient en une phrase — un relevé creux est AMBIGU (personne
-     *  n'a travaillé, ou rien n'a été capturé), et le score tranche. C'est ce qui
+     *  n'a travaillé, ou rien n'a été capturé), et la dernière connexion du poste le dit. C'est ce qui
      *  protège la personne d'une mauvaise conclusion, donc ça se dit en clair. */
-    body: "You can't see the work, so you read the record: hours, screenshots and daily updates land on the client project as the week happens. The evidence quality score says how well the hours are backed, and the Devices page says when a laptop last checked in - so a gap in the data doesn't get read as a gap in the work.",
+    body: "You can't see the work, so you read the record: hours, screenshots and daily updates land on the client project as the week happens. Each person's Devices page says when a laptop last checked in - so a gap in the data doesn't get read as a gap in the work.",
     pillar: "activity" as PillarId,
   },
   {
@@ -1963,7 +1308,7 @@ export interface SolutionPillar {
   body: string;
   caps: Capability[];
   spec: Spec[];
-  mock: Mockup;
+  mock: Screen;
   band: string;
   /** Le ton de l'oeil-de-boeuf suit la BANDE, jamais le pilier.
    *   - mint  → `live-on-light` : l'ambre y tombe à 1,83:1 (règle de `product.ts`)
@@ -2070,7 +1415,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
    *
    * ⚠️ Cette page doit se défendre contre trois voisines qui parlent aussi
    * d'argent facturé, et la frontière est nette dans chaque cas :
-   *   - `/solutions/consulting-firms` mène par la PREUVE (le score de qualité) ;
+   *   - `/solutions/consulting-firms` mène par la PREUVE (la capture sous politique publiée) ;
    *   - `/solutions/accounting-firms` mène par le COÛT DU CHANGEMENT de dossier ;
    *   - `/solutions/digital-agencies` mène par la CONSOMMATION d'un forfait.
    * Ici le sujet est la ligne elle-même : d'où elle vient et si elle tient quand
@@ -2081,14 +1426,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
       eyebrow: "Client billing",
       h1: "Every invoice line should survive one question: “What was this?”",
       lede: "Every hour starts on a task inside a client project. DocuFlow does not write the invoice, but when a client questions a line, the hours, tasks and documents behind it are already in one record.",
-      hero: {
-        kind: "record",
-        title: "Halcyon Retail · March",
-        chip: "In review",
-        meter: { label: "Budget", value: "120 h", percent: 76, read: "76% used" },
-        foot: "42 entries · 3 tasks",
-        tags: ["campaign", "March"],
-      },
+      hero: { src: "billing-hero", alt: "DocuFlow: Project record for the Halcyon Retail campaign: 91.2 h tracked of a 120 h budget, 76% used." },
       situation: {
         heading: "The line says “campaign production.” The client asks what that means.",
         points: [
@@ -2134,28 +1472,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "Tasks - open / in progress / done / archived",
             "Project notes",
           ]),
-          /* ⚠️ `attach` et non `record` — le héros de cette page rendait DÉJÀ
-             cette fiche, au titre, à la puce, à la jauge et aux valeurs
-             identiques.
-             Ce bloc s'appelle « The line » et son corps nomme quatre natures :
-             « hours, tasks, notes and documents ATTACH TO THE CLIENT PROJECT ».
-             Aucune n'était montrée. Le total `57 items` est dérivé — c'est ce
-             qui rend « one record » vérifiable au lieu d'être une formule, et
-             c'est le chiffre que le dessin de la situation contredit avec son
-             `0 attached`. La carte montre le dossier, jamais une facture :
-             DocuFlow n'en écrit pas. */
-          mock: {
-            kind: "attach",
-            title: "Halcyon Retail · March",
-            note: "one record",
-            rows: [
-              { label: "Hours", count: 42, unit: "entries" },
-              { label: "Tasks", count: 3, unit: "on the project" },
-              { label: "Notes", count: 7, unit: "written" },
-              { label: "Documents", count: 5, unit: "produced" },
-            ],
-            foot: "what the March lines are written from",
-          },
+          mock: { src: "billing-entries", alt: "DocuFlow: The Time tab of the campaign: every entry on a task, with the person, the day and the hours." },
         },
         {
           ref: "time",
@@ -2169,19 +1486,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "Timesheets and entry history",
             "CSV export of time entries for payroll",
           ]),
-          mock: {
-            kind: "timer",
-            running: {
-              project: "Halcyon Retail · Spring campaign",
-              task: "Landing page build",
-              elapsed: "1:12:40",
-            },
-            entries: [
-              { task: "Halcyon · Copy review", duration: "0:38:15" },
-              { task: "Halcyon · Client call", duration: "0:26:00" },
-            ],
-            foot: "Timesheet · March 14",
-          },
+          mock: { clip: "billing-filter", src: "billing-time", alt: "DocuFlow: Time Tracking entries for the week, filtered to the Halcyon Retail campaign: each one on a task, with the person and the duration." },
         },
       ],
       scenario: {
@@ -2194,7 +1499,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             ", described as “campaign production”.",
           ],
           [
-            "The entries on the project already hold the work behind it - ",
+            "Analytics already shows the work behind it, task by task - ",
             fig("14 h"),
             " on the landing page build, ",
             fig("6.5 h"),
@@ -2206,17 +1511,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "The reply goes out in one message the same morning. Nothing is reconstructed, and nothing is discounted to make the conversation stop.",
           ],
         ],
-        mock: {
-          kind: "query",
-          client: "Halcyon Retail · March",
-          line: "“Campaign production” - what was this?",
-          tasks: [
-            { name: "Landing page build", hours: 14 },
-            { name: "Copy review", hours: 6.5 },
-            { name: "Client calls", hours: 3 },
-          ],
-          foot: "from the March entries",
-        },
+        mock: { src: "billing-tasks", alt: "DocuFlow: Analytics, hours recorded per task: Landing page build 14.0 h, Copy review 6.5 h, Client calls 3.0 h." },
       },
       objection: {
         eyebrow: "Trust",
@@ -2248,32 +1543,8 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
     en: {
       eyebrow: "Remote teams",
       h1: "You cannot see the work. You can read the record.",
-      lede: "Hours, activity and daily updates land on the client project as the week happens. An evidence quality score says how well those hours are backed, and the Devices page says when a laptop last checked in - before a gap in the data is mistaken for a gap in the work.",
-      /* ⚠️ `week` et non `score`. Le H1 promet quelque chose à LIRE — « You
-         cannot see the work. You can read the record. » — et `ScoreMock` posait
-         le chiffre au-dessus de vingt-quatre fenêtres anonymes et de huit
-         vignettes identiques : une texture, pas un relevé de journées. Rien
-         là-dedans ne se compte ni ne se reconnaît.
-         Ici les cinq journées sont nommées et chacune porte ses heures, son
-         activité et ses captures. Le total `38 h` est DÉRIVÉ des journées et
-         tombe sur le chiffre du scénario (« 11 h against 38 h the week
-         before ») : c'est la même semaine, vue entière avant d'être vue
-         cassée. Les captures sont au rythme réel (3–5 min par défaut, donc
-         ~15 par heure suivie), et le score est CALCULÉ dessus. */
-      hero: {
-        kind: "week",
-        label: "Evidence quality",
-        days: [
-          { day: "MON", hours: "7:40", activity: 78, shots: 112 },
-          { day: "TUE", hours: "8:10", activity: 86, shots: 121 },
-          { day: "WED", hours: "6:55", activity: 64, shots: 102 },
-          { day: "THU", hours: "8:25", activity: 91, shots: 127 },
-          { day: "FRI", hours: "6:50", activity: 61, shots: 100 },
-        ],
-        duplicates: 2,
-        seenDaysAgo: 0,
-        foot: "Week 31 · remote · one person",
-      },
+      lede: "Hours, activity and daily updates land on the client project as the week happens. Each person's Devices page says when a laptop last checked in - before a gap in the data is mistaken for a gap in the work.",
+      hero: { src: "remote-hero", alt: "DocuFlow: Analytics, hours recorded per day, Monday to Friday." },
       situation: {
         heading: "A quiet week and an absent week look identical.",
         points: [
@@ -2310,43 +1581,16 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
         {
           ref: "activity",
           label: "The record",
-          heading: "The record grades its own completeness.",
-          body: "The desktop agent records screenshots, activity levels and idle time, and admins see a score from 0 to 100 for how complete the record is. Hours with too little evidence behind them show as such, and the Devices page shows when a laptop stopped checking in.",
+          heading: "A silent laptop is not a quiet week.",
+          body: "The desktop agent records screenshots, activity levels and idle time, and each person's Devices page shows when a laptop stopped checking in. Analytics warns admins about a device that has been silent for a week.",
           caps: capsOf("activity", [
-            "Evidence quality score, 0–100 per person",
             "Desktop agent for Windows, macOS and Linux",
             "Keyboard and mouse activity in 60-second windows",
             "Offline-first - events queue and sync on reconnect",
-            "Admin analytics - coverage, quality, devices, warnings",
+            "Admin analytics - recorded time, activity, warnings",
             "Device registry with remote revocation",
           ]),
-          /* ⚠️ `device` et non `score` — le héros de cette page porte DÉJÀ la
-             carte de score, aux mêmes valeurs. Les deux se suivaient à un écran
-             d'écart, ce qui ne se voyait pas tant qu'elles étaient blanches et
-             plates, et saute aux yeux depuis qu'elles sont deux feuilles
-             chaudes jumelles.
-             Le héros garde le chiffre qu'on LIT — c'est la promesse du H1. Ce
-             bloc-ci montre la MACHINE, ce que son corps décrit mot pour mot, et
-             c'est ce poste que le scénario fait taire plus bas.
-             Les lignes sont celles de la page Devices du produit — OS, dernier
-             contact, révocation — et rien d'autre : ni taille de file, ni
-             cadence de capture, qui n'y figurent pas. Rien d'inventé sauf
-             l'identifiant de parc, qui est une étiquette de maquette comme
-             « Atlas · Sprint 14 ». */
-          mock: {
-            kind: "device",
-            label: "Device registry",
-            name: "WS-2291",
-            platform: "macOS · paired Monday",
-            status: "Online",
-            platforms: [{ short: "WIN" }, { short: "MAC", active: true }, { short: "LNX" }],
-            rows: [
-              { label: "OS", value: "macOS" },
-              { label: "Last seen", value: "2 min ago" },
-              { label: "Token", value: "revocable" },
-            ],
-            foot: "Revocable from the Devices page · one device, one person",
-          },
+          mock: { src: "remote-updates", alt: "DocuFlow: The Updates tab of the project: status and blockers written by two people." },
         },
         {
           ref: "time",
@@ -2359,15 +1603,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "The desktop agent pauses the timer when you go idle",
             "Timesheets and entry history",
           ]),
-          mock: {
-            kind: "timer",
-            running: { project: "Atlas · Sprint 14", task: "DF-482 Auth refactor", elapsed: "2:14:38" },
-            entries: [
-              { task: "Atlas · Standup", duration: "0:12:00" },
-              { task: "Atlas · Code review", duration: "1:04:22" },
-            ],
-            foot: "Timesheet · Tuesday",
-          },
+          mock: { src: "remote-time", alt: "DocuFlow: Time Tracking screen with a timer running on DF-482, above the day's entries." },
         },
       ],
       scenario: {
@@ -2382,44 +1618,22 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             " the week before. On a dashboard that is a conversation nobody wants to have.",
           ],
           [
-            "The evidence score on those 11 h reads ",
-            fig("94/100"),
-            " - what did arrive is sound. It simply stops: the laptop was last seen on Tuesday at ",
+            "The record simply stops: the laptop last checked in on Tuesday at ",
             fig("14:38"),
             ".",
           ],
           [
-            "The Devices page shows it offline since then. The conversation is with IT, not with the person.",
+            "Their Devices page shows it offline since then. The conversation is with IT, not with the person.",
           ],
         ],
-        /* `silence` et non `score` : le paragraphe nomme un JOUR et un ARRÊT.
-           Une carte de score ne porte aucun des deux.
-           `cut: 34` sur cinq jours tombe dans le deuxième, mardi : la coupure
-           est à l'endroit que la phrase nomme, et l'intervalle sans données
-           s'en déduit au lieu d'être retapé.
-           ⚠️ Le score est calculé sur ce qui EST arrivé (11 h, et leurs
-           captures) : il est fort, et c'est le point de la section — le relevé
-           reçu est sain, il s'arrête. Ce qui explique l'arrêt est le dernier
-           contact du poste, pas le score. L'ancienne version affichait
-           « 38 · WEAK » et « 4 days queued », deux choses que le produit ne
-           peut pas savoir : le serveur ne voit pas ce qu'un poste n'a pas
-           envoyé. */
-        mock: {
-          kind: "silence",
-          label: "Evidence quality",
-          evidence: { tracked: "11:00", screenshots: 165, duplicates: 2, activity: 70, events: true, seenDaysAgo: 3 },
-          days: ["MON", "TUE", "WED", "THU", "FRI"],
-          cut: 34,
-          lastEvent: "Last seen · Tue 14:38",
-          foot: "Week 32 · device offline since Tuesday",
-        },
+        mock: { src: "remote-devices", alt: "DocuFlow: Devices screen: two enrolled devices, one online and one offline for three days, each revocable." },
       },
       objection: {
         eyebrow: "Surveillance",
         heading: "Remote monitoring is where trust goes to die.",
         body: "Monitoring has to be visible or it is not worth having. A running indicator, an optional working-hours window for screenshots and self-review make the record inspectable by the person it describes. The desktop agent is separate from the browser timer, so a team can run time and projects with no capture at all.",
         argument:
-          "The score protects the person because it grades the record, never the human. A week that looks empty is checked against the device before anyone attributes the gap to the individual.",
+          "A week that looks empty is checked against the device before anyone attributes the gap to the individual.",
         guarantees: [
           "A visible indicator shows exactly when the timer is running",
           "Screenshots can be limited to the working hours your admins set",
@@ -2431,7 +1645,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
       meta: {
         title: "DocuFlow for remote teams - read the record, not the dot",
         description:
-          "Hours, activity and daily updates land on the client project as the week happens, and an evidence quality score says when the hours have too little evidence behind them.",
+          "Hours, activity and daily updates land on the client project as the week happens, and a silent laptop shows as offline instead of as a bad week.",
       },
     },
   },
@@ -2445,31 +1659,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
       eyebrow: "Hybrid teams",
       h1: "The desk and the kitchen table on one timesheet.",
       lede: "One timesheet follows the week from office to home. Offline events reconcile once the connection returns, and screenshots can stop when the working day ends.",
-      /* ⚠️ `week` et non `timer`. Cette page rendait TROIS chronomètres
-         identiques — héros, pilier 01, scénario — aux mêmes valeurs, ce qui
-         disait au lecteur qu'il avait déjà vu la page.
-         Le héros porte la promesse du H1, « one timesheet », donc il montre la
-         SEMAINE ENTIÈRE : c'est la seule surface d'où l'on voit qu'une feuille
-         couvre deux endroits. Le pilier 01 garde le chronomètre — c'est LA
-         feuille de temps, en cours.
-         Le total `37 h` est dérivé des cinq journées : sur une page dont la
-         situation dit « a timesheet that has to add up », le total ne peut pas
-         être une décoration. Plus de lieu par journée (`OFFICE` / `HOME`) :
-         DocuFlow n'en enregistre aucun, donc la carte ne peut pas l'afficher. */
-      hero: {
-        kind: "week",
-        label: "Evidence quality",
-        days: [
-          { day: "MON", hours: "7:30", activity: 74, shots: 112 },
-          { day: "TUE", hours: "8:05", activity: 83, shots: 121 },
-          { day: "WED", hours: "6:45", activity: 66, shots: 101 },
-          { day: "THU", hours: "7:50", activity: 88, shots: 117 },
-          { day: "FRI", hours: "6:50", activity: 62, shots: 102 },
-        ],
-        duplicates: 6,
-        seenDaysAgo: 0,
-        foot: "Week 14 · one timesheet, whichever desk",
-      },
+      hero: { src: "hybrid-hero", alt: "DocuFlow: Project record for the Operating model engagement: budget, next actions and the hours tracked this month." },
       situation: {
         heading: "Two places, one week, and a timesheet that has to add up.",
         points: [
@@ -2515,15 +1705,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "Timesheets and entry history",
             "Configurable expected hours per person",
           ]),
-          mock: {
-            kind: "timer",
-            running: { project: "Meridian · Operating model", task: "Board pack revisions", elapsed: "1:32:07" },
-            entries: [
-              { task: "Meridian · Workshop prep", duration: "2:10:00" },
-              { task: "Meridian · Stakeholder calls", duration: "1:45:30" },
-            ],
-            foot: "Timesheet · Thursday",
-          },
+          mock: { src: "hybrid-time", alt: "DocuFlow: Time Tracking screen with a timer running, above the day's entries." },
         },
         {
           ref: "activity",
@@ -2537,30 +1719,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "Idle detection with prompt and countdown",
             "Device registry with remote revocation",
           ]),
-          /* Ce bloc s'appelle « The agent » et son corps décrit l'AGENT — file
-             locale, reconnexion, fenêtre d'heures, révocation. Une carte de
-             score n'en montre rien : elle note le relevé, pas la machine.
-             `device` montre le poste tel que la page Devices l'affiche, et le
-             score reste sur le héros où il note la semaine. */
-          mock: {
-            kind: "device",
-            label: "Device registry",
-            name: "MBP-0417",
-            platform: "macOS · MacBook Pro",
-            status: "Online",
-            platforms: [{ short: "WIN" }, { short: "MAC", active: true }, { short: "LNX" }],
-            /* ⚠️ Pas de ligne « Active hours » ici : la fenêtre d'heures
-               actives est le SUJET ENTIER du dessin de l'objection
-               (`HoursWindowArt`), deux sections plus bas. Un fait, un seul
-               endroit — sinon la page l'énonce deux fois et le dessin de
-               l'objection ne fait que répéter une ligne déjà lue. */
-            rows: [
-              { label: "OS", value: "macOS" },
-              { label: "Last seen", value: "14:02" },
-              { label: "Token", value: "revocable" },
-            ],
-            foot: "Revocable from the Devices page · one device, one person",
-          },
+          mock: { src: "hybrid-policy", alt: "DocuFlow: Administration, Tracking Policy: captures restricted to active hours, 08:00 to 18:00." },
         },
       ],
       scenario: {
@@ -2585,28 +1744,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             " the laptop is open again and no screenshot is taken, because the working-hours window closed at six.",
           ],
         ],
-        /* ⚠️ `reconcile` et non `timer` — c'était le TROISIÈME chronomètre
-           identique de la page.
-           L'objection du scénario est une addition : « the block appears once,
-           not twice ». Un chronomètre ne s'additionne pas ; ces quatre blocs si,
-           et leur total (7 h) est dérivé. C'est le total qui prouve à l'oeil
-           qu'aucune heure n'a été comptée deux fois.
-           Les heures de début S'ENCHAÎNENT sur les durées, et la chaîne tombe
-           sur les chiffres du texte : 09:05 + 2:38 = 11:43, + 1:57 = 13:40 (la
-           coupure), + 0:22 = 14:02 (la reconnexion). Déplacer une durée casse
-           la chaîne visiblement, ce qui est le but. */
-        mock: {
-          kind: "reconcile",
-          label: "Thursday · one timesheet",
-          blocks: [
-            { at: "09:05", task: "Workshop prep", hours: "2:38" },
-            { at: "11:43", task: "Board pack revisions", hours: "1:57" },
-            { at: "13:40", task: "Stakeholder calls", hours: "0:22", offline: true },
-            { at: "14:02", task: "Board pack revisions", hours: "2:03" },
-          ],
-          reconnected: "14:02",
-          foot: "Thursday · queued and reconciled",
-        },
+        mock: { src: "hybrid-entries", alt: "DocuFlow: The Time tab of the engagement: the four blocks of one day, each listed once." },
       },
       objection: {
         eyebrow: "Boundaries",
@@ -2639,37 +1777,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
       eyebrow: "Employee productivity",
       h1: "Measure openly, or the team will work around the measure.",
       lede: "Each screenshot carries the keyboard and mouse activity of the minute before it, and by default the agent asks before it pauses for idle. A visible indicator shows when the timer is running, and anyone can open the data recorded about them.",
-      /* ⚠️ `windows` et non `score` — le pilier 01 rendait la MÊME carte de
-         score, aux mêmes valeurs, un écran plus bas.
-         Le score reste au pilier 01, dont le corps dit « an evidence quality
-         score rates the completeness of the record ». Le héros prend la
-         première phrase du lede : chaque capture porte l'activité de la minute
-         qui la précède. Les captures d'une heure, horodatées, se comptent — ce
-         qu'une carte de score ne permettait pas. (L'ancienne grille de
-         soixante « fenêtres d'une minute » dessinait une série minute par
-         minute que l'agent n'enregistre pas.)
-         Le trou tombe sur le ralenti du scénario (11:04 → 11:14) : aucune
-         capture pendant les dix minutes, et l'intervalle est dérivé. */
-      hero: {
-        kind: "windows",
-        label: "Screenshots · one hour",
-        indicator: "Recording",
-        captures: [
-          { at: "11:00", activity: 72 },
-          { at: "11:03", activity: 64 },
-          { at: "11:17", activity: 81 },
-          { at: "11:21", activity: 77 },
-          { at: "11:25", activity: 58 },
-          { at: "11:30", activity: 85 },
-          { at: "11:33", activity: 69 },
-          { at: "11:38", activity: 91 },
-          { at: "11:42", activity: 74 },
-          { at: "11:46", activity: 62 },
-          { at: "11:51", activity: 88 },
-        ],
-        idle: { from: "11:04", to: "11:14" },
-        foot: "one hour · visible to the person measured",
-      },
+      hero: { src: "productivity-hero", alt: "DocuFlow: Activity page, Tracking Policy: what is captured and when, shown to every member." },
       situation: {
         heading: "Productivity gets measured by whoever is loudest about it.",
         points: [
@@ -2683,7 +1791,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
           },
           {
             title: "One bad week and one incomplete record look the same.",
-            body: "Without something that grades the record itself, a quiet stretch is indistinguishable from a stretch that simply wasn't captured - and people get judged on the difference.",
+            body: "Without a rule everyone can read, a quiet stretch is indistinguishable from a stretch that simply wasn't captured - and people get judged on the difference.",
           },
         ],
       },
@@ -2706,21 +1814,15 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
         {
           ref: "activity",
           label: "The measure",
-          heading: "Measured in the open, with the record graded for completeness.",
-          body: "Each screenshot carries the activity of the minute before it, idle time triggers a prompt and countdown, and an evidence quality score rates the completeness of the record - not the person it describes.",
+          heading: "Measured in the open, under a policy everyone can read.",
+          body: "Each screenshot carries the activity of the minute before it, and idle time triggers a prompt and countdown. A capture below the low-activity line is a fact about the capture, not a score.",
           caps: capsOf("activity", [
             "Keyboard and mouse activity in 60-second windows",
             "Idle detection with prompt and countdown",
-            "Evidence quality score, 0–100 per person",
             "Capture restricted to an active-hours window",
-            "Admin analytics - coverage, quality, devices, warnings",
+            "Admin analytics - recorded time, activity, warnings",
           ]),
-          mock: {
-            kind: "score",
-            label: "Evidence quality",
-            evidence: { tracked: "7:40", screenshots: 34, duplicates: 6, activity: 58, events: true, seenDaysAgo: 0 },
-            foot: "One person · Tuesday · admin view",
-          },
+          mock: { src: "productivity-policy", alt: "DocuFlow: Administration, Tracking Policy: capture interval, low-activity threshold, idle timeout and the idle prompt." },
         },
         {
           ref: "time",
@@ -2733,15 +1835,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "Timesheets and entry history",
             "Configurable expected hours per person",
           ]),
-          mock: {
-            kind: "timer",
-            running: { project: "Ridgeline · Tier 1", task: "Inbound queue", elapsed: "4:12:55" },
-            entries: [
-              { task: "Ridgeline · Team huddle", duration: "0:15:00" },
-              { task: "Ridgeline · Escalations", duration: "1:18:40" },
-            ],
-            foot: "Timesheet · today",
-          },
+          mock: { src: "productivity-time", alt: "DocuFlow: Time Tracking screen with a timer running on the inbound queue." },
         },
       ],
       scenario: {
@@ -2764,33 +1858,13 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "Nothing idle was counted as work, and nothing has to be argued about at review time. The record and the person agree.",
           ],
         ],
-        /* ⚠️ `idle` et non `timer` — c'était la même carte que le pilier 02,
-           aux mêmes valeurs.
-           La section décrit un ENCHAÎNEMENT (« How an idle stretch is
-           handled »), et un chronomètre montre un instant : il ne pouvait pas
-           montrer ce qui est raconté. Les étapes portent leurs heures et la
-           durée du ralenti est DÉRIVÉE — 11:04 → 11:14 fait les « 10 min » du
-           texte, le délai d'inactivité par défaut. Les réponses sont celles du
-           produit (« I'm back » / « I'm not working ») : aucune annotation,
-           rien de stocké sur la réponse. L'ancienne version (seuil de 3 min,
-           « marked: call away from desk », historique) décrivait une fonction
-           qui n'existe pas. */
-        mock: {
-          kind: "idle",
-          label: "Idle · Tuesday",
-          steps: [
-            { at: "11:04", event: "Input stops" },
-            { at: "11:14", event: "Idle timeout reached", note: "10 min · prompt with 60 s countdown" },
-            { at: "11:14", event: "“I'm back”", note: "idle minutes dropped, timer carries on" },
-          ],
-          outcome: "Asked, never counted",
-          foot: "10 min default timeout · 60 s countdown",
-        },
+        /* Pas de visuel : aucun écran de l'application ne montre la question d'inactivité,
+           qui vit dans l'agent de bureau. */
       },
       objection: {
         eyebrow: "Consent",
         heading: "Nobody wants a productivity score on their back.",
-        body: "Then do not put one there. The evidence quality score grades the record, not the person: it shows how complete the week's data is and never changes the time counted. A visible indicator, an idle prompt, an optional working-hours window for screenshots and self-review keep the measure open.",
+        body: "Then do not put one there. DocuFlow gives no one a productivity score. A visible indicator, an idle prompt, an optional working-hours window for screenshots and self-review keep the measure open.",
         argument:
           "A measure the team can inspect is one it stops working around. When people can see what is recorded, when and why, the effort that went into looking busy goes back into the work.",
         guarantees: [
@@ -2820,14 +1894,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
       eyebrow: "Project profitability",
       h1: "Every job was profitable until somebody added it up.",
       lede: "Budgeted versus actual hours is a live number on the project record, not a figure assembled from exports after the fact. A job running hot is visible in week two, while it can still be changed.",
-      hero: {
-        kind: "record",
-        title: "Fairview · Phase 2 fit-out",
-        chip: "In progress",
-        meter: { label: "Budgeted", value: "320 h", percent: 78, read: "249 h actual" },
-        foot: "Week 2 of 6",
-        tags: ["fixed price", "phase 2"],
-      },
+      hero: { src: "profit-hero", alt: "DocuFlow: Project record for the Phase 2 fit-out: 249.0 h tracked of a 320 h budget, 78% used." },
       situation: {
         heading: "Profit gets calculated after the chance to act has passed.",
         points: [
@@ -2874,30 +1941,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "Daily updates with status and blockers",
             "Team assignment per project",
           ]),
-          /* ⚠️ `project` et non `record` — le héros de cette page rendait DÉJÀ
-             cette fiche, à la jauge et aux valeurs identiques, et le scénario
-             une troisième fois.
-             Ce bloc s'appelle « The project » et son corps décrit un CONTENANT :
-             « every project carries its budget, stages and tasks ». Le héros
-             garde la jauge (le budget consommé, qui est sa promesse) ; ici on
-             montre la structure qui la porte.
-             Les étapes sont celles de `crmProjects`, donc celles du rail de
-             l'accueil : deux pages qui décrivent le même objet ne peuvent pas
-             le nommer autrement. */
-          mock: {
-            kind: "project",
-            title: "Fairview · Phase 2 fit-out",
-            chip: "In progress",
-            stages: ["LEAD", "WON", "IN PROGRESS", "IN REVIEW", "COMPLETED"],
-            at: 2,
-            tasks: [
-              { state: "Open", count: 12 },
-              { state: "In progress", count: 5 },
-              { state: "Done", count: 31 },
-              { state: "Archived", count: 4 },
-            ],
-            foot: "week 2 of 6 · 4 assigned",
-          },
+          mock: { src: "profit-list", alt: "DocuFlow: Projects list: three jobs with budget used and hours tracked." },
         },
         {
           ref: "time",
@@ -2910,15 +1954,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "Timesheets and entry history",
             "CSV export of time entries for payroll",
           ]),
-          mock: {
-            kind: "timer",
-            running: { project: "Fairview · Phase 2", task: "Submittal review", elapsed: "1:52:10" },
-            entries: [
-              { task: "Fairview · Coordination call", duration: "0:45:00" },
-              { task: "Fairview · RFI 041", duration: "0:38:44" },
-            ],
-            foot: "Timesheet · week 2",
-          },
+          mock: { src: "profit-time", alt: "DocuFlow: Time Tracking screen with a timer running on Submittals and RFIs." },
         },
       ],
       scenario: {
@@ -2945,30 +1981,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "That is a variation you raise in week two, with the figures open - not a margin you explain at handover.",
           ],
         ],
-        /* ⚠️ `variance` et non `record` — troisième rendu de la même fiche sur
-           la page, et surtout : la phrase centrale du scénario est « the hours
-           are already attributed to tasks ». Une jauge à 78 % ne montre aucune
-           cause.
-           UN SEUL budget, celui du projet (320 h) : les tâches n'ont pas
-           d'estimation dans DocuFlow, donc l'ancien budget par ligne était une
-           fonction inventée. Le « 20 h » du texte est le chiffre du DEVIS, celui
-           du client, et ne figure pas sur la carte.
-           Les quatre lignes S'ADDITIONNENT sur les chiffres du texte :
-           98+62+54+35 = 249 h réelles, soit 78 % de 320. Le réel et le
-           pourcentage sont dérivés, donc le lecteur peut faire l'addition. */
-        mock: {
-          kind: "variance",
-          title: "Fairview · Phase 2",
-          period: "Week 2 of 6",
-          budget: 320,
-          lines: [
-            { label: "Fit-out", actual: 98 },
-            { label: "Submittals and RFIs", actual: 62, flag: true },
-            { label: "Site meetings", actual: 54 },
-            { label: "Estimating", actual: 35 },
-          ],
-          foot: "hours by task · admin analytics",
-        },
+        mock: { src: "profit-tasks", alt: "DocuFlow: Analytics, hours recorded per task: Fit-out 98.0 h, Submittals and RFIs 62.0 h, Site meetings 54.0 h, Estimating 35.0 h." },
       },
       objection: {
         eyebrow: "Pressure",
@@ -3001,12 +2014,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
       eyebrow: "Onboarding documentation",
       h1: "The answer already exists. The new person cannot find it.",
       lede: "New people ask the assistant about written procedures and recorded walkthroughs instead of interrupting the team. Every answer links back to the page it came from.",
-      hero: {
-        kind: "source",
-        question: "how do we handle a refund over $500?",
-        answer: "Tier 2 approves anything above $500, and the reason goes on the client record. Walked through in the March onboarding session.",
-        sources: ["doc · Refunds policy", "doc · Onboarding Mar 6 (Loom)"],
-      },
+      hero: { src: "onboarding-hero", alt: "DocuFlow: Project documentation: the refunds policy in the block editor, beside the account's pages." },
       situation: {
         heading: "Onboarding is a queue of interruptions with a person at the front.",
         points: [
@@ -3053,24 +2061,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "AI assistant over semantic search, cited",
             "Re-indexing skips unchanged content",
           ]),
-          /* ⚠️ `library` et non `source` — le héros ET le scénario rendaient
-             déjà cette réponse citée, à la question, à la réponse et aux sources
-             identiques. Trois exemplaires du même dessin sur une page dont le
-             sujet est justement qu'on ne retrouve rien.
-             Ce bloc s'appelle « The library » et sa phrase distinctive est que
-             l'assistant répond depuis ce qui a été ÉCRIT ET DIT (transcriptions
-             Loom / Fathom) — la seule promesse de la page qu'aucune autre
-             surface ne porte. D'où deux natures de contenu et un total indexé
-             dérivé. */
-          mock: {
-            kind: "library",
-            label: "The library · one index",
-            shelves: [
-              { name: "Pages", note: "nested, from templates", count: 48 },
-              { name: "Recorded walkthroughs", note: "transcript from Loom or Fathom", count: 12, spoken: true },
-            ],
-            foot: "re-indexed as they are edited",
-          },
+          mock: { src: "onboarding-library", alt: "DocuFlow: Workspace Documents: folders and documents with their access and last editor." },
         },
         {
           ref: "clients",
@@ -3085,14 +2076,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "Team assignment per project",
             "Project cloning",
           ]),
-          mock: {
-            kind: "record",
-            title: "Ridgeline · Tier 1 support",
-            chip: "In progress",
-            people: true,
-            foot: "Runbook · escalation matrix · refunds policy",
-            tags: ["onboarding", "SLA"],
-          },
+          mock: { src: "onboarding-tasks", alt: "DocuFlow: The Tasks tab of the account, with new agent onboarding in progress." },
         },
       ],
       scenario: {
@@ -3115,34 +2099,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             " and cost nobody else their morning. The page it came from is the same one the next agent will find.",
           ],
         ],
-        /* ⚠️ `route` et non `source` — troisième rendu de la réponse citée sur
-           la page, et surtout : l'arc de la section est un CONTRASTE. « The old
-           route is to ask the team lead, WHO IS ON A CALL » contre « the
-           question took 20 seconds and COST NOBODY ELSE THEIR MORNING ». Une
-           carte de réponse ne peut montrer que la route qui aboutit ; elle est
-           incapable de montrer celle qu'on évite, qui est la moitié de
-           l'argument.
-           Tous les chiffres viennent de la copy ci-dessus (`$740`, `20 seconds`,
-           `March 6`). La route bloquée ne porte AUCUNE durée : chiffrer le temps
-           perdu serait une allégation que le texte n'écrit pas. */
-        mock: {
-          kind: "route",
-          label: "Day 3 · refund of $740",
-          routes: [
-            {
-              name: "The old route",
-              steps: ["Ask the team lead", "Team lead is on a call", "Wait, or guess"],
-              outcome: "Two people stopped",
-              blocked: true,
-            },
-            {
-              name: "The new route",
-              steps: ["Ask the assistant", "Answer with 2 sources", "Open either one"],
-              outcome: "20 seconds",
-            },
-          ],
-          foot: "same page the next agent will find",
-        },
+        mock: { src: "onboarding-runbook", alt: "DocuFlow: Project documentation: the March 6 onboarding page, nested under the refunds policy." },
       },
       objection: {
         eyebrow: "Decay",

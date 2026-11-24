@@ -1,0 +1,43 @@
+---
+/** Une vraie capture de l'application, nommée par `solutions.ts`.
+ *  Même habillage qu'`AppScreen` (à plat, légendée) : voir ses règles. */
+import type { ImageMetadata } from "astro";
+import AppScreen from "../product/AppScreen.astro";
+import AppClip from "../product/AppClip.astro";
+
+interface Props {
+  src: string;
+  alt: string;
+  /** Nom d'un clip de `src/assets/clips/`, qui remplace alors la capture. Réservé
+   *  aux piliers : ni héros (LCP) ni bande `ink`. */
+  clip?: string;
+  /** Sur la bande `ink`, la légende passe en `slate-on-ink`. */
+  onDark?: boolean;
+  /** Au-dessus de la ligne de flottaison : jamais différée. */
+  eager?: boolean;
+}
+
+const { src, alt, clip, onDark = false, eager = false } = Astro.props;
+
+const FILES = import.meta.glob<{ default: ImageMetadata }>(
+  "../../assets/screens/solutions/*.png",
+  { eager: true }
+);
+const file = FILES[`../../assets/screens/solutions/${src}.png`];
+if (!file) throw new Error(`[solutions] capture introuvable : ${src}.png`);
+
+const POSTERS = import.meta.glob<{ default: ImageMetadata }>("../../assets/clips/*.png", { eager: true });
+const VIDEOS = import.meta.glob<{ default: string }>("../../assets/clips/*.mp4", { eager: true });
+const poster = clip ? POSTERS[`../../assets/clips/${clip}.png`] : undefined;
+const video = clip ? VIDEOS[`../../assets/clips/${clip}.mp4`] : undefined;
+if (clip && (!poster || !video)) throw new Error(`[solutions] clip introuvable : ${clip}.mp4 / .png`);
+if (clip && (eager || onDark)) throw new Error(`[solutions] clip réservé aux piliers : ${clip}`);
+---
+
+{
+  poster && video ? (
+    <AppClip src={video.default} poster={poster.default} alt={alt} />
+  ) : (
+    <AppScreen src={file.default} alt={alt} onDark={onDark} eager={eager} />
+  )
+}

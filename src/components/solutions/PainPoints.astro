@@ -1,6 +1,4 @@
 ---
-import FaultsArt from "../art/FaultsArt.astro";
-
 interface Props {
   heading: string;
   points: { title: string; body: string }[];
@@ -13,15 +11,13 @@ interface Props {
 
 const { heading, points, eyebrow = "The problem" } = Astro.props;
 
-/** ⚠️ EXACTEMENT trois points. La grille est en `grid-cols-3` et le dessin
- *  d'en-tête (`FaultsArt`) montre trois ruptures — « trois marques ambre pour
- *  les trois points numérotés juste en dessous ». Un quatrième point laisserait
- *  un orphelin en deuxième rangée ET ferait mentir l'illustration, sans que
- *  rien ne le signale. */
+
+/** ⚠️ EXACTEMENT trois points. La grille est en `grid-cols-3` : un quatrième point
+ *  laisserait un orphelin en deuxième rangée sans que rien ne le signale. */
 if (points.length !== 3) {
   throw new Error(
     `[solutions] PainPoints attend 3 points, ${points.length} reçus (« ${heading} »). ` +
-      `La grille et FaultsArt sont bâtis sur trois.`
+      `La grille est bâtie sur trois.`
   );
 }
 ---
@@ -39,29 +35,9 @@ if (points.length !== 3) {
     surface du site. Voir la table `EYEBROW_TONE` de `solutions.ts`. */}
 <section class="bg-white py-[88px]" data-reveal-group>
   <div class="container-wide">
-    {/* En-tête sur deux colonnes, les trois points restent pleine largeur en
-        dessous. Le dessin est le même sur les huit pages : il montre la FORME
-        d'un relevé troué, pas le problème d'un secteur — inventer huit
-        situations serait inventer huit fois. */}
-    <div
-      class="grid grid-cols-1 items-center gap-14 min-[901px]:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]"
-    >
-      <div>
-        <p class="label-mono text-[11px] text-ink" data-reveal>{eyebrow}</p>
+    <p class="label-mono text-[11px] text-ink" data-reveal>{eyebrow}</p>
 
-        <h2 class="mt-4 max-w-[20ch] text-[clamp(28px,4vw,42px)]" data-reveal>{heading}</h2>
-      </div>
-
-      {/* Le dessin par défaut — un relevé troué de trois marques — sert les huit
-          pages secteur, où le sujet EST « le dossier a des trous ».
-          Une page cas d'usage passe le sien : son sujet est nommé (facturation,
-          télétravail, rentabilité…) et le lecteur doit le reconnaître avant
-          d'avoir lu une ligne. Un dessin identique sur quatorze pages ne dit
-          rien d'aucune. */}
-      <div class="hidden min-[901px]:block" data-use-case-motion-card>
-        <slot name="art"><FaultsArt /></slot>
-      </div>
-    </div>
+    <h2 class="mt-4 max-w-[24ch] text-[clamp(28px,4vw,42px)]" data-reveal>{heading}</h2>
 
     <ol class="mt-12 grid grid-cols-1 gap-x-14 gap-y-0 min-[901px]:grid-cols-3" data-reveal>
       {

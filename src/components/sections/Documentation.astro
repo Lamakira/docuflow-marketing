@@ -1,7 +1,8 @@
 ---
 import PillarSection from "../PillarSection.astro";
-import AppScreen from "../product/AppScreen.astro";
-import ledgerDocumentation from "../../assets/screens/ledger-documentation.png";
+import AppClip from "../product/AppClip.astro";
+import poster from "../../assets/clips/nested-page.png";
+import clip from "../../assets/clips/nested-page.mp4";
 
 interface Props {
   /** Posé par `index.astro` d'après le rang du pilier — jamais en dur ici. */
@@ -19,6 +20,6 @@ const { reverse = false } = Astro.props;
   band="bg-band-warm"
   reverse={reverse}
 >
-  {/* La vraie documentation de projet (23 novembre 2026) : l'onglet Documentation de la fiche projet, l'arbre de pages et l'éditeur de blocs. Un autre projet que la capture de `/product`, pour ne pas montrer deux fois le même écran. */}
-  <AppScreen src={ledgerDocumentation} alt="DocuFlow project documentation inside the Ledger migration client project: the Documentation tab, the page tree and the block editor with its toolbar." />
+  {/* Ouvrir une page imbriquée : un geste filmé, règles dans `product/AppClip.astro`. */}
+  <AppClip src={clip} poster={poster} alt="DocuFlow project documentation: the Technical spec page is expanded and its nested Rollback plan page is open in the block editor." />
 </PillarSection>

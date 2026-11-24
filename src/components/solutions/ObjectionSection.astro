@@ -1,6 +1,5 @@
 ---
 import { Icon } from "astro-icon/components";
-import RedactedArt from "../art/RedactedArt.astro";
 
 /** L'objection du secteur, répondue directement.
  *
@@ -20,10 +19,6 @@ interface Props {
   body: string;
   argument: string;
   guarantees: string[];
-  /** La disposition par défaut garde le petit dessin sous la réponse. Un cas
-   *  d'usage dont le dessin EST la démonstration peut former une seule colonne
-   *  de preuve à droite : dessin, puis garanties. */
-  artLayout?: "below-copy" | "above-guarantees";
 }
 
 const {
@@ -32,21 +27,16 @@ const {
   body,
   argument,
   guarantees,
-  artLayout = "below-copy",
 } = Astro.props;
+
 ---
 
 <section class="bg-white py-[88px]" data-reveal-group>
   <div class="container-wide">
     <div
-      class:list={[
-        "grid grid-cols-1",
-        artLayout === "above-guarantees"
-          ? "gap-8 min-[901px]:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] min-[901px]:gap-x-16 min-[901px]:gap-y-6"
-          : "gap-12 min-[901px]:grid-cols-2",
-      ]}
+      class="grid grid-cols-1 gap-12 min-[901px]:grid-cols-2"
     >
-      <div class:list={[artLayout === "above-guarantees" && "min-[901px]:row-span-2"]} data-reveal>
+      <div data-reveal>
         <p class="label-mono text-[11px] text-live-on-light">{eyebrow}</p>
 
         <h2 class="mt-4 max-w-[18ch] text-[clamp(28px,4vw,42px)]">{heading}</h2>
@@ -58,39 +48,18 @@ const {
         <p class="mt-5 max-w-[48ch] text-[17px] leading-[1.6] font-medium text-ink">{argument}</p>
       </div>
 
-      {/* Par défaut, le petit dessin termine la colonne de réponse. Pour
-          `client-billing`, il ouvre plutôt la colonne de preuve et prend toute
-          sa largeur : l'illustration et les garanties forment alors un seul
-          groupe, au lieu de flotter dans deux zones sans rapport. */}
-      <div
-        class:list={[
-          "hidden min-[901px]:block",
-          artLayout === "above-guarantees"
-            ? "min-[901px]:col-start-2 min-[901px]:row-start-1"
-            : "max-w-[340px] min-[901px]:col-start-1 min-[901px]:row-start-2",
-        ]}
-        data-use-case-motion-card
-      >
-        <slot name="art"><RedactedArt /></slot>
-      </div>
-
       {/* Le filet 1 px porte le bord, le fond `paper` ne fait que nuancer : sans
           filet, du paper sur blanc (1,09:1) ne délimiterait rien.
           `aria-hidden` sur les icônes — quatre coches identiques n'ajoutent rien
           que la ligne ne dise déjà. */}
       <ul
-        class:list={[
-          artLayout === "above-guarantees"
-            ? "grid grid-cols-1 gap-3 min-[1180px]:grid-cols-2 min-[901px]:col-start-2 min-[901px]:row-start-2"
-            : "space-y-3 min-[901px]:col-start-2 min-[901px]:row-start-1",
-        ]}
+        class="space-y-3"
         data-reveal
       >
         {
           guarantees.map((item) => (
             <li
               class="flex items-start gap-3 rounded-[6px] border border-rule bg-paper p-4"
-              data-use-case-motion-guarantee
             >
               <Icon
                 name="lucide:circle-check"

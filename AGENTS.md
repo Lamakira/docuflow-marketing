@@ -351,14 +351,19 @@ sur `<html>`, que `global.css` lit en `scroll-padding-top: var(--scroll-pad, 80p
 déclaré depuis une page peut se retrouver dans une feuille partagée au regroupement ; une variable
 inline, non.
 
-**L'accueil aussi** (23 novembre 2026, deuxième passe) : le héros, la fiche client, la documentation et la carte DocuFlow de la pile sont de vraies captures ; les cartes d'outils de la pile, les heures et la réponse IA restent dessinées, mais lisibles. L'inspecteur au survol du héros n'existe plus. Détail dans `docs/claims-audit-2026-11-23.md`.
+**Les écrans montrés sont de vrais écrans** (23 et 24 novembre 2026). Les quatre piliers de
+`/product`, le héros, la fiche client, les heures, la documentation et la carte DocuFlow de
+l'accueil rendent `product/AppScreen.astro` : une capture de l'app v2 (`src/assets/screens/`, WebP
+par `astro:assets`), à plat et légendée « demo workspace ». Restent dessinés sur l'accueil : les
+quatre cartes d'outils de la pile (elles représentent des produits concurrents, pas DocuFlow) et la
+réponse IA (`ANSWER_CARD`). Règles et procédure dans l'en-tête d'`AppScreen.astro` ; la principale :
+**données fictives uniquement**, instance isolée.
 
-**Trois piliers montrent l'interface réelle** (23 novembre 2026) : Time, Clients et Knowledge
-rendent `product/AppScreen.astro` avec une capture de l'app v2 (`src/assets/screens/`, WebP généré
-par `astro:assets`), à plat et légendée « demo workspace » — « The Layered Paper Boundary » interdit
-le papier chaud sur un vrai panneau produit. Activity reste dessiné (`EvidenceMock`) : la démo n'a
-aucune capture d'écran. Règles et procédure de reprise dans l'en-tête d'`AppScreen.astro` ; la
-principale : **aucune personne réelle à l'écran**, le nom du membre de démo est remplacé avant capture.
+**Sept gestes sont filmés** (`product/AppClip.astro`, clips et images fixes dans `src/assets/clips/`) :
+fiche client, heures et documentation sur l'accueil ; Time, Clients et Knowledge sur `/product` ;
+« The hours » sur `/solutions/client-billing`. Boucles MP4
+muettes ; l'image fixe reste le contenu, la vidéo l'enjolive. Règles dans l'en-tête d'`AppClip.astro`.
+Un geste ne se filme que si le texte voisin l'annonce. Jamais dans un héros ni sur bande `ink`.
 
 **Une piste de grille implicite se dimensionne sur son min-content** — mesuré à 410 px pour la
 colonne d'un pilier, soit une barre horizontale garantie dès 360 px. Les grilles qui passent à une
@@ -478,16 +483,8 @@ d'usage n'atteint jamais le warm : **`/solutions/onboarding-documentation`, dont
 documentation, serait la seule page du site à ne jamais montrer la bande documentaire.** D'où aussi
 la garde qui exige exactement DEUX piliers.
 
-**Chaque page a SES deux dessins, et le registre le fait respecter.** `UseCaseArt.astro` est indexé
-par slug ET par emplacement (`situation` / `objection`) et lève sur toute case manquante. Les huit
-pages secteur partagent `FaultsArt` et `RedactedArt` légitimement — elles partagent un sujet. Les six
-cas d'usage n'en partagent aucun : arrivé sur `/solutions/client-billing`, un lecteur doit voir qu'il
-s'agit de facturation AVANT d'avoir lu une ligne. Deux fautes déjà commises et désormais impossibles :
-le relevé troué générique en tête d'une page facturation, et une capture floutée en face d'une
-objection qui ne parle pas de capture.
-
-`PainPoints` et `ObjectionSection` ont donc un `<slot name="art">` dont le contenu par défaut est le
-dessin secteur : les huit pages existantes sont inchangées.
+**Les dessins des pages cas d'usage sont retirés** (24 novembre 2026, voir « Les visuels de
+`/solutions` »).
 
 **`getUseCase` est séparé de `getSolution`, délibérément.** Élargir `getSolution` pour avaler les cas
 d'usage paraît propre, mais `RelatedSectors` lit `page.sector.icon / .name / .tag` — une page cas
@@ -573,84 +570,29 @@ hors flux, lui-même `display: none` au-dessus de 561 px.
 **Astro rogne l'espace en tête du contenu d'un élément.** `Start free<span> trial</span>` s'est
 livré en « Start freetrial ». Un `&nbsp;` n'est pas rogné.
 
-## Les illustrations de section (`src/components/art/`)
+## Les visuels de `/solutions`
 
-Ajoutées le 27 juillet 2026. Six dessins qui remplissent la colonne droite des en-têtes de section,
-laissée vide jusque-là : `/solutions` était la seule page de la famille dont le héros n'avait pas de
-visuel, alors que ses huit enfants en ont tous un.
+**Depuis le 24 novembre 2026, plus aucun écran dessiné sur `/solutions`.** Les maquettes
+(`solutions/mockups/`, `product/mockups/`), les SVG de section (`components/art/`) et leur script
+(`scripts/art.ts`) sont supprimés : ils montraient des fonctions que l'app n'a pas, des montants
+qu'elle n'affiche pas et un score qu'elle ne calcule pas.
 
-**Ce sont des SVG inline, géométriques, aux tokens du site.** Le registre a été arbitré contre deux
-alternatives, le 27 juillet :
+- Héros, piliers et scénarios déclarent un `Screen` (`{ src, alt }`) dans `src/data/solutions.ts`.
+  `solutions/ScreenShot.astro` résout `src` dans `src/assets/screens/solutions/` et **lève au build
+  si le fichier manque**.
+- **Une section sans écran réel n'a pas de visuel.** `scenario.mock` est optionnel : celui
+  d'`employee-productivity` n'en a pas, la question d'inactivité vivant dans l'agent de bureau.
+  Ne pas redessiner pour combler.
+- **Le texte et la capture se contrôlent ensemble.** Chaque chiffre de la capture doit soutenir la
+  phrase voisine. Trois fautes attrapées à la relecture : des journées commençant à 3 h (capture
+  prise le matin en UTC), une même personne sur deux minuteurs qui se chevauchent, un dossier
+  « closed » affiché ACTIVE.
+- **Le score de preuve n'est annoncé nulle part**, ni en 0–100 ni en lettre, tant que l'app ne
+  corrige pas `getEvidenceQualityReport` : la jointure sur les captures multiplie les durées.
 
-- **Un jeu d'illustrations générées** (`~/Téléchargements/saas_illustrations_svg`) : quatre fichiers
-  `.svg` qui sont en réalité un seul PNG de 1254×1254 encapsulé — zéro `<path>`, 1,0 à 1,2 Mo pièce,
-  personnages, plantes, mugs, une palette bleue absente des tokens, des chiffres inventés à l'écran
-  (« 84% avg », « Deal won $48k ») et du texte cuit dans l'image, donc intraduisible en phase FR.
-  C'est l'inverse point par point de `docs/prompts/stack-card-illustrations-generation.md`, la
-  spécification que le dépôt contient DÉJÀ pour ce jeu d'assets et qui n'a jamais servi.
-- **Lottie** : `lottie-web` embarque un second moteur d'animation (~150–250 Ko livrés) pour un
-  travail que GSAP, déjà chargé sur ces pages par `reveal.ts`, fait à zéro octet.
-
-Résultat mesuré : **8,1 Ko de SVG pour les trois illustrations de `/solutions`**, 5 Ko pour les trois
-d'une page secteur — contre 1,0 Mo pour UNE image du jeu écarté.
-
-**Aucun texte dans les dessins, jamais.** C'est la règle qui fait tout tenir : rien à retraduire
-quand le FR arrivera, aucune statistique inventée à l'écran (une image ment aussi bien qu'une
-phrase, et la Loi sur la concurrence ne fait pas la différence), et rien d'illisible pour un lecteur
-d'écran — les six sont `aria-hidden` et `role="presentation"`.
-
-**Chaque dessin dit ce que sa section dit.** Ce ne sont pas des remplissages : le registre de huit
-rangées dont une est trouvée EST la question « Which of these is you? » ; la grille 4×4 dont la case
-pleine change de colonne à chaque rangée EST « every trade loses money somewhere different » ; le
-relevé troué de trois marques ambre EST les trois points de douleur numérotés juste en dessous.
-
-**⚠️ Cette règle a été étendue et durcie le 30 juillet 2026** par la revue des maquettes des SIX pages
-cas d'usage, toute entière sur le même défaut : un chiffre posé sur une texture ne dit rien. **Avant
-de dessiner ou de modifier une maquette, lire `docs/mockup-corrections.md`** : il porte le test
-d'acceptation en quatre points (ça se compte, ça dit ce que SA section dit, ça ne la CONTREDIT pas,
-ça ne se répète pas), les règles qui en sortent, et surtout **les approches refusées**, dont
-plusieurs paraissent évidentes et sont fausses.
-
-**Et la règle la plus chère de cette revue, apprise quatre fois : CHANGER UNE MAQUETTE OBLIGE À
-RELIRE LES DESSINS DE LA MÊME PAGE.** Le dessin ne bouge pas, c'est la maquette voisine qui prend son
-sujet. Quatre illustrations sont mortes de ça (`IdlePromptArt`, `TwoPlacesArt`, `CitedAnswerArt`,
-`InvoiceArt`). Faire le contrôle de collision **avant** de construire.
-
-### Quatre pièges
-
-0. **⚠️ Une illustration qui empile ses enfants DOIT créer son propre contexte
-   d'empilement.** Le carrousel du héros donne `z-index: 30 / 20 / 10` à ses trois
-   cartes. Sans `z-index: 0` sur leur conteneur, ces valeurs vivent dans le
-   contexte RACINE et entrent en concurrence avec `.nav-header`, qui vaut aussi
-   `z-30` — et à égalité c'est l'ordre du DOM qui tranche, or `<main>` vient après
-   `<header>`. Résultat constaté : la pastille de nav passait DERRIÈRE les cartes
-   une fois repliée. `z-index: 0` sur le conteneur enferme tout et la pile ne
-   compte plus que pour un plan.
-   C'est le miroir exact de la règle du panneau du méga-menu, et les deux
-   coexistent sans se contredire : le panneau ne doit porter AUCUN `z-index`
-   parce qu'il n'est qu'un descendant d'un contexte existant ; le carrousel doit
-   en porter un parce qu'il CONTIENT des enfants empilés.
-
-1. **Des barres grises uniformes en rangées, c'est un squelette de chargement.** La première version
-   du dessin du héros se lisait « la page n'a pas fini de charger » — au-dessus de la ligne de
-   flottaison, le pire endroit possible. Corrigé en donnant à chaque rangée une MARQUE différente
-   (cercle, carré, anneau, losange…) et en retirant la puce de trois rangées : un squelette n'a
-   jamais de glyphes distincts ni d'irrégularité. Vaut pour tout futur dessin fait de barres.
-2. **Ne PAS mettre `data-reveal` sur l'enveloppe d'une illustration.** `reveal.ts` et `art.ts` se
-   composent techniquement, mais ça fait deux ScrollTrigger pour un seul travail : l'enveloppe reste
-   à `opacity: 0` pendant que ses enfants jouent leur cascade à vide. Constaté à l'écran sur
-   « By use case ». **La cascade interne EST l'arrivée du dessin.**
-3. **Les dessins d'en-tête disparaissent sous 901px** (`hidden min-[901px]:block`). Ils sont
-   décoratifs : les garder empilés repousserait le contenu d'un écran entier sur téléphone. Celui du
-   héros de `/solutions` reste, lui, à toutes les largeurs — comme les maquettes des héros secteur.
-   ⚠️ Une media query mesure le viewport **barre de défilement comprise**, alors que `100%` et
-   `clientWidth` l'excluent : tester ce point de rupture dans un iframe redimensionné donne un
-   résultat faux de la largeur de la barre.
-
-`src/scripts/art.ts` porte le contrat complet — `[data-art]` sur le `<svg>`, puis `data-art-in` /
-`-grow` / `-draw` / `-pop` sur les enfants. Mêmes propriétés de sûreté que `reveal.ts` : l'état
-masqué est posé par `gsap.set()` et jamais par une règle CSS (sans JS les six dessins sont entiers,
-vérifié), et `prefers-reduced-motion` coupe l'animation entièrement plutôt que de la raccourcir.
+Un piège hérité des anciens dessins, toujours valable : **un bloc qui empile ses enfants avec des
+`z-index` doit porter `z-index: 0`**, sinon ses enfants concurrencent `.nav-header` (`z-30`) et
+passent devant la nav repliée.
 
 ## À faire
 
@@ -669,23 +611,16 @@ vérifié), et `prefers-reduced-motion` coupe l'animation entièrement plutôt q
 - [ ] **Confirmer les montants des plans** (7 / 14 / 22 $) et l'existence d'un DPA : ni l'un ni
       l'autre n'est vérifiable dans le code de l'app (les prix vivent dans Stripe).
 - [ ] **Faire signer la copy neuve de `/product`** par Masdouk : le H2 de Knowledge, le libellé
-      « THE ARGUMENT » et les cinq phrases de `PRODUCT_ARGUMENT` (signalées dans `product.ts`).
-- [ ] **Faire signer la copy des maquettes de `/solutions/remote-teams`** — table complète dans
-      `docs/mockup-corrections.md`. Aucun de ces mots n'est validé.
-- [ ] **Passer les pages SECTEUR au test d'acceptation** de `docs/mockup-corrections.md` :
-      `digital-agencies` et `bpo-call-centers` rendent chacune une carte de score identique en héros
-      et en pilier. Les six pages cas d'usage sont faites.
+      « THE ARGUMENT » et les deux phrases de `PRODUCT_ARGUMENT` (signalées dans `product.ts`).
+- [ ] **Faire signer la copy réécrite le 24 novembre 2026** (retrait du score, page Devices) — table
+      « 24 November » dans `docs/claims-audit-2026-11-23-solutions.md`.
 - [ ] Arbitrer l'ambre des oeils-de-boeuf sur bande claire (voir « La page `/product` ») — décision
       de site, pas de page.
-- [ ] **Arbitrer les deux ambres de la bande `ink`** : l'oeil-de-boeuf de `ScenarioBand` et le badge
-      `WEAK`. La « One Amber Rule » est entamée (voir `docs/mockup-corrections.md`).
-- [ ] **Arbitrer les tirets hors du reçu** — `DESIGN.md` les réserve à `/pricing`, trois maquettes
-      cas d'usage en utilisent. Soit la règle s'élargit, soit les trois passent en trait plein.
-- [ ] **Trancher la contradiction « aucun texte dans les dessins »** — la règle visait les six SVG
-      d'en-tête, les maquettes cas d'usage en sont pleines depuis le 29 juillet.
+- [ ] **Arbitrer l'oeil-de-boeuf ambre de `ScenarioBand` sur bande `ink`** (« One Amber Rule ») et le
+      sort des tokens Layered Paper, que plus rien n'utilise depuis le 24 novembre 2026. Saïd.
 - [ ] Rafraîchir le sidecar d'impeccable (`/impeccable document`) : `DESIGN.md` a bougé, ses
       signalements 36px sont désormais du bruit.
-- [ ] **Corriger le débordement horizontal de `/pricing` à 360 px** — 7 px, **préexistant** et
+- [ ] **Corriger le débordement horizontal de `/pricing` à 360 px** — 7 px le 27 juillet, 9 px mesurés le 24 novembre, **préexistant** et
       découvert en balayant les largeurs le 27 juillet 2026. Le `<table>` du comparatif demande
       343 px dans un conteneur de 312 px (`ComparisonTable.astro`). Ni l'accueil, ni `/product`, ni
       aucune des neuf pages `/solutions` ne débordent, à aucune des huit largeurs testées.
@@ -713,7 +648,7 @@ vérifié), et `prefers-reduced-motion` coupe l'animation entièrement plutôt q
 | `docs/design-brief.md` | Brief initial — ⚠️ décrit l'ancien concept « journée de travail » |
 | `docs/landing-corrections.md` | Le delta qui a corrigé le concept — **c'est la version qui fait foi** |
 | `docs/claims-audit-2026-11-23.md` | Ce que l'app ne fait pas et que le site annonçait — **fait foi sur ce qu'on a le droit d'écrire**, preuves dans le code de l'app |
-| `docs/mockup-corrections.md` | Revue des maquettes cas d'usage — **fait foi sur leur style**, approches refusées incluses |
+| `docs/mockup-corrections.md` | Revue des maquettes cas d'usage — **historique** : les maquettes sont supprimées depuis le 24 novembre 2026 |
 | `docs/site-architecture.md` | Arborescence complète, matrice SEO, fondations techniques |
 | `docs/design-handoff/` | Maquettes HTML de référence — ouvrir dans un navigateur |
 | `docs/design_handoff_pricing_cards/` | Cartes cornées de `/pricing` — **remplace `Pricing.dc.html`** |

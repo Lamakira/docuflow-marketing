@@ -382,8 +382,7 @@ are self-hosted; no third-party font request is ever made.
 - **Score** (700 mono, 36px, `-0.02em`, 1.0): The evidence quality figure, and only that figure —
   `84`, `38`, always followed by a 14px `/100` in Archive Slate. It is the one number in the system
   set larger than a headline's neighbours, because it is the number a skeptical operator came to the
-  page to check. Carried by `product/mockups/EvidenceMock`, `solutions/mockups/ScoreMock`,
-  `solutions/mockups/WeekMock` and `solutions/mockups/SilenceMock`. A second figure reaching for
+  page to check. **No longer used since 24 November 2026**: the score left the site. A second figure reaching for
   this size is almost certainly a proof stat (24px) or a plan price (34px) instead.
 
 Sizes outside this ramp are one-offs, not steps: `14.5px` (sector blurb), `22px` (block-editor
@@ -567,7 +566,7 @@ Screenshot tiles are drawn, not textured. The 45° Cold Stock/white stripe that 
 Every capture tile now renders `CaptureThumb.astro`: the silhouette of a work screen (editor, sheet,
 document, design canvas) in Divider Grey marks — no text, no app name, no clock time, since the agent
 records the image and nothing more. Adjacent tiles rotate through the four variants, never repeat.
-The 45° stripe survives only as redaction in `RedactedArt`. Where the app itself can be shown — the home hero, the client record and documentation pillars, the DocuFlow card of the stack, three `/product` pillars — the page uses a real capture of the v2 app instead (`AppScreen.astro`), flat, never Layered Paper.
+The 45° stripe no longer ships. Wherever DocuFlow itself is shown — home, all four `/product` pillars, every `/solutions` page — the page uses a real capture of the v2 app instead (`AppScreen.astro`), flat, never Layered Paper.
 
 **The Squares-and-Circles Rule.** In data marks, shape carries meaning: a square marker is a task, a
 round marker is a document. Never assign these arbitrarily; the shapes are a legend.
@@ -601,9 +600,8 @@ round marker is a document. Never assign these arbitrarily; the shapes are a leg
 ### Layered Paper Card — illustration pattern
 
 Use this pattern when a marketing illustration depicts a record, invoice, timesheet or query as a
-physical object. The production reference is
-`src/components/solutions/mockups/SectorMockup.astro`; activate it with
-`<SectorMockup mock={mock} warm />`.
+physical object. **Nothing ships it since 24 November 2026**: real captures
+replaced every Layered Paper illustration. Kept as the reference if one comes back (decision: Saïd).
 
 **Standalone recipe**
 

@@ -7,13 +7,16 @@ import PlatformBand from "../components/product/PlatformBand.astro";
 import ArgumentSection from "../components/product/ArgumentSection.astro";
 import CapabilityList from "../components/product/CapabilityList.astro";
 import FinalCta from "../components/sections/FinalCta.astro";
-import EvidenceMock from "../components/product/mockups/EvidenceMock.astro";
-import PaperStage from "../components/product/mockups/PaperStage.astro";
 import AppScreen from "../components/product/AppScreen.astro";
+import AppClip from "../components/product/AppClip.astro";
 import type { ImageMetadata } from "astro";
-import timeEntries from "../assets/screens/time-entries.png";
-import projectDossier from "../assets/screens/project-dossier.png";
-import projectDocumentation from "../assets/screens/project-documentation.png";
+import timerStart from "../assets/clips/timer-start.png";
+import timerStartClip from "../assets/clips/timer-start.mp4";
+import projectBoard from "../assets/clips/project-board.png";
+import projectBoardClip from "../assets/clips/project-board.mp4";
+import trackingPolicy from "../assets/screens/tracking-policy.png";
+import searchByName from "../assets/clips/search-by-name.png";
+import searchByNameClip from "../assets/clips/search-by-name.mp4";
 import { PRODUCT_PILLARS, type PillarId } from "../data/product";
 
 const title = "DocuFlow product - time, activity, clients and knowledge";
@@ -21,37 +24,37 @@ const description =
   "Everything DocuFlow does, with the real intervals, counts and limits: the timer, the desktop monitoring agent, client projects and budgets, and documentation with cited answers.";
 
 /** Le visuel de chaque pilier. Clé = `id` du pilier, pour qu'un réordonnancement
- *  de `PRODUCT_PILLARS` emmène le bon dessin avec la bonne section.
+ *  de `PRODUCT_PILLARS` emmène la bonne capture avec la bonne section.
  *  `Record<PillarId, …>` et non `Record<string, …>` : un pilier ajouté ou
  *  renommé dans `product.ts` sans son entrée ici échoue à la vérification des
- *  types (`astro check` / build) au lieu de planter au rendu sur un mockup
- *  `undefined`. */
-type Visual =
-  | { kind: "screen"; src: ImageMetadata; alt: string }
-  | { kind: "mock"; Mockup: typeof EvidenceMock };
+ *  types (`astro check` / build) au lieu de planter au rendu sur une
+ *  image `undefined`.
+ *
+ *  Les quatre piliers montrent l'interface réelle (24 novembre 2026), capturée
+ *  sur une instance locale isolée remplie de données fictives. Time, Clients et
+ *  Knowledge montrent un geste filmé (`AppClip`) : chacun est annoncé par une
+ *  puce du pilier. Activity reste fixe et montre la politique de suivi et non un score : l'app n'affiche aucun score chiffré. */
+type Visual = { src: ImageMetadata; alt: string; clip?: string };
 
-/* Trois piliers montrent l'interface réelle depuis le 23 novembre 2026 (voir
- * `AppScreen.astro`). Activity reste dessiné : le Workspace de démonstration
- * n'a aucune capture d'écran ni mesure d'activité — `seed-demo.ts` n'en sème
- * pas — donc l'écran réel serait vide, et le remplir montrerait le poste d'une
- * vraie personne. `TimerMock`, `ClientMock` et `AnswerMock` restent dans le
- * dépôt mais ne sont plus rendus ici. */
 const VISUALS: Record<PillarId, Visual> = {
   time: {
-    kind: "screen",
-    src: timeEntries,
-    alt: "DocuFlow Time Tracking screen: the timer above a list of stopped time entries, each filed against a client project and a task, with its duration.",
+    src: timerStart,
+    clip: timerStartClip,
+    alt: "DocuFlow Time Tracking screen: a project and a task chosen, the timer running on Migration scripts, above the stopped entries of the day.",
   },
-  activity: { kind: "mock", Mockup: EvidenceMock },
+  activity: {
+    src: trackingPolicy,
+    alt: "DocuFlow Administration, Tracking Policy: capture interval, active hours, low-activity threshold, idle timeout and the idle prompt.",
+  },
   clients: {
-    kind: "screen",
-    src: projectDossier,
-    alt: "DocuFlow project record for Atlas warehouse rollout: client, stage, project manager, 23.0 h tracked of a 120 h budget, next tasks and the budget meter.",
+    src: projectBoard,
+    clip: projectBoardClip,
+    alt: "DocuFlow Projects board: the Ledger rebuild card has been dragged from the Active column to In review, and both column counts have changed.",
   },
   knowledge: {
-    kind: "screen",
-    src: projectDocumentation,
-    alt: "DocuFlow project documentation: the page tree of the client project beside the block editor and its toolbar.",
+    src: searchByName,
+    clip: searchByNameClip,
+    alt: "DocuFlow search: typing Ledger lists the Ledger rebuild project and the Ledger SOW page, with the project the page belongs to.",
   },
 };
 
@@ -88,21 +91,10 @@ const VISUALS: Record<PillarId, Visual> = {
       const visual = VISUALS[pillar.id];
       return (
         <ProductPillar pillar={pillar} reverse={i % 2 === 1}>
-          {/* ⚠️ Les quatre visuels passent par `PaperStage` — l'habillage
-              Layered Paper des pages `/solutions`. Arbitré le 30 juillet 2026 :
-              `/product` était resté plat au motif que la fiche technique relève
-              de l'« operational UI » que `DESIGN.md` veut ruled et square. C'est
-              une mauvaise lecture — cette règle vise l'INTERFACE, et « The
-              Layered Paper Boundary » définit le chaud comme « an illustration
-              of records, not a live product panel ». Ces quatre cartes sont des
-              illustrations de relevés, exactement comme celles des pages
-              secteur. */}
-          {visual.kind === "screen" ? (
-            <AppScreen src={visual.src} alt={visual.alt} />
+          {visual.clip ? (
+            <AppClip src={visual.clip} poster={visual.src} alt={visual.alt} />
           ) : (
-            <PaperStage>
-              <visual.Mockup />
-            </PaperStage>
+            <AppScreen src={visual.src} alt={visual.alt} />
           )}
         </ProductPillar>
       );

@@ -148,3 +148,45 @@ Nested pages and templates exist in v2 (`PageTree.tsx` in the Project Dossier). 
 | stack cards | "Northwind / Meridian / Kaleido" + "Won / Proposal / Lead" + "— h"; "Meeting / Dev work / Calls" + "no client"; "Project unknown"; "Onboarding / Client FAQ / Process v2 (old)" + "14 mo ago / 9 mo ago / 2 yr ago" | legible content instead of grey bars; each states what the generic tool lacks |
 | hours | tile captions "11:02 68%"…; bar legend "Keyboard and mouse activity · one bar per screenshot, today" | the app samples activity per screenshot |
 | AI answer | panel strings "Ask DocuFlow", "Answers from your records", "Ask about a Project, Client, or policy…" | copied from the real v2 panel |
+
+## 24 November: real screens, score removed (for sign-off)
+
+Every visual on these pages is now a real v2 capture with fictional data, captioned "DocuFlow web app · demo workspace". Strings that lived inside the deleted mockups and drawings are gone with them; those listed in the sections above no longer ship. Where a capture replaced a section drawing (pain points, objection, related sectors), the section is now text only.
+
+Reason codes: **S** the 0–100 score does not exist in v2 and the grade it shows is computed wrongly (screenshots multiply the hours); **D** the Devices page lists only the signed-in person's own devices; **A** the totals per task are on Analytics, not on the project.
+
+| where | before (short) | after | why |
+|---|---|---|---|
+| /product Activity, heading | "Evidence, and a score telling you how good it is." | "Evidence, under rules your team can read." | S |
+| /product Activity, body | "…DocuFlow grades the coverage…" | "…Admins set the intervals, the active hours and the idle timeout, and every member can read that policy." | S |
+| /product Activity, spec | "0–100 evidence score" | "10% low-activity line" (the default) | S |
+| /product Activity, bullet | "Evidence quality score, 0–100 per person" | removed (also on 5 /solutions pages) | S |
+| /product and /solutions, bullet | "Admin analytics - coverage, quality, devices, warnings" | "Admin analytics - recorded time, activity, warnings" | S |
+| /product argument 01 | "An evidence quality score" | removed; two arguments remain | S |
+| /pricing Business note | "Analytics, evidence scores and payroll exports." | "Analytics and payroll exports." | S |
+| /pricing comparison | "Analytics & evidence score" | "Advanced analytics" | S |
+| consulting, lede | "…a score for how complete that record is…" | "Hours attach to an engagement, and activity and screenshots attach to the hours. When a client questions an invoice, the answer is a record rather than a recollection." | S |
+| consulting, pillar 1 heading | "The record grades its own completeness." | "Captured under a policy your team can read." | S |
+| consulting, pillar 1 body | "…score from 0 to 100 per person…" | "…Admins set what is captured and when, and every member can read that policy." | S |
+| consulting, scenario | "The entries on the engagement put…" + score line | "Analytics puts those hours against three deliverables - … on workshops." | A, S |
+| consulting, meta | "…evidence quality score from 0 to 100…" | "Hours against an engagement, with the screenshots and activity behind them on the same record." | S |
+| accounting, pillar 2 body | "…a coverage score per person…" | "…under a policy every member can read: how often it captures, and when it pauses." | S |
+| bpo, lede | "…and evidence quality per agent…" | dropped | S |
+| bpo, pillar 1 body | "…each agent's record gets an evidence-quality score." | dropped | S |
+| bpo, scenario | "the Devices page shows … online" / "each agent's evidence quality…" | "one device drops off the network and queues its events locally." / "the account's hours are on the project, agent by agent" | D, S |
+| bpo, meta | "…evidence quality per agent… Coverage evidence for outsourced teams." | "Recorded time per agent and per account, screenshots under a published policy, and an offline-first desktop agent for outsourced teams." | S |
+| staffing, guarantee | "Any device can be revoked from the Devices page" | "Each person can revoke their own devices from the Devices page" | D |
+| agencies, billing scenarios | "The entries on the project show / already hold…" | "Analytics shows…" / "Analytics already shows the work behind it, task by task" | A |
+| software, scenario | "the record reads 61 h, and the entries show…" | "…and Analytics shows…" | A |
+| remote, index blurb and lede | "The evidence quality score says…, the Devices page says…" | "Each person's Devices page says when a laptop last checked in…" | S, D |
+| remote, pillar 1 heading | "The record grades its own completeness." | "A silent laptop is not a quiet week." | S |
+| remote, pillar 1 body | "…a score from 0 to 100…" | "…each person's Devices page shows when a laptop stopped checking in. Analytics warns admins about a device that has been silent for a week." | S, D |
+| remote, scenario | "The evidence score on those 11 h reads…" | "The record simply stops: the laptop last checked in on Tuesday at 14:38." / "Their Devices page shows it offline since then." | S, D |
+| remote, objection | "The score protects the person…" | "A week that looks empty is checked against the device before anyone attributes the gap to the individual." | S |
+| remote, meta | "…an evidence quality score says…" | "…and a silent laptop shows as offline instead of as a bad week." | S |
+| productivity, symptom 3 | "Without something that grades the record itself…" | "Without a rule everyone can read…" | S |
+| productivity, pillar 1 heading | "Measured in the open, with the record graded for completeness." | "Measured in the open, under a policy everyone can read." | S |
+| productivity, pillar 1 body | "…an evidence quality score rates the completeness…" | "…A capture below the low-activity line is a fact about the capture, not a score." (the app's own words) | S |
+| productivity, objection | "The evidence quality score grades the record, not the person…" | "Then do not put one there. DocuFlow gives no one a productivity score. A visible indicator, …" | S |
+
+Known gaps between copy and capture, left as they are: scenario prose names months (March, April, August) while captures carry November 2026 dates; the home hero eyebrow says "LEAD" while the record shown is ACTIVE.

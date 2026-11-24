@@ -1,5 +1,8 @@
 # Corrections — les maquettes des pages cas d'usage
 
+> **Historique.** Les maquettes et dessins décrits ici sont supprimés depuis le 24 novembre 2026,
+> remplacés par de vraies captures de l'app. Voir « Les visuels de `/solutions` » dans `AGENTS.md`.
+
 > Revue de direction du 30 juillet 2026, sur **les six pages `/solutions/{cas d'usage}`**. Ce
 > document est le delta : il enregistre ce qui a été refusé, pourquoi, et la règle qui en sort.
 > **Il fait foi sur le style des maquettes**, au-dessus de tout ce qui a été livré avant cette date.
