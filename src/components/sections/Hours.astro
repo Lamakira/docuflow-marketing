@@ -1,7 +1,8 @@
 ---
 import PillarSection from "../PillarSection.astro";
-import CaptureThumb from "../CaptureThumb.astro";
-import { CAPTURE_VARIANTS } from "../captures";
+import AppClip from "../product/AppClip.astro";
+import poster from "../../assets/clips/hours-to-project.png";
+import clip from "../../assets/clips/hours-to-project.mp4";
 
 interface Props {
   /** Posé par `index.astro` d'après le rang du pilier — jamais en dur ici. */
@@ -9,23 +10,6 @@ interface Props {
 }
 
 const { reverse = false } = Astro.props;
-
-/** Niveaux d'activité sur la session : > 70 % live, > 40 % hour, sinon rule. */
-const activity = [
-  52, 78, 84, 61, 47, 73, 91, 12, 58, 66, 44, 55, 81, 88, 39, 72, 95, 63, 49, 77, 85, 31, 68, 74,
-  57, 42,
-];
-
-/** Les quatre dernières captures : heure et activité de la minute précédente.
- *  Les pourcentages sont ceux des quatre dernières barres de `activity`, pour
- *  que la vignette et l'histogramme disent la même chose. */
-const SHOTS = activity.slice(-4).map((value, i) => ({
-  time: ["11:02", "11:07", "11:13", "11:18"][i],
-  activity: value,
-}));
-
-const tone = (value: number) =>
-  value > 70 ? "var(--color-live)" : value > 40 ? "var(--color-hour)" : "var(--color-rule)";
 ---
 
 <PillarSection
@@ -35,41 +19,5 @@ const tone = (value: number) =>
   body="The desktop agent records screenshots, keyboard and mouse activity and idle time in the background, and files everything against the project the timer was running on. Nobody writes a timesheet from memory."
   reverse={reverse}
 >
-  <div class="rounded-[8px] border border-rule bg-white p-5">
-    <div class="flex items-baseline justify-between">
-      <p class="font-mono text-[12px] text-slate">Northwind · Ledger rebuild</p>
-      <p class="font-mono text-[12px] font-bold text-live-on-light">88% active</p>
-    </div>
-
-    {/* Chaque vignette porte son heure et l'activité clavier/souris de la
-        minute qui la précède — ce qu'affiche la galerie Activity de l'app v2.
-        Sans ces deux valeurs, quatre écrans dessinés ne se lisaient pas. */}
-    <div class="mt-4 grid grid-cols-4 gap-3">
-      {
-        SHOTS.map((shot, i) => (
-          <figure class="m-0 min-w-0">
-            <span class="block aspect-[4/3] overflow-hidden rounded-[3px] border border-rule">
-              <CaptureThumb variant={CAPTURE_VARIANTS[i % CAPTURE_VARIANTS.length]} />
-            </span>
-            <figcaption class="mt-[6px] flex justify-between gap-1 font-mono text-[10px]">
-              <span class="text-ink">{shot.time}</span>
-              <span class="text-slate">{shot.activity}%</span>
-            </figcaption>
-          </figure>
-        ))
-      }
-    </div>
-
-    <div class="mt-5 flex h-10 items-end gap-[3px]" aria-hidden="true">
-      {
-        activity.map((value) => (
-          <span
-            class="flex-1 rounded-[1px]"
-            style={`height:${value}%;background:${tone(value)}`}
-          />
-        ))
-      }
-    </div>
-    <p class="mt-2 font-mono text-[10px] text-slate">Keyboard and mouse activity · one bar per screenshot, today</p>
-  </div>
+  <AppClip src={clip} poster={poster} alt="DocuFlow project record, Time tab: a timer has just started and its running entry is first in the list, above the stopped entries of the Ledger rebuild project." />
 </PillarSection>

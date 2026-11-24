@@ -48,20 +48,9 @@ export interface MegaMenu {
   promo: { eyebrow: string; title: string; body: string; link: { label: string; href: string } };
 }
 
-/** Le même trio de contacts apparaît sur trois cartes : la fiche du héros
- *  (`sections/Hero.astro`), la fiche client du pilier CRM (`sections/ClientRecord.astro`)
- *  et sa maquette sur `/product` (`product/mockups/ClientMock.astro`). Centralisé ici pour
- *  que les trois restent identiques sans compter sur un commentaire répété dans
- *  chaque fichier. Tons neutres : un avatar vert ferait dire « confirmé » à un contact. */
-export const CONTACTS = [
-  { initials: "EP", name: "Elena Park", role: "VP Finance", tone: "#0F1524" },
-  { initials: "RA", name: "Rob Adeyemi", role: "Controller", tone: "#2A3348" },
-  { initials: "SD", name: "Sofia Duarte", role: "Project sponsor", tone: "#59657A" },
-];
-
-/** La carte « réponse IA » du pilier Knowledge, dupliquée entre l'accueil
- *  (`sections/AiAnswer.astro`) et sa maquette sur `/product`
- *  (`product/mockups/AnswerMock.astro`) — copie validée, à ne pas faire dériver. */
+/** La carte « réponse IA » du pilier Knowledge de l'accueil
+ *  (`sections/AiAnswer.astro`) — copie validée. Seul panneau produit encore dessiné :
+ *  une vraie réponse demanderait une clé OpenAI sur l'instance de capture. */
 export const ANSWER_CARD = {
   question: "what did we agree on the Ledger rebuild?",
   answer:
@@ -239,7 +228,7 @@ export const PLANS = [
     name: "Business",
     monthly: 22,
     annual: 18,
-    note: "Analytics, evidence scores and payroll exports.",
+    note: "Analytics and payroll exports.",
     pricingNote: "Scaling ops that need control and reporting.",
     cta: "Start free trial",
     featured: false,
@@ -302,7 +291,7 @@ export const COMPARISON_GROUPS: {
       { name: "Desktop agent (Win/Mac/Linux)", cells: [true, true, true, true] },
       { name: "Screenshots", cells: ["1 proj", true, true, true] },
       { name: "Activity & idle detection", cells: [false, true, true, true] },
-      { name: "Analytics & evidence score", cells: [false, false, true, true] },
+      { name: "Advanced analytics", cells: [false, false, true, true] },
     ],
   },
   {

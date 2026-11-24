@@ -2,25 +2,25 @@
 /**
  * Une vraie capture de l'application web DocuFlow (interface v2).
  *
- * Ajoutée le 23 novembre 2026, à la demande de remplacer les maquettes
- * dessinées par l'interface réelle là où c'est possible. Trois règles :
+ * Ajoutée le 23 novembre 2026, étendue le 24 à tout le site. Trois règles :
  *
- *  1. **Le Workspace de démonstration, et lui seul.** Les captures viennent de
- *     l'app locale remplie par `scripts/seed-demo.ts` (Northwind Logistics,
- *     Atlas warehouse rollout…). Jamais un Workspace client.
- *  2. **Aucune personne réelle.** Le seul membre du Workspace de démo est une
- *     vraie personne de TECHMA : son nom et sa photo ont été remplacés dans la
- *     page, juste avant la capture, par « Ana Ruiz » et des initiales. Rien
- *     d'autre n'a été retouché — ni chiffres, ni libellés, ni mise en page.
+ *  1. **Données fictives, et elles seules.** Les captures viennent d'une instance
+ *     locale ISOLÉE de l'app (base Postgres jetable, services tiers doublés),
+ *     remplie de sociétés et de personnes inventées. Jamais un Workspace client.
+ *  2. **L'écran n'est pas retouché.** Ni chiffres, ni libellés, ni mise en page.
+ *     Trois interventions, sur le rendu seulement : la police Switzer, déclarée
+ *     par l'app mais que Fontshare ne sert plus, est fournie localement ; le
+ *     fuseau du navigateur (UTC+5 sur les écrans de minuteur, pour une journée
+ *     de travail aux heures ouvrées) ; et le cadrage.
  *  3. **Plat, jamais Layered Paper.** « The Layered Paper Boundary » de
  *     `DESIGN.md` réserve le papier chaud aux illustrations de relevés : une
  *     capture EST le produit, elle se pose donc à plat, filet 1 px, rayon 8,
  *     sans ombre. La légende le dit au lecteur : c'est l'écran réel, avec des
  *     données de démonstration.
  *
- * Pour refaire une capture : `npm run db:seed:demo` dans l'app, viewport de
- * 800 à 1060 px, panneau latéral replié, puis remplacer le fichier dans
- * `src/assets/screens/` — `astro:assets` régénère le WebP et les dimensions.
+ * Pour refaire une capture : instance isolée, `deviceScaleFactor: 2`, puis
+ * remplacer le fichier dans `src/assets/screens/` — `astro:assets` régénère le
+ * WebP et les dimensions.
  */
 import { Image } from "astro:assets";
 import type { ImageMetadata } from "astro";
@@ -28,21 +28,28 @@ import type { ImageMetadata } from "astro";
 interface Props {
   src: ImageMetadata;
   alt: string;
+  onDark?: boolean;
+  eager?: boolean;
 }
 
-const { src, alt } = Astro.props;
+const { src, alt, onDark = false, eager = false } = Astro.props;
+
+/** 640 et 1280 : la colonne fait ~600px, donc 1x et 2x. Jamais plus large que la source. */
+const widths = [640, 960, 1280, src.width].filter((w, i, all) => w <= src.width && all.indexOf(w) === i);
 ---
 
 <figure class="app-screen">
   <Image
     src={src}
     alt={alt}
-    widths={[src.width]}
-    loading="lazy"
+    widths={widths}
+    sizes="(max-width: 900px) calc(100vw - 48px), 640px"
+    loading={eager ? "eager" : "lazy"}
+    fetchpriority={eager ? "high" : "auto"}
     decoding="async"
     class="app-screen-img"
   />
-  <figcaption class="app-screen-caption">DocuFlow web app · demo workspace</figcaption>
+  <figcaption class:list={["app-screen-caption", { "app-screen-caption--dark": onDark }]}>DocuFlow web app · demo workspace</figcaption>
 </figure>
 
 <style>
@@ -64,5 +71,9 @@ const { src, alt } = Astro.props;
     font-family: var(--font-mono);
     font-size: 11px;
     color: var(--color-slate);
+  }
+
+  .app-screen-caption--dark {
+    color: var(--color-slate-on-ink);
   }
 </style>

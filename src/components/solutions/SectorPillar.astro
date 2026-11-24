@@ -1,6 +1,6 @@
 ---
 import SpecStrip from "../product/SpecStrip.astro";
-import SectorMockup from "./mockups/SectorMockup.astro";
+import ScreenShot from "./ScreenShot.astro";
 import type { SolutionPillar } from "../../data/solutions";
 
 /** Un bloc pilier d'une page secteur.
@@ -22,10 +22,9 @@ interface Props {
   pillar: SolutionPillar;
   /** Nom du pilier produit (« Time », « Clients »…) pour le lien de sortie. */
   productName: string;
-  warmMockup?: boolean;
 }
 
-const { pillar, productName, warmMockup = false } = Astro.props;
+const { pillar, productName } = Astro.props;
 
 const EYEBROW_CLASS = {
   hour: "text-hour",
@@ -89,7 +88,7 @@ const EYEBROW_CLASS = {
         class={pillar.reverse ? "min-[901px]:order-1" : ""}
         data-reveal
       >
-        <SectorMockup mock={pillar.mock} warm={warmMockup} />
+        <ScreenShot src={pillar.mock.src} alt={pillar.mock.alt} clip={pillar.mock.clip} />
       </div>
     </div>
   </div>

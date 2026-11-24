@@ -1,6 +1,5 @@
 ---
 import { USE_CASES } from "../../data/solutions";
-import ConvergeArt from "../art/ConvergeArt.astro";
 
 /** L'axe « par cas d'usage » — ce qui justifie l'existence de `/solutions` face
  *  à l'index secteurs de l'accueil, qui liste déjà les mêmes huit entrées avec
@@ -19,12 +18,7 @@ import ConvergeArt from "../art/ConvergeArt.astro";
 
 <section class="py-[88px]" data-reveal-group>
   <div class="container-wide">
-    {/* En-tête sur deux colonnes, les six blocs restent pleine largeur en
-        dessous. L'illustration est décorative : elle disparaît sous 901px. */}
-    <div
-      class="grid grid-cols-1 items-center gap-14 min-[901px]:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]"
-    >
-      <div>
+    <div>
         <p class="label-mono text-[11px] text-hour" data-reveal>By use case</p>
 
         <h2 class="mt-4 max-w-[20ch] text-[clamp(28px,4vw,42px)]" data-reveal>
@@ -35,11 +29,6 @@ import ConvergeArt from "../art/ConvergeArt.astro";
           The same four pillars, arranged around what is going wrong. Most teams recognise
           themselves in one of these before they recognise themselves in a sector.
         </p>
-      </div>
-
-      <div class="hidden min-[901px]:block">
-        <ConvergeArt />
-      </div>
     </div>
 
     <ul class="mt-12 grid grid-cols-1 gap-x-14 gap-y-0 min-[901px]:grid-cols-2" data-reveal>

@@ -1,6 +1,6 @@
 ---
-import SectorMockup from "./mockups/SectorMockup.astro";
-import type { Line, Mockup } from "../../data/solutions";
+import ScreenShot from "./ScreenShot.astro";
+import type { Line, Screen } from "../../data/solutions";
 
 /** « A real day » — la section qu'un lecteur transfère à un associé.
  *
@@ -16,16 +16,15 @@ interface Props {
   eyebrow: string;
   heading: string;
   lines: Line[];
-  mock: Mockup;
-  warmMockup?: boolean;
+  mock?: Screen;
 }
 
-const { eyebrow, heading, lines, mock, warmMockup = false } = Astro.props;
+const { eyebrow, heading, lines, mock } = Astro.props;
 ---
 
 <section class="bg-ink py-[88px]" data-reveal-group>
   <div class="container-wide">
-    <div class="grid grid-cols-1 gap-14 min-[901px]:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+    <div class:list={["grid grid-cols-1 gap-14", mock && "min-[901px]:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]"]}>
       <div data-reveal>
         {/* L'ambre tient 8,4:1 sur `ink` : c'est la seule bande où il porte du
             texte sans discussion. */}
@@ -50,12 +49,11 @@ const { eyebrow, heading, lines, mock, warmMockup = false } = Astro.props;
         </div>
       </div>
 
-      <div class="min-[901px]:self-center" data-reveal>
-        {/* `onDark` est posé en dur : cette section EST la bande `ink`, elle ne
-            se paramètre pas. La feuille reste claire, seule son ombre change —
-            une ombre calibrée pour du blanc disparaît sur `ink`. */}
-        <SectorMockup mock={mock} warm={warmMockup} onDark />
-      </div>
+      {mock && (
+        <div class="min-[901px]:self-center" data-reveal>
+          <ScreenShot src={mock.src} alt={mock.alt} onDark />
+        </div>
+      )}
     </div>
   </div>
 </section>

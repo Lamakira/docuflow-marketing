@@ -3,8 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 import SectorEntry from "../../components/SectorEntry.astro";
 import UseCaseList from "../../components/solutions/UseCaseList.astro";
 import FinalCta from "../../components/sections/FinalCta.astro";
-import TradeStack from "../../components/art/TradeStack.astro";
-import PillarMatrix from "../../components/art/PillarMatrix.astro";
+import ScreenShot from "../../components/solutions/ScreenShot.astro";
 import { SECTORS } from "../../data/site";
 import { SOLUTIONS_MENU, FINE_PRINT } from "../../data/solutions";
 
@@ -56,7 +55,11 @@ const description =
       </div>
 
       <div>
-        <TradeStack />
+        <ScreenShot
+          src="index-projects"
+          alt="DocuFlow: Projects list with six clients from six trades, each with its status, budget used, hours tracked and due date."
+          eager
+        />
       </div>
     </div>
   </section>
@@ -66,13 +69,7 @@ const description =
       — c'est `paper` qui désigne la ligne sur une bande blanche. */}
   <section class="bg-white py-[88px]">
     <div class="container-wide">
-      {/* L'en-tête passe en deux colonnes, la liste des huit reste pleine
-          largeur en dessous. L'illustration est décorative : elle disparaît sous
-          901px plutôt que de repousser la liste d'un écran entier. */}
-      <div
-        class="grid grid-cols-1 items-center gap-14 min-[901px]:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]"
-      >
-        <div>
+      <div>
           <p class="label-mono text-[11px] text-ink">By industry</p>
 
           {/* ⚠️ Cette intro ne parle PAS de la page. Une première version disait
@@ -91,11 +88,6 @@ const description =
             o'clock. A shift the client wants proof was staffed. Each page opens on the one that
             costs you, and leads with the part of DocuFlow that answers it.
           </p>
-        </div>
-
-        <div class="hidden min-[901px]:block">
-          <PillarMatrix />
-        </div>
       </div>
 
       <ul class="mt-12 grid grid-cols-1 gap-x-[72px] gap-y-0 min-[901px]:grid-cols-2">

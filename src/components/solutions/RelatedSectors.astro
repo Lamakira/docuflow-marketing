@@ -1,6 +1,5 @@
 ---
 import { Icon } from "astro-icon/components";
-import SiblingsArt from "../art/SiblingsArt.astro";
 import { getSolution } from "../../data/solutions";
 
 /** Maillage interne : trois secteurs frères, plus `/product` et `/pricing`.
@@ -20,20 +19,14 @@ const siblings = related.map((slug) => getSolution(slug));
 
 <section class="py-[88px]" data-reveal-group>
   <div class="container-wide">
-    {/* En-tête sur deux colonnes, les trois frères restent pleine largeur. */}
-    <div
-      class="grid grid-cols-1 items-center gap-14 min-[901px]:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]"
-    >
+    {/* Le dessin d'en-tête est retiré (24 novembre 2026). */}
+    <div>
       <div>
         <p class="label-mono text-[11px] text-hour" data-reveal>Also for</p>
 
         <h2 class="mt-4 max-w-[18ch] text-[clamp(26px,3.4vw,36px)]" data-reveal>
           Teams with the same problem, in another trade.
         </h2>
-      </div>
-
-      <div class="hidden min-[901px]:block">
-        <SiblingsArt />
       </div>
     </div>
 

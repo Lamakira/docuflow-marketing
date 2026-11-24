@@ -1,7 +1,8 @@
 ---
 import PillarSection from "../PillarSection.astro";
-import AppScreen from "../product/AppScreen.astro";
-import clientRecord from "../../assets/screens/client-record.png";
+import AppClip from "../product/AppClip.astro";
+import poster from "../../assets/clips/client-to-project.png";
+import clip from "../../assets/clips/client-to-project.mp4";
 
 interface Props {
   /** Posé par `index.astro` d'après le rang du pilier — jamais en dur ici. */
@@ -20,6 +21,6 @@ const { reverse = false } = Astro.props;
   stageTone="live"
   reverse={reverse}
 >
-  {/* La vraie fiche client de l'application (23 novembre 2026), à la place de la maquette : coordonnées, contact, opportunités à leur étape, projets du client. Workspace de démonstration — règles dans `product/AppScreen.astro`. */}
-  <AppScreen src={clientRecord} alt="DocuFlow client record for Northwind Logistics: client details, the primary contact, eight opportunities with their stages and the client's projects." />
+  {/* De la fiche client au projet qui lui est rattaché : un geste filmé, règles dans `product/AppClip.astro`. */}
+  <AppClip src={clip} poster={poster} alt="DocuFlow client record for Northwind Systems: client details, contacts and the client's projects. The animation opens the Ledger rebuild project." />
 </PillarSection>

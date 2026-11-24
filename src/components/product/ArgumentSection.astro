@@ -3,7 +3,7 @@ import { PRODUCT_ARGUMENT } from "../../data/product";
 ---
 
 {/* Le seul moment de la page qui argumente. Tout le reste spécifie — c'est
-    précisément ce qui donne son poids à ces cinq phrases. Aucune boîte : cinq
+    précisément ce qui donne son poids à ces phrases. Aucune boîte : des
     entrées séparées par un filet, comme l'index des secteurs de l'accueil. */}
 <section class="argument bg-paper" data-reveal-group>
   <div class="container-wide">
@@ -16,8 +16,8 @@ import { PRODUCT_ARGUMENT } from "../../data/product";
     {/* `<ol>` : le brief numérote, et l'ordre est celui de la force de
         l'argument. Le numéro visible est donc une vraie information de rang —
         mais il est déjà porté par la liste ordonnée, donc le glyphe est
-        `aria-hidden` : sans ça un lecteur d'écran annonce « 1. 01 An evidence
-        quality score ». Il vit dans les données comme `index` chez les piliers,
+        `aria-hidden` : sans ça un lecteur d'écran annonce « 1. 01 » devant
+        chaque titre. Il vit dans les données comme `index` chez les piliers,
         et doit suivre l'ordre du tableau. */}
     <ol class="arg-list" data-reveal>
       {

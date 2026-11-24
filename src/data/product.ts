@@ -32,7 +32,7 @@
 /** Les quatre piliers du produit, et rien d'autre : la clé du registre de
  *  visuels dans `product.astro` (`Record<PillarId, …>`) est construite sur ce
  *  type, pas sur `string` — un pilier ajouté ou renommé sans son visuel casse
- *  donc `astro check`/le build plutôt que de planter au rendu avec un mockup
+ *  donc `astro check`/le build plutôt que de planter au rendu sur une image
  *  `undefined`. */
 export type PillarId = "time" | "activity" | "clients" | "knowledge";
 
@@ -147,8 +147,8 @@ const PILLAR_DEFINITIONS: PillarDefinition[] = [
     id: "activity",
     index: "02",
     name: "Activity",
-    heading: "Evidence, and a score telling you how good it is.",
-    body: "A desktop agent on Windows, macOS and Linux records screenshots, keyboard and mouse activity and idle time in the background. It keeps working offline. And DocuFlow grades the coverage, so you know when tracked hours have too little evidence behind them.",
+    heading: "Evidence, under rules your team can read.",
+    body: "A desktop agent on Windows, macOS and Linux records screenshots, keyboard and mouse activity and idle time in the background. It keeps working offline. Admins set the intervals, the active hours and the idle timeout, and every member can read that policy.",
     band: "bg-band-mint",
     eyebrowTone: "live",
     rows: [
@@ -187,15 +187,9 @@ const PILLAR_DEFINITIONS: PillarDefinition[] = [
         qualifier: "remote revocation",
       },
       {
-        bullet: "Evidence quality score, 0–100 per person",
-        key: true,
-        capability: "Evidence quality score, 0–100",
-        qualifier: "strong / moderate / weak / insufficient",
-      },
-      {
-        bullet: "Admin analytics - coverage, quality, devices, warnings",
+        bullet: "Admin analytics - recorded time, activity, warnings",
         capability: "Admin analytics",
-        qualifier: "coverage, quality, devices, warnings",
+        qualifier: "recorded time, activity, warnings",
       },
       {
         bullet: "Screenshot review by person and date",
@@ -206,7 +200,7 @@ const PILLAR_DEFINITIONS: PillarDefinition[] = [
     spec: [
       { value: "3–15m", label: "capture" },
       { value: "60s", label: "activity window" },
-      { value: "0–100", label: "evidence score" },
+      { value: "10%", label: "low-activity line" },
       { value: "3", label: "platforms" },
     ],
   },
@@ -397,16 +391,11 @@ export const PLATFORM_CARDS = [
 export const PRODUCT_ARGUMENT = [
   {
     n: "01",
-    title: "An evidence quality score",
-    body: "The monitoring data grades its own completeness, so hours with too little evidence behind them show up instead of passing as complete.",
-  },
-  {
-    n: "02",
     title: "Meetings that answer questions",
     body: "Loom and Fathom recordings bring their transcripts in, so the assistant can answer from what was said.",
   },
   {
-    n: "03",
+    n: "02",
     title: "An agent that survives the network",
     body: "Work queues locally and reconciles without duplicates when the connection returns.",
   },

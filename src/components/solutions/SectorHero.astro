@@ -1,11 +1,11 @@
 ---
-import SectorMockup from "./mockups/SectorMockup.astro";
-import { FINE_PRINT, type Mockup } from "../../data/solutions";
+import ScreenShot from "./ScreenShot.astro";
+import { FINE_PRINT, type Screen } from "../../data/solutions";
 import { APP_SIGN_UP } from "../../data/app";
 
 /** Le héros d'une page secteur. Même forme à deux colonnes que `ProductHero` —
  *  plutôt qu'un troisième héros pour le site — mais la colonne de droite porte
- *  une maquette du produit et non un sommaire : ici le lecteur ne cherche pas un
+ *  une capture du produit et non un sommaire : ici le lecteur ne cherche pas un
  *  plan de page, il cherche à se reconnaître.
  *
  *  L'oeil-de-boeuf porte le tag du secteur (`AGENCY`, `LEGAL`…) : c'est le mot
@@ -22,11 +22,10 @@ interface Props {
   tag: string;
   h1: string;
   lede: string;
-  mock: Mockup;
-  warmMockup?: boolean;
+  mock: Screen;
 }
 
-const { tag, h1, lede, mock, warmMockup = false } = Astro.props;
+const { tag, h1, lede, mock } = Astro.props;
 ---
 
 <section class="pb-20 pt-16">
@@ -60,7 +59,7 @@ const { tag, h1, lede, mock, warmMockup = false } = Astro.props;
     </div>
 
     <div>
-      <SectorMockup mock={mock} warm={warmMockup} />
+      <ScreenShot src={mock.src} alt={mock.alt} eager />
     </div>
   </div>
 </section>

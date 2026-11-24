@@ -191,3 +191,32 @@ Le domaine n'a pas été touché. Tous les liens passent par `src/data/app.ts` :
 - `APP_URL` par défaut : `https://docuflow-masdouk1.replit.app` (`astro.config.mjs`). Le `.env` local
   le pose à `http://localhost:5000`. Passer à `docuflow.techma.ai` = une valeur d'`APP_URL`, sans
   toucher au balisage.
+
+## Passe du 24 novembre 2026 — tous les écrans dessinés remplacés
+
+**Ce que cet audit avait raté.** La première passe avait gardé le « score de qualité 0–100 » et
+affiché des valeurs (84, 96, 99…) que l'app ne montre pas. Vérifié depuis : l'interface v2 n'affiche
+qu'un grade par membre (`client/src/v2/V2Analytics.tsx:457`), jamais de nombre, et ce grade est faux :
+`getEvidenceQualityReport` (`server/modules/postgresStorage.ts`) somme les durées après une jointure
+sur les captures. Mesuré sur l'instance isolée : 5 entrées de 8 h et 240 captures donnent
+« 1920.0 h » et « 240 of 11520 ». Le score est donc retiré partout, nombre et grade. La même page
+affirme pourtant « DocuFlow does not score or rank Members » (`administration.ts:1255`) : le site ne
+reprend pas cette phrase, il dit seulement qu'il n'y a pas de score de productivité.
+
+**Ce qui a remplacé les dessins.** 66 captures pour `/solutions`, 8 pour l'accueil et `/product`, sur
+une instance locale isolée de l'app (base jetable, services tiers doublés, personnes et sociétés
+fictives). Supprimés : `components/art/`, les deux dossiers `mockups/`, `scripts/art.ts`. Restent
+dessinés : les quatre cartes d'outils de la pile et la réponse IA de l'accueil.
+
+**À corriger dans l'app** (hors de ce dépôt) : la jointure ci-dessus, qui touche aussi le rapport de
+couverture ; Switzer, déclarée mais plus servie par Fontshare ; à vérifier en production, la page
+Devices de l'instance isolée annonçait « Not published yet for any platform ». L'app lit les
+installeurs dans le bucket de l'environnement (`server/downloadRoutes.ts`) : sur un stockage doublé
+il est vide, donc cela ne prouve rien sur la production. Le site promet Windows, macOS et Linux.
+
+**Vérifié** : la recherche trouve une page et un projet par leur nom (instance isolée, 24 novembre).
+
+**À trancher** : `advancedAnalytics` n'est ouvert qu'à partir de Business et couvre toute la route
+`/api/admin/analytics` (`featureGate.ts:94`). Les pages `/solutions` montrent Analytics sans préciser
+le plan.
+
