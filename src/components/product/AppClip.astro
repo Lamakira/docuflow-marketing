@@ -141,10 +141,19 @@ const widths = [640, 960, poster.width].filter((w, i, all) => w <= poster.width 
 
     let inView = false;
     let pausedByReader = false;
+    let loading: Promise<void> | undefined;
 
     const label = () => {
       toggle.textContent = pausedByReader ? "Play" : "Pause";
       toggle.setAttribute("aria-label", `${toggle.textContent} the animation`);
+    };
+
+    // Le clip est téléchargé en entier puis lu depuis la mémoire : Safari exige
+    // des réponses partielles (`Range`), que l'hébergement de Replit ne sert pas.
+    const load = async () => {
+      const response = await fetch(video.dataset.src ?? "");
+      if (!response.ok) throw new Error(`Clip: ${response.status}`);
+      video.src = URL.createObjectURL(new Blob([await response.blob()], { type: "video/mp4" }));
     };
 
     const sync = () => {
@@ -154,7 +163,13 @@ const widths = [640, 960, poster.width].filter((w, i, all) => w <= poster.width 
         return;
       }
       if (inView && !pausedByReader) {
-        if (!video.src) video.src = video.dataset.src ?? "";
+        if (!video.src) {
+          // Échec : l'image fixe reste, nouvel essai au prochain passage à l'écran.
+          loading ??= load()
+            .then(sync, () => {})
+            .finally(() => (loading = undefined));
+          return;
+        }
         // Lecture refusée par le navigateur : l'image fixe reste en place.
         video.play().catch(() => {});
       } else {
