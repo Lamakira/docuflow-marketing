@@ -492,7 +492,7 @@ const CONTENT: Record<string, Record<Locale, SectorCopy>> = {
             "Capture restricted to an active-hours window",
             "Admin analytics - recorded time, activity, warnings",
           ]),
-          mock: { src: "consulting-policy", alt: "DocuFlow: Administration, Tracking Policy: capture interval, active hours, low-activity threshold, idle timeout and the idle prompt." },
+          mock: { src: "consulting-evidence", alt: "DocuFlow: Activity page: the Tracking Policy every member reads, above captures from desktop devices filed against the Operating model engagement, by task and person." },
         },
         {
           ref: "time",
@@ -1777,7 +1777,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
       eyebrow: "Employee productivity",
       h1: "Measure openly, or the team will work around the measure.",
       lede: "Each screenshot carries the keyboard and mouse activity of the minute before it, and by default the agent asks before it pauses for idle. A visible indicator shows when the timer is running, and anyone can open the data recorded about them.",
-      hero: { src: "productivity-hero", alt: "DocuFlow: Activity page, Tracking Policy: what is captured and when, shown to every member." },
+      hero: { src: "productivity-hero", alt: "DocuFlow: Activity page as a member sees it: the Tracking Policy applied to them, above their own captures of the day." },
       situation: {
         heading: "Productivity gets measured by whoever is loudest about it.",
         points: [
@@ -1822,7 +1822,7 @@ const CONTENT_USE_CASES: Record<string, Record<Locale, UseCaseCopy>> = {
             "Capture restricted to an active-hours window",
             "Admin analytics - recorded time, activity, warnings",
           ]),
-          mock: { src: "productivity-policy", alt: "DocuFlow: Administration, Tracking Policy: capture interval, low-activity threshold, idle timeout and the idle prompt." },
+          mock: { src: "productivity-policy", alt: "DocuFlow: Tracking Policy settings: the low-activity threshold, described as a fact about the capture and not a score, the idle timeout and the idle prompt." },
         },
         {
           ref: "time",
