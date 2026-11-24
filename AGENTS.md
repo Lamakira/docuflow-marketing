@@ -620,10 +620,8 @@ passent devant la nav repliée.
       sort des tokens Layered Paper, que plus rien n'utilise depuis le 24 novembre 2026. Saïd.
 - [ ] Rafraîchir le sidecar d'impeccable (`/impeccable document`) : `DESIGN.md` a bougé, ses
       signalements 36px sont désormais du bruit.
-- [ ] **Corriger le débordement horizontal de `/pricing` à 360 px** — 7 px le 27 juillet, 9 px mesurés le 24 novembre, **préexistant** et
-      découvert en balayant les largeurs le 27 juillet 2026. Le `<table>` du comparatif demande
-      343 px dans un conteneur de 312 px (`ComparisonTable.astro`). Ni l'accueil, ni `/product`, ni
-      aucune des neuf pages `/solutions` ne débordent, à aucune des huit largeurs testées.
+- [x] ~~Corriger le débordement horizontal de `/pricing` à 360 px~~ — corrigé le 24 novembre 2026 dans
+      `ComparisonTable.astro` (en-têtes et colonnes sous 620 et 480 px), mesuré de 320 à 1440 px.
 - [ ] Arbitrer le domaine et mettre à jour `site` dans `astro.config.mjs` (actuellement `docuflow.ca`)
 - [ ] **Donner une destination réelle à la prise de rendez-vous et au contact commercial.**
       Le second CTA « Book a 15-minute demo » est retiré des quatre héros et `Talk to us`

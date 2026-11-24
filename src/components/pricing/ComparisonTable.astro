@@ -234,5 +234,38 @@ import { PLANS, COMPARISON_GROUPS } from "../../data/site";
     .compare {
       padding: 56px 0;
     }
+
+    .th-plan {
+      padding-right: 0;
+      font-size: 11px;
+      letter-spacing: -0.02em;
+    }
+  }
+
+  /* À 360px la colonne de plan faisait 47px pour un « Enterprise » de 78px : le
+     mot sortait de la page et lui donnait une barre horizontale. Les colonnes de
+     plan s'élargissent et les en-têtes rapetissent jusqu'à tenir dans la leur. */
+  @media (max-width: 480px) {
+    .col-feature {
+      width: 28%;
+    }
+
+    .col-plan {
+      width: 18%;
+    }
+
+    thead th {
+      padding-right: 0;
+    }
+
+    .th-plan {
+      font-size: 10px;
+      letter-spacing: -0.04em;
+    }
+
+    .limit {
+      font-size: 10px;
+      letter-spacing: -0.04em;
+    }
   }
 </style>
